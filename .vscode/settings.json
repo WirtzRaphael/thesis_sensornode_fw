@@ -1,0 +1,21 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "stdlib.h": "c",
+        "pico.h": "c",
+        "uart.h": "c",
+        "numbers": "c",
+        "compare": "c",
+        "cstdint": "c",
+        "rtc.h": "c",
+        "tmp117.h": "c",
+        "display.h": "c",
+        "i2c_operations.h": "c",
+        "time.h": "c"
+    },
+    "cmake.configureSettings": {
+        "PICO_SDK_PATH": "/home/rw/repos/3_resources/pico_sdk",
+        "PICO_SEGGER_PATH": "/home/rw/bin/jlink",
+        "PICO_TOOLCHAIN_PATH": "/usr/bin/arm-none-eabi-gcc-12.2"
+    }
+}

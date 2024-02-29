@@ -1,0 +1,126 @@
+#+TITLE: MSE VM2 Sensornode
+:BUFFERSETTINGS:
+#+STARTUP: overview noinlineimages nologstatesreversed ident hidestars hideblocks
+:END:
+
+* Information
+- CMake with Ninja
+- RP2040
+* Setup
+** Development Tools
+- Visual Studio Code
+
+*** Environment
+- run script environment or execute it's content in the shell.
+- check environmnet
+```
+env |  grep PICO
+```
+
+*Fish shell*
+- edit config
+- source the config
+- https://fishshell.com/docs/current/cmds/set.html
+*** Build Tools & Toolchain
+#+begin_src sh :results none
+  cmake --version
+  ninja --version
+  gcc --version
+  arm-none-arm-eabi-gcc --version
+  python --version
+#+end_src
+*** SDK
+- ref : https://github.com/raspberrypi/pico-sdk
+- get sdk
+#+begin_src sh :eval no
+  git clone git@github.com:raspberrypi/pico-sdk.git pico_sdk
+#+end_src
+- create =CMakeLists.txt=
+
+#+begin_src sh :eval no
+cd pico_sdk
+git submodule update --init
+#+end_src
+
+** Debugging
+- J-Link Debugger
+- J-Link Debugger Mini
+#+begin_src sh :results none
+  yay -Qi jlink-software-and-documentation
+#+end_src
+- see vscode settings =launch.json=
+
+** CMake Kit
+#+begin_src
+  {
+    "name": "GCC 12.2.1 arm-none-eabi",
+    "compilers": {
+      "C": "/usr/bin/arm-none-eabi-gcc",
+      "CXX": "/usr/bin/arm-none-eabi-g++"
+    },
+    "isTrusted": true
+  },
+#+end_src
+
+** McuLib
+- Run setup script to download the library from the repository.
+  - for windows see https://github.com/urhano/addMCULib/blob/master/create.ps1
+
+* CI / CD
+- Branches :: main, develop, feature
+- Release :: Github Action
+  - https://github.com/softprops/action-gh-release
+* Usage
+- Init script
+- Build script
+- Deploy
+  - Debug Cortex VSCode
+  - Copy file via USB
+** Deploy via USB
+- Execute build and make scripts
+- Hold =BOOTSEL= button and connect USB.
+  #+begin_src sh
+    blkid -o list | grep RPI-RP2
+  #+end_src
+
+#+RESULTS:
+: /dev/sda1  vfat    RPI-RP2  (not mounted)  0009-A0CB
+
+- mount device
+  #+begin_src sh :eval no
+    sudo mount /dev/sdb1 /mnt/pico
+  #+end_src
+- check files
+  #+begin_src sh
+    ls /mnt/pico/
+  #+end_src
+
+#+RESULTS:
+| INDEX.HTM   |
+| INFO_UF2.TXT |
+
+- copy program on the pico
+  #+begin_src sh
+    cp ./build/sensornode.uf2 /mnt/pico/
+  #+end_src
+- Flush memory buffer to the storage device
+  #+begin_src sh :eval no
+    sudo sync
+  #+end_src
+
+  *Hint*
+  - auto deploy via usb see https://github.com/ConorShore/RPi_Pico_Autoloader
+** Deploy via VSCode debug
+** Connect Serial USB
+- Find USB connection
+  - ~dmesg~
+- Connect
+  - With ~tio~
+    - see also https://github.com/tio/tio
+#+begin_quote sh
+tio /dev/ttyACM0
+#+end_quote
+* References
+- https://lindevs.com/set-up-raspberry-pi-pico-sdk-on-ubuntu
+- https://github.com/raspberrypi/pico-sdk
+- https://www.raspberrypi.com/documentation/microcontrollers/c_sdk.html#raspberry-pi-pico-cc-sdk
