@@ -20,6 +20,7 @@
 #endif
 
 /* \todo need to have it globally defined, as not present anywhere else */
+uint32_t SystemCoreClock = 120000000;
 
 void PL_Init(void) {
   McuLib_Init();

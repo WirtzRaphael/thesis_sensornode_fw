@@ -17,12 +17,6 @@
    */
 #define PL_CONFIG_USE_WIFI              (0 && PL_CONFIG_USE_PICO_W) /* if using WiFi functionality */
 
-/* I2C: OLED and Sensor */
-#define PL_CONFIG_USE_I2C               (1) /* if using I2C bus */
-#define PL_CONFIG_USE_HW_I2C            (0 && PL_CONFIG_USE_I2C && CONFIG_USE_HW_I2C)
-#define PL_CONFIG_USE_OLED              (1 && PL_CONFIG_USE_I2C)
-
-
 void PL_Init(void);
 
 #endif /* APP_PLATFORM_H_ */
