@@ -1,8 +1,8 @@
-/*!
+/*
  * Copyright (c) 2019, 2022 Erich Styger
  * All rights reserved.
- * \file
- * \brief Configuration header file for McuSHT40 (Sensirion SHT40 sensor).
+ *
+ * Configuration header file for McuSHT40 (Sensirion SHT40 sensor)
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */

@@ -1,7 +1,7 @@
-/*!
+/*
  * Copyright (c) 2019, Erich Styger
- * \file
- * \brief Configuration header file for X12.017 quad-stepper motor driver.
+ *
+ * Configuration header file for X12.017 quad-stepper motor driver
  * Copyright (c) 2020, Erich Styger
  * SPDX-License-Identifier: BSD-3-Clause
  *

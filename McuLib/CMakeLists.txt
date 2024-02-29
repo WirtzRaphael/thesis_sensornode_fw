@@ -57,7 +57,6 @@ else ()
               "src/McuGPIO.c"
               "src/McuGFont.c"
               "src/McuI2cLib.c"
-              "src/McuINA260.c"
               "src/McuLib.c"
               "src/McuLED.c"
               "src/McuLog.c"

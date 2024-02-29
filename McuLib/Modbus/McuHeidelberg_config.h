@@ -19,22 +19,12 @@
 
 #ifndef McuHeidelberg_CONFIG_USE_WATCHDOG
   #define McuHeidelberg_CONFIG_USE_WATCHDOG       (0)
-    /*!< if using MCU watchdog functionality */
+    /*!< if using MCU watchdog functionality. Currently not implemented */
 #endif
 
-#ifndef McuHeidelberg_CONFIG_HYSTERESIS_POWER
-  #define McuHeidelberg_CONFIG_HYSTERESIS_POWER    (150)
-    /*! Use this value as hysteresis */
-#endif
-
-#ifndef McuHeidelberg_CONFIG_BASE_SITE_POWER
-  #define McuHeidelberg_CONFIG_BASE_SITE_POWER    (250)
-    /*! Use this value as the site base power */
-#endif
-
-#ifndef McuHeidelberg_CONFIG_DEFAULT_CHARGING_MODE
-  #define McuHeidelberg_CONFIG_DEFAULT_CHARGING_MODE    McuHeidelberg_User_ChargingMode_SlowPlusPV
-    /*!< one of McuHeidelberg_UserChargingMode_e, used at startup */
+#ifndef McuHeidelberg_CONFIG_SITE_BASE_POWER
+  #define McuHeidelberg_CONFIG_SITE_BASE_POWER    (500)
+    /*! If non-zero, use this value as the site base power */
 #endif
 
 #endif /* MODBUS_MCUHEIDELBERG_CONFIG_H_ */
