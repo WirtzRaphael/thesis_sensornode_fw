@@ -10,6 +10,8 @@
 #  McuLib
 #  lvglLib # LittlevGL library inside the McuLib
 
+set(THIS_LIBRARY_NAME McuLib)
+
 file(GLOB MCULIBFILES
   RNet/*.c
   fonts/*.c
@@ -32,6 +34,7 @@ file(GLOB MCULIBFILES
   src/McuGenericSWI2C.c
   src/SDA1.c
   src/SCL1.c
+  src/McuINA260.c
   src/McuFXOS8700.c
   src/McuGFont.c
   src/McuGPIO.c
@@ -71,6 +74,7 @@ file(GLOB MCULIBFILES
   src/McuTrigger.c
   src/McuUart485.c
   src/McuULN2003.c
+  src/McuUnity.c
   src/McuUtility.c
   src/McuW25Q128.c
   src/McuWait.c
@@ -95,7 +99,8 @@ file(GLOB MCULIBFILES
   FreeRTOS/Source/portable/MemMang/heap_5.c
   FreeRTOS/Source/portable/MemMang/heap_useNewlib.c
   FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
-  
+  FreeRTOS/Source/portable/GCC/ARM_CM4F/portTicks.c
+
   # littleFS
   littleFS/lfs_util.c
   littleFS/lfs.c
@@ -117,27 +122,30 @@ file(GLOB MCULIBFILES
 # add_library: With this declaration, you express the intent to build a library. 
 # The first argument is the name of the library, 
 # the second argument are the files that will be compiled to create your library.
-add_library(McuLib ${MCULIBFILES})
+add_library(${THIS_LIBRARY_NAME} OBJECT ${MCULIBFILES})
 
 # target_link_libraries: If you link with other libraries, list them here
 target_link_libraries(
-  McuLib
+  ${THIS_LIBRARY_NAME}
   # lvglLib   # see note above
-  pico_stdlib
-  pico_unique_id
-  hardware_pio 
-  hardware_flash
-  hardware_spi
-  hardware_sync
-  hardware_i2c
-  hardware_sleep
+  PUBLIC pico_stdlib
+  PUBLIC pico_unique_id
+  PUBLIC pico_multicore
+  PUBLIC hardware_pio 
+  PUBLIC hardware_flash
+  PUBLIC hardware_spi
+  PUBLIC hardware_sync
+  PUBLIC hardware_i2c
+  PUBLIC hardware_exception
+  PUBLIC hardware_clocks
+  PUBLIC hardware_sync
 )
 
 # target_include_directories: Libraries need to publish their header files 
 # so that you can import them in source code. This statement expresses where to find the files 
 # - typically in an include directory of your projects.
 target_include_directories(
-  McuLib 
+  ${THIS_LIBRARY_NAME} 
   PUBLIC
   ./
   ./src/ 
@@ -152,4 +160,4 @@ target_include_directories(
   ./LittlevGL
   ./Modbus
   ./RNet
- )
+)

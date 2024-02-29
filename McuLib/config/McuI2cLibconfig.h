@@ -1,7 +1,9 @@
-/*
+/*!
  * Copyright (c) 2020-2022, Erich Styger
  *
  * SPDX-License-Identifier: BSD-3-Clause
+ * \file
+ * \brief Configuration items for the McuI2cLib module.
  */
 
 #ifndef I2CLIBCONFIG_H_
@@ -10,7 +12,7 @@
 #include "McuLib.h"
 
 #ifndef McuLib_CONFIG_MCUI2CLIB_ENABLED
-  #define McuLib_CONFIG_MCUI2CLIB_ENABLED  (1)
+  #define McuLib_CONFIG_MCUI2CLIB_ENABLED  (0)
     /*!< 1: enable module, 0: disable module */
 #endif
 

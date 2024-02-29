@@ -33,6 +33,7 @@ file(GLOB MCULIBFILES
   src/McuGenericSWI2C.c
   src/SDA1.c
   src/SCL1.c
+  src/McuINA260.c
   src/McuFXOS8700.c
   src/McuGFont.c
   src/McuGPIO.c
@@ -71,6 +72,7 @@ file(GLOB MCULIBFILES
   src/McuTimeout.c
   src/McuTrigger.c
   src/McuUart485.c
+  src/McuUnity.c
   src/McuULN2003.c
   src/McuUtility.c
   src/McuW25Q128.c
