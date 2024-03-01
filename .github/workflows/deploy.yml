@@ -3,11 +3,11 @@ name: Build, Deploy Docker Image CI
 # Only deploy when a new tag is pushed
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "develop" ]
   pull_request:
     branches: [ "main" ]
-        tags:
-          - "v*.*.*"
+      tags:
+        - "v*.*.*"
           
 # Must match the project() name in CMakeLists.txt
 env:
