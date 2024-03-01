@@ -6,8 +6,8 @@ on:
     branches: [ "develop" ]
   pull_request:
     branches: [ "main" ]
-      tags:
-        - "v*.*.*"
+    tags:
+      - "v*.*.*"
           
 # Must match the project() name in CMakeLists.txt
 env:
