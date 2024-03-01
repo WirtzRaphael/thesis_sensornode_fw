@@ -52,14 +52,19 @@ COPY run_build.sh /project/
 COPY run_init.sh /project/
 
 RUN ls -l /project/
+
 RUN cd /project/ && \
-    chmod +x run_init.sh \
-    ./run_init.sh
+    cmake -G "Ninja" . -B build
+# RUN cd /project/ && \
+#     chmod +x run_init.sh \
+#     ./run_init.sh
 
 # Build project
 RUN cd /project/ && \
-    chmod +x run_build.sh && \
-    ./run_build.sh
+    cmake --build build
+# RUN cd /project/ && \
+#     chmod +x run_build.sh && \
+#     ./run_build.sh
     
 # Command that will be invoked when the container starts
 ENTRYPOINT ["/bin/bash"]
