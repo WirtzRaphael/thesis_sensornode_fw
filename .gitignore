@@ -1,6 +1,7 @@
 
 ARCHIVE
 build
+deploy
 
 pico-extras
 pico-sdk
