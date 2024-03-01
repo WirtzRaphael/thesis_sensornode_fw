@@ -6,8 +6,8 @@ on:
       branches: [ "feature/freertos" ]
   pull_request:
     branches: [ "develop" ]
-        # tags:
-        #   - "v*.*.*"
+        tags:
+          - "v*.*.*"
           
 # Must match the project() name in CMakeLists.txt
 env:
