@@ -28,8 +28,16 @@ RUN \
     git submodule update --init && \
     cd /
 
+# Install Pico-Extras
+RUN \
+    cd /project/ && \
+    git clone https://github.com/raspberrypi/pico-extras.git --branch master
+
 # Set the Pico SDK environment variable
 ENV PICO_SDK_PATH=/project/pico-sdk/
+ENV PICO_EXTRAS_PATH=/project/pico-extras/
+
+# todo pico extras
 
 # Install McuLib
 # alternative : setup script
@@ -43,13 +51,14 @@ COPY CMakeLists.txt /project/
 COPY run_build.sh /project/
 COPY run_init.sh /project/
 
-RUN \
-    cd /project/ && \
+RUN ls -l /project/
+RUN cd /project/ && \
+    chmod +x run_init.sh \
     ./run_init.sh
 
 # Build project
-RUN \
-    cd /project/ && \
+RUN cd /project/ && \
+    chmod +x run_build.sh && \
     ./run_build.sh
     
 # Command that will be invoked when the container starts
