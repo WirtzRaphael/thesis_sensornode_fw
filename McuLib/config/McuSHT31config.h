@@ -1,8 +1,8 @@
-/*!
+/*
  * Copyright (c) 2019, Erich Styger
  * All rights reserved.
- * \file
- * \brief Configuration header file for McuSHT31 sensor from Sensirion.
+ *
+ * Configuration header file for McuSHT31
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */

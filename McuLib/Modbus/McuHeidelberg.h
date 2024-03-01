@@ -19,7 +19,6 @@ typedef enum McuHeidelberg_Event_e {
   McuHeidelberg_Event_SitePower_Changed,          /* used power by site has changed */
   McuHeidelberg_Event_ChargerPower_Changed,       /* charging value of car changed */
   McuHeidelberg_Event_GridPower_Changed,          /* grid power value changed */
-  McuHeidelberg_Event_BatteryPower_Changed,       /* battery power value changed */
 } McuHeidelberg_Event_e;
 
 typedef void (*McuHeidelberg_EventCallback)(McuHeidelberg_Event_e);
@@ -38,17 +37,6 @@ typedef enum McuHeidelberg_ChargingMode_e {
   McuHeidelberg_User_ChargingMode_Slow,             /* charge immediately with the minimal power */
   McuHeidelberg_User_ChargingMode_SlowPlusPV,       /* charge immediately with the minimal power. If PV supports more power, the power level gets increased */
   McuHeidelberg_User_ChargingMode_Fast,             /* charge immediately with maximum power */
-  McuHeidelberg_User_ChargingMode_6_Amp,
-  McuHeidelberg_User_ChargingMode_7_Amp,
-  McuHeidelberg_User_ChargingMode_8_Amp,
-  McuHeidelberg_User_ChargingMode_9_Amp,
-  McuHeidelberg_User_ChargingMode_10_Amp,
-  McuHeidelberg_User_ChargingMode_11_Amp,
-  McuHeidelberg_User_ChargingMode_12_Amp,
-  McuHeidelberg_User_ChargingMode_13_Amp,
-  McuHeidelberg_User_ChargingMode_14_Amp,
-  McuHeidelberg_User_ChargingMode_15_Amp,
-  McuHeidelberg_User_ChargingMode_16_Amp,
   McuHeidelberg_User_ChargingMode_NofChargingMode,  /* sentinel, must be last in list! */
 } McuHeidelberg_UserChargingMode_e;
 
@@ -77,12 +65,10 @@ void McuHeidelberg_SetSolarPowerWatt(uint32_t powerW);
 
 uint32_t McuHeidelberg_GetSitePowerWatt(void);
 void McuHeidelberg_SetSitePowerWatt(uint32_t powerW);
+uint32_t McuHeidelberg_GetSiteWithoutChargerPowerWatt(void);
 
 int32_t McuHeidelberg_GetGridPowerWatt(void);
 void McuHeidelberg_SetGridPowerWatt(int32_t powerW);
-
-int32_t McuHeidelberg_GetBatteryPowerWatt(void);
-void McuHeidelberg_SetBatteryPowerWatt(int32_t powerW);
 
 uint32_t McuHeidelberg_GetMaxCarPower(void);
 

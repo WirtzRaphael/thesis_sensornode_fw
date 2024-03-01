@@ -11,11 +11,8 @@
 #include "McuLib.h"
 #include "McuShell.h"
 #include <stdio.h>
-#if McuSemihost_CONFIG_LOG_ENABLED
-  #include "McuLog.h"
-#endif
 
-#if McuSemihost_CONFIG_IS_ENABLED
+#if McuLib_CONFIG_CORTEX_M >= 0 /* only on ARM Cortex-M */
 /*
  * ARM Semihosting operations, see https://developer.arm.com/documentation/dui0471/g/Semihosting
  * See https://github.com/cnoviello/mastering-stm32/blob/master/nucleo-f411RE/system/include/arm/semihosting.h
@@ -73,12 +70,6 @@ typedef enum McuSemihost_Op_e {
 
 #if McuSemihost_CONFIG_INIT_STDIO_HANDLES
   static int McuSemihost_tty_handles[3]; /* stdin, stdout and stderr */
-#endif
-
-#if McuSemihost_CONFIG_LOG_ENABLED
-  #define McuSemihost_log(...) McuLog_log(McuLog_TRACE, __BASE_FILE__, __LINE__, __VA_ARGS__)
-#else
-  #define McuSemihost_log(...) do{}while(0)
 #endif
 
 bool McuSemihost_StdIOKeyPressed(void) {
@@ -178,63 +169,45 @@ int McuSemihost_SeggerIsConnected(void) {
 #endif
 
 int McuSemihost_SysHostTime(void) {
-  int res;
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_TIME, NULL);
-  McuSemihost_log("SYS_TIME: %d", res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_TIME, NULL);
 }
 
 int McuSemihost_SysHostClock(void) {
-  int res;
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_CLOCK, NULL);
-  McuSemihost_log("SYS_CLOCK: %d", res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_CLOCK, NULL);
 }
 
 int McuSemihost_SysFileOpen(const unsigned char *filename, int mode) {
   int32_t param[3];
-  int res;
 
   param[0] = (int32_t)filename;
   param[1] = mode;
   param[2] = McuUtility_strlen((char*)filename);
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_OPEN, &param[0]);
-  McuSemihost_log("SYS_OPEN '%s', mode:%d: %d", filename, mode, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_OPEN, &param[0]);
 }
 
 int McuSemihost_SysFileClose(int fh) {
   int32_t param;
-  int res;
 
   param = fh;
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_CLOSE, &param);
-  McuSemihost_log("SYS_CLOSE fh:%d: %d", fh, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_CLOSE, &param);
 }
 
 int McuSemihost_SysFileRead(int fh, unsigned char *data, size_t nofBytes) {
   int32_t param[3];
-  int res;
 
   param[0] = fh;
   param[1] = (int32_t)data;
   param[2] = nofBytes;
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_READ, &param[0]);
-  McuSemihost_log("SYS_READ fh:%d nof:%d: %d", fh, nofBytes, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_READ, &param[0]);
 }
 
 int McuSemihost_SysFileWrite(int fh, const unsigned char *data, size_t nofBytes) {
   int32_t param[3];
-  int res;
 
   param[0] = fh;
   param[1] = (int32_t)data;
   param[2] = nofBytes;
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_WRITE, &param[0]);
-  McuSemihost_log("SYS_WRITE fh:%d nof:%d: %d", fh, nofBytes, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_WRITE, &param[0]);
 }
 
 #if McuSemihost_CONFIG_HAS_SYS_REMOVE
@@ -245,13 +218,10 @@ int McuSemihost_SysFileWrite(int fh, const unsigned char *data, size_t nofBytes)
  */
 int McuSemihost_SysFileRemove(const unsigned char *filePath) {
   int32_t param[2];
-  int res;
 
   param[0] = (int32_t)filePath;
   param[1] = McuUtility_strlen((char*)filePath);
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_REMOVE, &param[0]);
-  McuSemihost_log("SYS_REMOVE '%s': %d", filePath, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_REMOVE, &param[0]);
 }
 #endif
 
@@ -263,103 +233,72 @@ int McuSemihost_SysFileRemove(const unsigned char *filePath) {
  */
 int McuSemihost_SysFileRename(const unsigned char *filePath, const unsigned char *fileNewPath) {
   int32_t param[4];
-  int res;
 
   param[0] = (int32_t)filePath;
   param[1] = McuUtility_strlen((char*)filePath);
   param[2] = (int32_t)fileNewPath;
   param[3] = McuUtility_strlen((char*)fileNewPath);
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_RENAME, &param[0]);
-  McuSemihost_log("SYS_RENAME '%s'->'%s': %d", filePath, fileNewPath, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_RENAME, &param[0]);
 }
 #endif
 
 int McuSemihost_SysFileLen(int fh) {
   int32_t param;
-  int res;
 
   param = fh;
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_FLEN, &param);
-  McuSemihost_log("SYS_FLEN fh:%d: %d", fh, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_FLEN, &param);
 }
 
 int McuSemihost_SysFileSeek(int fh, int pos) {
   int32_t param[2];
-  int res;
 
   param[0] = fh;
   param[1] = pos;
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_SEEK, &param[0]);
-  McuSemihost_log("SYS_SEEK fh:%d pos:%d: %d", fh, pos, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_SEEK, &param[0]);
 }
 
 #if McuSemihost_CONFIG_HAS_SYS_TMPNAME
 int McuSemihost_SysTmpName(uint8_t fileID, unsigned char *buffer, size_t bufSize) {
   int32_t param[3];
-  int res;
 
   param[0] = (int32_t)buffer;
   param[1] = fileID;
   param[2] = bufSize;
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_TMPNAME, &param[0]);
-  McuSemihost_log("SYS_TMPNAME f:%d, size:%d: %d", fileID, bufSize, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_TMPNAME, &param[0]);
 }
 #endif
 
 int McuSemihost_SysReadC(void) {
-  int res;
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_READC, NULL);
-  McuSemihost_log("SYS_READC: %d", res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_READC, NULL);
 }
 
 int McuSemihost_SysWriteC(char ch) {
   int32_t param = ch;
   (void)McuSemihost_HostRequest(McuSemihost_Op_SYS_WRITEC, &param); /* does not return valid value, R0 is corrupted */
-  McuSemihost_log("SYS_WRITEC '%c': 0", ch);
   return 0; /* success */
 }
 
 int McuSemihost_SysIsTTY(int fh) {
   int32_t param = fh;
-  int res;
-
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_ISTTY, &param);
-  McuSemihost_log("SYS_ISTTY fh:%d: %d", fh, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_ISTTY, &param);
 }
 
 int McuSemihost_SysIsError(int32_t errorCode) {
   int32_t param = errorCode;
-  int res;
-
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_ISERROR, &param); /* LinkServer fails? */
-  McuSemihost_log("SYS_ISERROR %d: %d", errorCode, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_ISERROR, &param); /* LinkServer fails? */
 }
 
 int McuSemihost_SysErrNo(void) {
   int32_t param = 0;
-  int res;
-
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_ERRNO, &param);
-  McuSemihost_log("SYS_ERRNO: %d", res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_ERRNO, &param);
 }
 
 int McuSemihost_SysGetCmdLine(unsigned char *cmd, size_t cmdSize) {
   int32_t param[2];
-  int res;
 
   param[0] = (int32_t)cmd;
   param[1] = cmdSize;
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_GET_CMDLINE, &param[0]);
-  McuSemihost_log("SYS_GET_CMDLINE en:%d: %d", cmdSize, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_GET_CMDLINE, &param[0]);
 }
 
 int McuSemihost_SysHeapInfo(McuSemihost_HeapInfo_t *heapInfo) {
@@ -369,37 +308,24 @@ int McuSemihost_SysHeapInfo(McuSemihost_HeapInfo_t *heapInfo) {
   (void)McuSemihost_HostRequest(McuSemihost_Op_SYS_HEAPINFO, &param);
   /* https://github.com/ARM-software/abi-aa/blob/main/semihosting/semihosting.rst#sys-heapinfo-0x16
    * On exit, the PARAMETER REGISTER is unchanged and the data block has been updated. */
-  McuSemihost_log("SYS_HEAPINFO: %d", 0);
   return 0; /* success: caller would have to inspect the heapinfo values. */
 }
 
 int McuSemihost_SysEnterSVC(void) {
   int32_t param = 0; /* not used */
-  int res;
-
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_ENTER_SVC, &param);
-  McuSemihost_log("SYS_ENTER_SVC: %d", res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_ENTER_SVC, &param);
 }
 
 int McuSemihost_SysException(McuSemihost_Exception_e exception) {
   int32_t param = exception; /* not used */
-  int res;
-
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_EXCEPTION, &param);
-  McuSemihost_log("SYS_EXCEPTION: %d", res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_EXCEPTION, &param);
 }
 
 #if McuSemihost_CONFIG_DEBUG_CONNECTION!=McuSemihost_DEBUG_CONNECTION_SEGGER
 /* SEGGER: ERROR: Semi hosting error: SYS_TICKFREQ is not supported by GDB Server. */
 int McuSemihost_SysTickFreq(void) {
   int32_t param = 0; /* must be zero */
-  int res;
-
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_TICKFREQ, &param);
-  McuSemihost_log("SYS_TICKFREQ: %d", res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_TICKFREQ, &param);
 }
 #endif
 
@@ -416,10 +342,7 @@ int McuSemihost_WriteString0(const unsigned char *str) {
   McuShell_SendStr(str, McuSemihost_stdio.stdOut); /* buffer it, then write to a file during flush */
   return ERR_OK;
 #else
-  int res;
-  res = McuSemihost_HostRequest(McuSemihost_Op_SYS_WRITE0, (void*)str);
-  McuSemihost_log("SYS_WRITE0 '%s': %d", str, res);
-  return res;
+  return McuSemihost_HostRequest(McuSemihost_Op_SYS_WRITE0, (void*)str);
 #endif
 }
 
@@ -877,7 +800,7 @@ int McuSemiHost_Test(void) {
   McuSemihost_WriteString((unsigned char*)"McuSemihost: SYS_EXCEPTION does not work with LinkServer\n");
 #else
   McuSemihost_WriteString((unsigned char*)"McuSemihost: SYS_EXCEPTION, going to exit debugger!\n");
-  McuSemihost_SysException(McuSemihost_ADP_Stopped_ApplicationExit); /* note: will exit application! */
+  McuSemihost_SysException(ADP_Stopped_ApplicationExit); /* note: will exit application! */
 #endif
   return result;
 }
@@ -908,4 +831,4 @@ void McuSemiHost_Init(void) {
 #endif
 }
 
-#endif /* McuSemihost_CONFIG_IS_ENABLED */
+#endif /* McuLib_CONFIG_CORTEX_M */

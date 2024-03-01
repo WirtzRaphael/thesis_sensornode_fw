@@ -1,9 +1,7 @@
-/*!
+/*
  * Copyright (c) 2023, Erich Styger
  *
  * SPDX-License-Identifier: BSD-3-Clause
- * \file
- * \brief Configuration items for the McuWatchdog module.
  */
 
 #ifndef MCUWATCHDOG_CONFIG_H_

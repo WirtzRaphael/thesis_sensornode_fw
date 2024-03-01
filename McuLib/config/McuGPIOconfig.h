@@ -1,9 +1,8 @@
-/*!
+/*
  * Copyright (c) 2019, Erich Styger
  * All rights reserved.
  *
- * \file
- * \brief Configuration header file for McuGPIO
+ * Configuration header file for McuGPIO
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
