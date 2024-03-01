@@ -3,7 +3,7 @@ name: Build, Deploy Docker Image CI
 # Only deploy when a new tag is pushed
 on:
   push:
-      branches: [ "feature/freertos" ]
+      branches: [ "main" ]
   pull_request:
     branches: [ "develop" ]
         tags:

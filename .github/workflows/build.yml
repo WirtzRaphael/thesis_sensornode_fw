@@ -2,7 +2,7 @@ name: Build Docker Image CI
 
 on:
   push:
-    branches: [ "feature/freertos" ]
+    branches: [ "feature/*" ]
   pull_request:
     branches: [ "develop" ]
 
