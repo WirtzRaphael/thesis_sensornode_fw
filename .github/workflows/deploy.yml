@@ -3,9 +3,9 @@ name: Build, Deploy Docker Image CI
 # Only deploy when a new tag is pushed
 on:
   push:
-      branches: [ "main" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "main" ]
         tags:
           - "v*.*.*"
           
