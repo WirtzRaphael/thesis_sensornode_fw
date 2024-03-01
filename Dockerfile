@@ -17,31 +17,11 @@ RUN \
     ninja-build \
     && rm -rf /var/lib/apt/lists/*
    
-# Install Pico SDK
+# Setup project directory
 RUN \
     mkdir -p /project/src/ && \
     mkdir -p /project/McuLib && \
-    mkdir -p /project/build && \
-    cd /project/ && \
-    git clone https://github.com/raspberrypi/pico-sdk.git --branch master && \
-    cd pico-sdk/ && \
-    git submodule update --init && \
-    cd /
-
-# Install Pico-Extras
-RUN \
-    cd /project/ && \
-    git clone https://github.com/raspberrypi/pico-extras.git --branch master
-
-# Set the Pico SDK environment variable
-ENV PICO_SDK_PATH=/project/pico-sdk/
-ENV PICO_EXTRAS_PATH=/project/pico-extras/
-
-# todo pico extras
-
-# Install McuLib
-# alternative : setup script
-COPY McuLib/ /project/McuLib/
+    mkdir -p /project/build
 
 # Source files
 COPY src/* /project/src/
@@ -50,9 +30,33 @@ COPY src/* /project/src/
 COPY CMakeLists.txt /project/
 COPY run_build.sh /project/
 COPY run_init.sh /project/
+COPY setup/mculib.sh /project/setup
+
+# Library : McuLib
+# - alternative : setup script
+COPY McuLib/ /project/McuLib/
+
+# Library : Pico SDK
+RUN \
+    cd /project/ && \
+    git clone https://github.com/raspberrypi/pico-sdk.git --branch master && \
+    cd pico-sdk/ && \
+    git submodule update --init && \
+    cd /
+
+ENV PICO_SDK_PATH=/project/pico-sdk/
+
+# Library : Pico-Extras
+RUN \
+    cd /project/ && \
+    git clone https://github.com/raspberrypi/pico-extras.git --branch master
+
+ENV PICO_EXTRAS_PATH=/project/pico-extras/
 
 RUN ls -l /project/
 
+
+# Configure CMake project
 RUN cd /project/ && \
     cmake -G "Ninja" . -B build
 # RUN cd /project/ && \
