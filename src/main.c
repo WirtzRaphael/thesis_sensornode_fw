@@ -210,7 +210,7 @@ fsm_event_t state_low_power_sleep_handler(void) {
 #if PICO_CONFIG_USE_SLEEP
     low_power_sleep();
 #else
-    sleep_ms(5000);
+    sleep_ms(2000);
 #endif // PICO_CONFIG_USE_SLEEP
 
     return FSM_EVENT_LOW_POWER_WAKEUP;
@@ -309,15 +309,16 @@ int main(void)
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
-    // Voltage output for sensors
-    gpio_init(PL_LED_GREEN);
-    gpio_set_dir(PL_LED_GREEN, GPIO_OUT);
-    gpio_put(PL_LED_GREEN, true);
 
-    gpio_init(PL_LED_BLUE);
-    gpio_set_dir(PL_LED_BLUE, GPIO_OUT);
-    gpio_init(PL_LED_RED);
-    gpio_set_dir(PL_LED_RED, GPIO_OUT);
+    gpio_init(PL_GPIO_TEST);
+    gpio_set_dir(PL_GPIO_TEST, GPIO_OUT);
+    gpio_put(PL_GPIO_TEST, true);
+
+    // Display
+    gpio_init(PL_DS_ENABLE);
+    gpio_set_dir(PL_DS_ENABLE, GPIO_OUT);
+    gpio_put(PL_DS_ENABLE, true);
+
 
     /* McuLib
     */

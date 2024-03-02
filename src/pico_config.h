@@ -18,24 +18,40 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 
 /* Features
 */
-#define PICO_CONFIG_USE_TMP117 (1)
+#define PICO_CONFIG_USE_TMP117 (0)
 #define PICO_CONFIG_USE_SLEEP (0)
 #define PICO_CONFIG_USE_DISPLAY (1)
-#define PICO_CONFIG_USE_RADIO (1)
+#define PICO_CONFIG_USE_RADIO (0)
 #define PICO_CONFIG_USE_HEARTBEAT (1)
 
 
+/* PL : Sensornode HW v1.0
+*/
+//#define PL_CONFIG_USE_BUTTONS 0
+//#define PL_SWITCH_MIDDLE 15
+//#define PL_SWITCH_RIGHT 16
+//#define PL_SWITCH_LEFT 17
+//#define PL_SWITCH_DOWN 19
+//#define PL_SWITCH_UP 20
+
+//#define PL_LED_BLUE 18
+//#define PL_LED_GREEN 19
+//#define PL_LED_RED 20
+#define PL_GPIO_TEST 18//29
+
+#define PL_DS_ENABLE  19//5
+
 /* PL : AEMBS Board
 */
-#define PL_CONFIG_USE_BUTTONS 0
-#define PL_SWITCH_MIDDLE 15
-#define PL_SWITCH_RIGHT 16
-#define PL_SWITCH_LEFT 17
-#define PL_SWITCH_DOWN 19
-#define PL_SWITCH_UP 20
+#define PL_AEMBS_CONFIG_USE_BUTTONS 0
+#define PL_AEMBS_SWITCH_MIDDLE 15
+#define PL_AEMBS_SWITCH_RIGHT 16
+#define PL_AEMBS_SWITCH_LEFT 17
+#define PL_AEMBS_SWITCH_DOWN 19
+#define PL_AEMBS_SWITCH_UP 20
 
-#define PL_LED_BLUE 18
-#define PL_LED_GREEN 19
-#define PL_LED_RED 20
+#define PL_AEMBS_LED_BLUE 18
+#define PL_AEMBS_LED_GREEN 19
+#define PL_AEMBS_LED_RED 20
 
 #endif /* PICO_CONFIG_H_ */
