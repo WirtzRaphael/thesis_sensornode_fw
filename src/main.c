@@ -4,6 +4,7 @@
 /* Pico
 */
 #include "pico.h"
+#include "pico_config.h"
 #include "pico/stdlib.h"
 #include "pico/sleep.h"
 #include "pico/unique_id.h"
@@ -306,9 +307,11 @@ int main(void)
     */
     // Initialize chosen serial port
     stdio_init_all();
+    #if MODEL_PICO_W
     if (cyw43_arch_init()) {
         return -1;
     }
+    #endif
 
     printf("Starting\n");
 
@@ -326,14 +329,9 @@ int main(void)
 #endif
 
     // Voltage output for sensors
-    gpio_init(PL_LED_GREEN);
-    gpio_set_dir(PL_LED_GREEN, GPIO_OUT);
-    gpio_put(PL_LED_GREEN, true);
-
-    gpio_init(PL_LED_BLUE);
-    gpio_set_dir(PL_LED_BLUE, GPIO_OUT);
-    gpio_init(PL_LED_RED);
-    gpio_set_dir(PL_LED_RED, GPIO_OUT);
+//    gpio_init(PL_LED_GREEN);
+//    gpio_set_dir(PL_LED_GREEN, GPIO_OUT);
+//    gpio_put(PL_LED_GREEN, true);
 
     /* McuLib
     */
@@ -446,7 +444,12 @@ int main(void)
 
 void heartbeat_status(void) {
     //printf("hearbeat %d \r\n", heartbeat);
+#if MODEL_PICO
+    gpio_put(LED_PIN, heartbeat);
+#endif
+#if MODEL_PICO_W
     gpio_put(CYW43_WL_GPIO_LED_PIN, heartbeat);
+#endif
     heartbeat = !heartbeat;
     return;
 }
