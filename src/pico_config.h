@@ -31,7 +31,7 @@ extern uint32_t SystemCoreClock;
 
 /* Features
 */
-#define PICO_CONFIG_USE_TMP117 (0)
+#define PICO_CONFIG_USE_TMP117 (1)
 #define PICO_CONFIG_USE_SLEEP (0)
 #define PICO_CONFIG_USE_DISPLAY (1)
 #define PICO_CONFIG_USE_RADIO (0)
