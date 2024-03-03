@@ -232,12 +232,16 @@ fsm_event_t state_radio_handler(void) {
     printf("HANDLER: RADIO\r\n");
     if (radio_counter >= RADIO_SEND_INTERVAL) { // todo : define
         radio_counter = 0;
+#if HW_PLATFORM_AEMBS_BOARD
             gpio_put(PL_LED_BLUE, true);
+#endif
             //radio_send_test_messages();
             radio_send_sensor_temperature_series(temperatureSensor1_time_series);
             sleep_ms(100);
             radio_send_sensor_temperature_series(temperatureSensor2_time_series);
+#if HW_PLATFORM_AEMBS_BOARD
             gpio_put(PL_LED_BLUE, false);
+#endif
             //return FSM_EVENT_RADIO_SEND;
             return FSM_EVENT_RADIO_IDLE;
     } else {
@@ -362,8 +366,14 @@ int main(void)
     /* UART
     */
     uart_init(UART1_ID,UART1_BAUD_RATE);
+#if MODEL_PICO && HW_PLATFORM_AEMBS_BOARD
     gpio_set_function(PICO_PINS_UART1_TX, GPIO_FUNC_UART);
     gpio_set_function(PICO_PINS_UART1_RX, GPIO_FUNC_UART);
+#endif
+#if MODEL_PICO_W && HW_PLATFORM_SENSORNODE_V1
+    gpio_set_function(PICO_PINS_UART0_TX, GPIO_FUNC_UART);
+    gpio_set_function(PICO_PINS_UART0_RX, GPIO_FUNC_UART);
+#endif
     // todo hw flow control
     // uart_set_hw_flow
     
