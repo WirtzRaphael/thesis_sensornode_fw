@@ -14,7 +14,7 @@
 #include "hardware/uart.h"
 // fixme : link to board
 #if MODEL_PICO
-#include "../pico-sdk/src/boards/include/boards/pico.h"
+    #include "../pico-sdk/src/boards/include/boards/pico.h"
 #endif
 #if MODEL_PICO_W
     //#include "../pico-sdk/src/boards/include/boards/pico_w.h"
@@ -207,7 +207,11 @@ fsm_event_t state_sensors_temperature_handler(i2c_inst_t *i2c) {
 
 fsm_event_t state_display_handler(void) {
 #if PICO_CONFIG_USE_DISPLAY
-    display_status_float(get_latest_temperature(temperatureSensor1_queue), get_latest_temperature(temperatureSensor2_queue));   
+#if PICO_CONFIG_USE_TMP117
+    display_status_float(get_latest_temperature(temperatureSensor1_queue), get_latest_temperature(temperatureSensor2_queue));
+#else
+    display_status_float(10, 15);
+#endif // PICO_CONFIG_USE_TMP117
 #endif // PICO_CONFIG_USE_DISPLAY
 
     return FSM_EVENT_DISPLAY_SHOW;
@@ -217,7 +221,7 @@ fsm_event_t state_low_power_sleep_handler(void) {
 #if PICO_CONFIG_USE_SLEEP
     low_power_sleep();
 #else
-    sleep_ms(5000);
+    sleep_ms(2000);
 #endif // PICO_CONFIG_USE_SLEEP
 
     return FSM_EVENT_LOW_POWER_WAKEUP;
@@ -328,10 +332,10 @@ int main(void)
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
 #endif
 
-    // Voltage output for sensors
-//    gpio_init(PL_LED_GREEN);
-//    gpio_set_dir(PL_LED_GREEN, GPIO_OUT);
-//    gpio_put(PL_LED_GREEN, true);
+    // Display
+    gpio_init(PL_GPIO_DISPLAY_ENABLE);
+    gpio_set_dir(PL_GPIO_DISPLAY_ENABLE, GPIO_OUT);
+    gpio_put(PL_GPIO_DISPLAY_ENABLE, true);
 
     /* McuLib
     */
@@ -448,7 +452,7 @@ void heartbeat_status(void) {
     gpio_put(LED_PIN, heartbeat);
 #endif
 #if MODEL_PICO_W
-    gpio_put(CYW43_WL_GPIO_LED_PIN, heartbeat);
+    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, heartbeat);
 #endif
     heartbeat = !heartbeat;
     return;

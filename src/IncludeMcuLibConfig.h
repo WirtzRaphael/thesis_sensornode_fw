@@ -27,8 +27,8 @@
 /* I2C */
 #define CONFIG_USE_HW_I2C                           (1) /* if using HW I2C, otherwise use software bit banging */
 #define MCUI2CLIB_CONFIG_I2C_DEVICE                 i2c0
-#define MCUI2CLIB_CONFIG_SDA_GPIO_PIN               16u
-#define MCUI2CLIB_CONFIG_SCL_GPIO_PIN               17u
+#define MCUI2CLIB_CONFIG_SDA_GPIO_PIN               8u
+#define MCUI2CLIB_CONFIG_SCL_GPIO_PIN               9u
 #define MCUI2CLIB_CONFIG_ADD_DELAY_US               (0)
 #define MCUI2CLIB_CONFIG_TIMEOUT_BYTE_US            (1000)
 /* -------------------------------------------------*/

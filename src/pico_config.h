@@ -21,8 +21,11 @@ extern uint32_t SystemCoreClock;
 #if MODEL_PICO_W
     //static const uint LED_PIN = CYW43_WL_GPIO_LED_PIN
 #endif
-#define PICO_PINS_I2C0_SDA 16
-#define PICO_PINS_I2C0_SCL 17
+
+#define PICO_PINS_I2C0_SDA 8
+#define PICO_PINS_I2C0_SCL 9
+#define PICO_PINS_I2C1_SDA 6
+#define PICO_PINS_I2C1_SCL 7
 #define PICO_PINS_UART1_TX 4
 #define PICO_PINS_UART1_RX 5
 
@@ -30,14 +33,15 @@ extern uint32_t SystemCoreClock;
 */
 #define PICO_CONFIG_USE_TMP117 (0)
 #define PICO_CONFIG_USE_SLEEP (0)
-#define PICO_CONFIG_USE_DISPLAY (0)
+#define PICO_CONFIG_USE_DISPLAY (1)
 #define PICO_CONFIG_USE_RADIO (0)
 #define PICO_CONFIG_USE_HEARTBEAT (1)
 
 /* PL : sensornode v1 - rp2040 pico w
 */
 #if MODEL_PICO_W && HW_SENSORNODE_V1
-    #define PL_TEST_OUTPUT 29
+    #define PL_GPIO_DISPLAY_ENABLE 3
+    #define PL_GPIO_TEST_OUTPUT 29
 #endif
 
 /* PL : AEMBS Board
