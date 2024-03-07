@@ -3,16 +3,23 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-
-#include "platform.h"
+#include "app_platform.h"
 #if PL_CONFIG_USE_PICO_W
   #include "pico/cyw43_arch.h"
   #include "PicoWiFi.h"
 #endif
 #include "application.h"
 #include "McuRTOS.h"
+#if PL_CONFIG_USE_RTT
+  #include "McuRTT.h"
+#endif
+#include "hardware/gpio.h"
 #include "McuLED.h"
 #include "McuLog.h"
+#include "McuLog.h"
+#include "McuUtility.h"
+
+
 
 #if !PL_CONFIG_USE_PICO_W
   #define LED_PIN   (25) /* GPIO 25 */

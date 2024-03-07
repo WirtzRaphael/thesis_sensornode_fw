@@ -37,7 +37,7 @@
 #define PL_CONFIG_USE_I2C               (1 && (PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_1 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_2 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_3 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_5 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_6 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_7)) /* if using I2C */
 #define PL_CONFIG_USE_GUI               (0 && PL_CONFIG_USE_I2C) /* if using lvgl GUI or not */
 #define PL_CONFIG_USE_GUI_KEY_NAV       (0 && PL_CONFIG_USE_GUI && PL_CONFIG_USE_BUTTONS) /* if using navigation keys for GUI */
-#define PL_CONFIG_USE_GUI_ENERGY_DASHBOARD   (1 && PL_CONFIG_IS_APP_VHS) /* energy flow dash-board */
+#define PL_CONFIG_USE_GUI_ENERGY_DASHBOARD   (0 && PL_CONFIG_IS_APP_VHS) /* energy flow dash-board */
 #define PL_CONFIG_USE_USB_CDC           (1) /* caution, because issues while debugging! In Termite, need to connect with RTS/CTS! Putty works fine */
 #define PL_CONFIG_USE_RTT               (1 || PL_CONFIG_USE_UNIT_TESTS) /* if using SEGGER RTT */
 #define PL_CONFIG_USE_MCUFLASH          (0) /* if using NVMC in Flash, needs to be turned on too */
