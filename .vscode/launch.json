@@ -25,7 +25,7 @@
         "continue"
     ],
     "showDevDebugOutput": "raw",
-    "svdFile": "${workspaceRoot}/pico_sdk/src/rp2040/hardware_regs/rp2040.svd"
+    "svdFile": "${workspaceRoot}/pico-sdk/src/rp2040/hardware_regs/rp2040.svd"
     }
 }
 
