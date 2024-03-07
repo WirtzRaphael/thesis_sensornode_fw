@@ -11,7 +11,7 @@ set(
 
 # settings for the board and hardware used
 set(PICO_PLATFORM rp2040)
-set(PICO_BOARD pico) # pico or pico_w
+set(PICO_BOARD pico_w) # pico or pico_w
 
 # set build type. Without 'Debug', it won't generate line information if using build subfolders.
 set(CMAKE_BUILD_TYPE Debug)
