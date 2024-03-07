@@ -3,6 +3,8 @@
 
 /* Pico
 */
+#include "pico.h"
+#include "pico_config.h"
 #include "pico/stdlib.h"
 #include "pico/sleep.h"
 #include "pico/unique_id.h"
@@ -11,7 +13,13 @@
 #include "hardware/timer.h" // todo move
 #include "hardware/uart.h"
 // fixme : link to board
-#include "../pico-sdk/src/boards/include/boards/pico.h"
+#if MODEL_PICO
+    #include "../pico-sdk/src/boards/include/boards/pico.h"
+#endif
+#if MODEL_PICO_W
+    //#include "../pico-sdk/src/boards/include/boards/pico_w.h"
+    #include "pico/cyw43_arch.h"
+#endif
 #include "pico/util/queue.h"
 
 /* McuLib
@@ -34,7 +42,6 @@
 /* project files
 */
 #include "platform.h"
-#include "pico_config.h"
 #include "low_power_operations.h"
 #include "i2c_operations.h"
 #include "display.h"
@@ -200,7 +207,11 @@ fsm_event_t state_sensors_temperature_handler(i2c_inst_t *i2c) {
 
 fsm_event_t state_display_handler(void) {
 #if PICO_CONFIG_USE_DISPLAY
-    display_status_float(get_latest_temperature(temperatureSensor1_queue), get_latest_temperature(temperatureSensor2_queue));   
+#if PICO_CONFIG_USE_TMP117
+    display_status_float(get_latest_temperature(temperatureSensor1_queue), get_latest_temperature(temperatureSensor2_queue));
+#else
+    display_status_float(10, 15);
+#endif // PICO_CONFIG_USE_TMP117
 #endif // PICO_CONFIG_USE_DISPLAY
 
     return FSM_EVENT_DISPLAY_SHOW;
@@ -210,7 +221,7 @@ fsm_event_t state_low_power_sleep_handler(void) {
 #if PICO_CONFIG_USE_SLEEP
     low_power_sleep();
 #else
-    sleep_ms(5000);
+    sleep_ms(2000);
 #endif // PICO_CONFIG_USE_SLEEP
 
     return FSM_EVENT_LOW_POWER_WAKEUP;
@@ -221,12 +232,16 @@ fsm_event_t state_radio_handler(void) {
     printf("HANDLER: RADIO\r\n");
     if (radio_counter >= RADIO_SEND_INTERVAL) { // todo : define
         radio_counter = 0;
+#if HW_PLATFORM_AEMBS_BOARD
             gpio_put(PL_LED_BLUE, true);
+#endif
             //radio_send_test_messages();
             radio_send_sensor_temperature_series(temperatureSensor1_time_series);
             sleep_ms(100);
             radio_send_sensor_temperature_series(temperatureSensor2_time_series);
+#if HW_PLATFORM_AEMBS_BOARD
             gpio_put(PL_LED_BLUE, false);
+#endif
             //return FSM_EVENT_RADIO_SEND;
             return FSM_EVENT_RADIO_IDLE;
     } else {
@@ -300,24 +315,31 @@ int main(void)
     */
     // Initialize chosen serial port
     stdio_init_all();
+    #if MODEL_PICO_W
+    if (cyw43_arch_init()) {
+        return -1;
+    }
+    #endif
+
     printf("Starting\n");
 
     low_power_init();
 
     /* GPIO
     */
+
+#if MODEL_PICO
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
+#endif
+#if MODEL_PICO_W
+    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+#endif
 
-    // Voltage output for sensors
-    gpio_init(PL_LED_GREEN);
-    gpio_set_dir(PL_LED_GREEN, GPIO_OUT);
-    gpio_put(PL_LED_GREEN, true);
-
-    gpio_init(PL_LED_BLUE);
-    gpio_set_dir(PL_LED_BLUE, GPIO_OUT);
-    gpio_init(PL_LED_RED);
-    gpio_set_dir(PL_LED_RED, GPIO_OUT);
+    // Display
+    gpio_init(PL_GPIO_DISPLAY_ENABLE);
+    gpio_set_dir(PL_GPIO_DISPLAY_ENABLE, GPIO_OUT);
+    gpio_put(PL_GPIO_DISPLAY_ENABLE, true);
 
     /* McuLib
     */
@@ -344,8 +366,14 @@ int main(void)
     /* UART
     */
     uart_init(UART1_ID,UART1_BAUD_RATE);
+#if MODEL_PICO && HW_PLATFORM_AEMBS_BOARD
     gpio_set_function(PICO_PINS_UART1_TX, GPIO_FUNC_UART);
     gpio_set_function(PICO_PINS_UART1_RX, GPIO_FUNC_UART);
+#endif
+#if MODEL_PICO_W && HW_PLATFORM_SENSORNODE_V1
+    gpio_set_function(PICO_PINS_UART0_TX, GPIO_FUNC_UART);
+    gpio_set_function(PICO_PINS_UART0_RX, GPIO_FUNC_UART);
+#endif
     // todo hw flow control
     // uart_set_hw_flow
     
@@ -430,7 +458,12 @@ int main(void)
 
 void heartbeat_status(void) {
     //printf("hearbeat %d \r\n", heartbeat);
+#if MODEL_PICO
     gpio_put(LED_PIN, heartbeat);
+#endif
+#if MODEL_PICO_W
+    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, heartbeat);
+#endif
     heartbeat = !heartbeat;
     return;
 }
