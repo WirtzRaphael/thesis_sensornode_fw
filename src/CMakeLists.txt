@@ -16,17 +16,22 @@ add_library(${THIS_LIBRARY_NAME} STATIC ${FILES})
 # target_link_libraries: If you link with other libraries, list them here
 target_link_libraries(
   ${THIS_LIBRARY_NAME}
-  McuLib
-  pico_stdio_usb
-  pico_stdlib
-  pico_runtime
-  hardware_sleep
-  hardware_rtc
- # hardware_sleep
+  PRIVATE McuLib                # we need the McuLi
+  PRIVATE pico_runtime
+  PRIVATE pico_stdlib
+  #PRIVATE pico_stdio_semihosting
+  PRIVATE pico_stdio_usb
+  #PRIVATE pico_stdio_uart
+  #PRIVATE hardware_pio  # WS2812B
+  #PRIVATE hardware_adc  # internal temperature and ADC
+  PRIVATE hardware_sleep
+  PRIVATE hardware_rtc  # RTC for sleep.c
+  #PRIVATE hardware_spi  # for SPI (external flash)
+  #PRIVATE hardware_pwm  # for PWM
 #  pico_cyw43_arch_none     # we need CYW43 to access the GPIO, but we don't need anything else
 #  # pico_cyw43_arch_lwip_poll
 # pico_cyw43_arch_lwip_threadsafe_background  # RAW lwIP with NO_SYS=1 in lwipopts.h
-#  pico_cyw43_arch_lwip_sys_freertos  # full lwIP including blocking sockets, with NO_SYS=0 in lwipopts.h
+# PUBLIC pico_cyw43_arch_lwip_sys_freertos  # full lwIP including blocking sockets, with NO_SYS=0 in lwipopts.h
 )
 
 # target_include_directories: Libraries need to publish their header files 
