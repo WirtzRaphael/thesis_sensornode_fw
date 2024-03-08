@@ -84,7 +84,8 @@
 #define McuFlash_CONFIG_MEM_START                     (((0+244*1024)-((McuFlash_CONFIG_NOF_BLOCKS)*(McuFlash_CONFIG_FLASH_BLOCK_SIZE))))
 /* ---------------------------------------------------------------------------------------*/
 /* McuSPI */
-//#define MCUSPI_CONFIG_HW_TEMPLATE   MCUSPI_CONFIG_HW_TEMPLATE_RP2040_SPI1
+#define MCUSPI_CONFIG_HW_TEMPLATE   MCUSPI_CONFIG_HW_TEMPLATE_RP2040_SPI1
+// overwrite template values
 #define MCUSPI_CONFIG_HW_SCLK_PIN (14)  /* SPI1_SCK */
 #define MCUSPI_CONFIG_HW_MOSI_PIN (15)  /* SPI1_TX  */
 #define MCUSPI_CONFIG_HW_MISO_PIN (12)  /* SPI1_RX  */
