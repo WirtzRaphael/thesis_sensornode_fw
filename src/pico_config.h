@@ -1,13 +1,14 @@
 #ifndef PICO_CONFIG_H_
 #define PICO_CONFIG_H_
+#include "IncludeMcuLibConfig.h"
+
 #include "stdint.h"
 extern uint32_t SystemCoreClock;
 
 #define MODEL_PICO (0)
 #define MODEL_PICO_W (1)
 
-#define HW_PLATFORM_SENSORNODE_V1 (1)
-#define HW_PLATFORM_AEMBS_BOARD (0)
+#define HW_PLATFORM (PL_CONFIG_HW_VERSION_1_0)
 
 
 /* UART
@@ -38,7 +39,7 @@ extern uint32_t SystemCoreClock;
 
 /* PL : sensornode v1 - rp2040 pico w
 */
-#if MODEL_PICO_W && HW_PLATFORM_SENSORNODE_V1
+#if MODEL_PICO_W && HW_PLATFORM == PL_CONFIG_HW_VERSION_1_0
     #define PICO_PINS_I2C0_SDA 8
     #define PICO_PINS_I2C0_SCL 9
     #define PICO_PINS_I2C1_SDA 6
@@ -54,7 +55,7 @@ extern uint32_t SystemCoreClock;
 
 /* PL : AEMBS Board
 */
-#if MODEL_PICO && HW_PLATFORM_AEMBS_BOARD
+#if MODEL_PICO && HW_PLATFORM == PL_CONFIG_HW_AEMBS_BOARD
     #define PL_AEMBS_CONFIG_USE_BUTTONS 0
     #define PL_AEMBS_SWITCH_MIDDLE 15
     #define PL_AEMBS_SWITCH_RIGHT 16

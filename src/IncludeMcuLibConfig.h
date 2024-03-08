@@ -9,7 +9,9 @@
 #ifndef MCULIB_CONFIG_CONFIG_H_
 #define MCULIB_CONFIG_CONFIG_H_
 
-#define PL_CONFIG_HW_VERSION_2_0    (20)  /* V0.1, 65x65mm green PCB with Pico, only with USB battery charger, without road */
+#define PL_CONFIG_HW_AEMBS_BOARD    (0)
+#define PL_CONFIG_HW_VERSION_1_0    (10)
+#define PL_CONFIG_HW_VERSION_2_0    (20)
 #define LIB_CONFIG_HW_VERSION  (PL_CONFIG_HW_VERSION_2_0)
 
 /* ---------------------------------------------------------------------------------------*/
