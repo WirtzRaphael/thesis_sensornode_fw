@@ -97,6 +97,7 @@ void APP_Run(void) {
       (TaskHandle_t*)NULL /* optional task handle to create */
     ) != pdPASS)
   {
+    McuLog_fatal("failed creating task");
     for(;;){} /* error! probably out of memory */
   }
   vTaskStartScheduler();
