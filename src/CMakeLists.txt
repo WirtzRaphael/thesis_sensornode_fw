@@ -22,11 +22,11 @@ target_link_libraries(
   #PRIVATE pico_stdio_semihosting
   PRIVATE pico_stdio_usb
   #PRIVATE pico_stdio_uart
-  #PRIVATE hardware_pio  # WS2812B
+  PRIVATE hardware_pio  # WS2812B
   #PRIVATE hardware_adc  # internal temperature and ADC
   PRIVATE hardware_sleep
   PRIVATE hardware_rtc  # RTC for sleep.c
-  #PRIVATE hardware_spi  # for SPI (external flash)
+  PRIVATE hardware_spi  # for SPI (external flash)
   #PRIVATE hardware_pwm  # for PWM
 #  pico_cyw43_arch_none     # we need CYW43 to access the GPIO, but we don't need anything else
 #  # pico_cyw43_arch_lwip_poll
