@@ -11,10 +11,15 @@
         "tmp117.h": "c",
         "display.h": "c",
         "i2c_operations.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "mcuflash.h": "c",
+        "freertos.h": "c",
+        "mcufatfs_cardpins.h": "c",
+        "mculed.h": "c",
+        "mculog.h": "c"
     },
     "cmake.configureSettings": {
-        "PICO_SDK_PATH": "/home/rw/repos/3_resources/pico_sdk",
+        "PICO_SDK_PATH": "/home/rw/repos/3_resources/pico-sdk",
         "PICO_SEGGER_PATH": "/home/rw/bin/jlink",
         "PICO_TOOLCHAIN_PATH": "/usr/bin/arm-none-eabi-gcc-12.2"
     }
