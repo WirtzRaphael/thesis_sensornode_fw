@@ -97,7 +97,7 @@
 /* -------------------------------------------------*/
 /* McuW25Q128 */
 #define MCUW25Q128_CONFIG_ENABLED               (1)
-#define MCUW25Q128_CONFIG_SIZE_KBYTES           (16*1024*1024)
+#define MCUW25Q128_CONFIG_SIZE_KBYTES           (16*1024) /* we have a 16 MByte device */
 /* -------------------------------------------------*/
 /* McuLittleFS */
 //#define LITTLEFS_CONFIG_ENABLED                       (1)
