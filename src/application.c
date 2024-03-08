@@ -22,6 +22,9 @@
 #if PL_CONFIG_USE_RTT
   #include "McuRTT.h"
 #endif
+#if PL_CONFIG_USE_LITTLE_FS
+  #include "littleFS/McuLittleFS.h"
+#endif
 
 #include "McuLED.h"
 #include "McuLog.h"
@@ -126,6 +129,15 @@ void APP_Run(void) {
 #if PICO_CONFIG_USE_RADIO
   radio_init();
 #endif
+
+#if PL_CONFIG_USE_LITTLE_FS
+  McuLog_info("Mounting litteFS volume.");
+  if(McuLFS_Mount(McuShell_GetStdio())==ERR_FAILED){
+    McuLog_info("Mounting failed please format device first");
+  }
+#endif
+
+  McuLog_info("Create task 'App' ... ");
 
   if (xTaskCreate(
       AppTask,  /* pointer to the task */

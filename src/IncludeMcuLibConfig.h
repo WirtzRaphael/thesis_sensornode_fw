@@ -92,7 +92,7 @@
 #define MCUSPI_CONFIG_HW_CS_PIN   (13)  /* SPI1_CSn */
 /* ---------------------------------------------------------------------------------------*/
 /* McuLittleFS */
-#define LITTLEFS_CONFIG_ENABLED                       (0) /* enable the LittleFS file system */
+#define LITTLEFS_CONFIG_ENABLED                       (1) /* enable the LittleFS file system */
 
 /* -------------------------------------------------*/
 /* McuW25Q128 */
