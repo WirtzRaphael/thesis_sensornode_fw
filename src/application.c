@@ -59,7 +59,12 @@ static void AppTask(void *pv) {
     ledIsOn = !ledIsOn;
   #endif
     vTaskDelay(pdMS_TO_TICKS(5*100));
+
+    McuLog_info("mculog info");
+    McuLog_trace("mculog trace");
+
   }
+}
 }
 
 void APP_Run(void) {
