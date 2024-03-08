@@ -16,7 +16,10 @@
         "freertos.h": "c",
         "mcufatfs_cardpins.h": "c",
         "mculed.h": "c",
-        "mculog.h": "c"
+        "mculog.h": "c",
+        "mcugpio.h": "c",
+        "mcuspi.h": "c",
+        "mculittlefs.h": "c"
     },
     "cmake.configureSettings": {
         "PICO_SDK_PATH": "/home/rw/repos/3_resources/pico-sdk",
