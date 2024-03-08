@@ -60,11 +60,23 @@ static void AppTask(void *pv) {
   #endif
     vTaskDelay(pdMS_TO_TICKS(5*100));
 
+
+    printf("Enter character: ");
+    char userCmd = getchar();
+
+    if(userCmd == 'a') {
+      printf("You entered a\n");
     McuLog_info("mculog info");
     McuLog_trace("mculog trace");
 
   }
+      printf("You entered something else\n");
+    }
+
+    //McuShell_SendStatusStr((unsigned char*)"app", (const unsigned char*)"Led blinking\r\n", io->stdOut);
+  }
 }
+
 }
 
 void APP_Run(void) {
