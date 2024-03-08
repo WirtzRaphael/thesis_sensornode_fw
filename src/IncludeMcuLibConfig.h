@@ -85,8 +85,8 @@
 /* ---------------------------------------------------------------------------------------*/
 /* McuSPI */
 //#define MCUSPI_CONFIG_HW_TEMPLATE   MCUSPI_CONFIG_HW_TEMPLATE_RP2040_SPI1
-#define MCUSPI_CONFIG_HW_SCLK_PIN (10)  /* SPI1_SCK */
-#define MCUSPI_CONFIG_HW_MOSI_PIN (11)  /* SPI1_TX  */
+#define MCUSPI_CONFIG_HW_SCLK_PIN (14)  /* SPI1_SCK */
+#define MCUSPI_CONFIG_HW_MOSI_PIN (15)  /* SPI1_TX  */
 #define MCUSPI_CONFIG_HW_MISO_PIN (12)  /* SPI1_RX  */
 #define MCUSPI_CONFIG_HW_CS_PIN   (13)  /* SPI1_CSn */
 /* ---------------------------------------------------------------------------------------*/
