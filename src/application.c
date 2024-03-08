@@ -72,9 +72,15 @@ static void AppTask(void *pv) {
 
     if(userCmd == 'a') {
       printf("You entered a\n");
+      McuLog_trace("You entered a");
       radio_read_temperature();
-    } else {
+    } else if (userCmd == 'd') {
+      printf("You entered d\n");
+      McuLog_trace("You entered d");
+    }
+    else {
       printf("You entered something else\n");
+      McuLog_trace("You entered something else");
     }
 
     //McuShell_SendStatusStr((unsigned char*)"app", (const unsigned char*)"Led blinking\r\n", io->stdOut);
@@ -116,8 +122,9 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled, const McuShell
 
 void APP_Run(void) {
   PL_Init();
-
-  uart_init(UART0_ID,UART0_BAUD_RATE);
+#if PICO_CONFIG_USE_RADIO
+  radio_init();
+#endif
 
   if (xTaskCreate(
       AppTask,  /* pointer to the task */
