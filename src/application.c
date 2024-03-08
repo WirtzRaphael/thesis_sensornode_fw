@@ -8,6 +8,13 @@
   #include "pico/cyw43_arch.h"
   #include "PicoWiFi.h"
 #endif
+
+#include "pico_config.h"
+#include "radio_config.h"
+
+#include "stdio.h"
+#include "pico/stdlib.h"
+
 #include "application.h"
 #include "McuRTOS.h"
 #if PL_CONFIG_USE_RTT
@@ -15,7 +22,6 @@
 #endif
 #include "hardware/gpio.h"
 #include "McuLED.h"
-#include "McuLog.h"
 #include "McuLog.h"
 #include "McuUtility.h"
 
@@ -66,10 +72,8 @@ static void AppTask(void *pv) {
 
     if(userCmd == 'a') {
       printf("You entered a\n");
-    McuLog_info("mculog info");
-    McuLog_trace("mculog trace");
-
-  }
+      radio_read_temperature();
+    } else {
       printf("You entered something else\n");
     }
 
@@ -81,6 +85,9 @@ static void AppTask(void *pv) {
 
 void APP_Run(void) {
   PL_Init();
+
+  uart_init(UART0_ID,UART0_BAUD_RATE);
+
   if (xTaskCreate(
       AppTask,  /* pointer to the task */
       "App", /* task name for kernel awareness debugging */
