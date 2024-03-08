@@ -82,16 +82,21 @@
 #define McuFlash_CONFIG_IS_ENABLED                    (1) /* enable McuFlash module */
 #define McuFlash_CONFIG_NOF_BLOCKS                    (32) /* number of flash blocks */
 #define McuFlash_CONFIG_MEM_START                     (((0+244*1024)-((McuFlash_CONFIG_NOF_BLOCKS)*(McuFlash_CONFIG_FLASH_BLOCK_SIZE))))
-/* ------------------- McuLittleFS --------------------------*/
+/* ---------------------------------------------------------------------------------------*/
+/* McuLittleFS */
 #define LITTLEFS_CONFIG_ENABLED                       (0) /* enable the LittleFS file system */
-#if 0 /* using Winbond external flash */
-  #define McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE     McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE_WINBOND_W25Q128
-#else /* using internal flash with McuFlash */
-  #define McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE     McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE_MCU_FLASH
-  #define McuLittleFS_CONFIG_BLOCK_SIZE                 (McuFlash_CONFIG_FLASH_BLOCK_SIZE)
-  #define McuLittleFS_CONFIG_BLOCK_COUNT                (McuFlash_CONFIG_NOF_BLOCKS)
-  #define McuLittleFS_CONFIG_BLOCK_OFFSET               ((McuFlash_CONFIG_MEM_START)/(McuFlash_CONFIG_FLASH_BLOCK_SIZE))
-#endif
+
+/* -------------------------------------------------*/
+/* McuW25Q128 */
+#define MCUW25Q128_CONFIG_ENABLED               (1)
+#define MCUW25Q128_CONFIG_SIZE_KBYTES           (16*1024*1024)
+/* -------------------------------------------------*/
+/* McuLittleFS */
+//#define LITTLEFS_CONFIG_ENABLED                       (1)
+//#define McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE     McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE_WINBOND_W25Q128
+//#define McuLittleFS_CONFIG_BLOCK_SIZE                 (4096) /* W25Q128 has blocks of 4 KByte */
+//#define McuLittleFS_CONFIG_BLOCK_COUNT                ((MCUW25Q128_CONFIG_SIZE_KBYTES*1024)/McuLittleFS_CONFIG_BLOCK_SIZE) /* W25Q128 has 16 MByte */
+//#define McuLittleFS_CONFIG_BLOCK_OFFSET               (0)
 /* ---------------------------------------------------------------------------------------*/
 
 #endif /* MCULIB_CONFIG_CONFIG_H_ */
