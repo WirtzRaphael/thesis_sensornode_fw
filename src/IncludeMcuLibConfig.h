@@ -100,11 +100,11 @@
 #define MCUW25Q128_CONFIG_SIZE_KBYTES           (16*1024) /* we have a 16 MByte device */
 /* -------------------------------------------------*/
 /* McuLittleFS */
-//#define LITTLEFS_CONFIG_ENABLED                       (1)
-//#define McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE     McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE_WINBOND_W25Q128
-//#define McuLittleFS_CONFIG_BLOCK_SIZE                 (4096) /* W25Q128 has blocks of 4 KByte */
-//#define McuLittleFS_CONFIG_BLOCK_COUNT                ((MCUW25Q128_CONFIG_SIZE_KBYTES*1024)/McuLittleFS_CONFIG_BLOCK_SIZE) /* W25Q128 has 16 MByte */
-//#define McuLittleFS_CONFIG_BLOCK_OFFSET               (0)
+#define LITTLEFS_CONFIG_ENABLED                       (1)
+#define McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE     McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE_WINBOND_W25Q128
+#define McuLittleFS_CONFIG_BLOCK_SIZE                 (4096) /* W25Q128 has blocks of 4 KByte */
+#define McuLittleFS_CONFIG_BLOCK_COUNT                ((MCUW25Q128_CONFIG_SIZE_KBYTES*1024)/McuLittleFS_CONFIG_BLOCK_SIZE) /* W25Q128 has 16 MByte */
+#define McuLittleFS_CONFIG_BLOCK_OFFSET               (0)
 /* ---------------------------------------------------------------------------------------*/
 
 #endif /* MCULIB_CONFIG_CONFIG_H_ */
