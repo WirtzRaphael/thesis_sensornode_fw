@@ -61,6 +61,14 @@ static void AppTask(void *pv) {
 #elif PL_CONFIG_USE_PICO_W && !PL_CONFIG_USE_WIFI
   bool ledIsOn = false;
 #endif
+
+#if PL_CONFIG_USE_LITTLE_FS
+  McuLog_info("Mounting litteFS volume.");
+  if(McuLFS_Mount(McuShell_GetStdio())==ERR_FAILED){
+    McuLog_info("Mounting failed please format device first");
+  }
+#endif
+
   for(;;) {
   #if APP_HAS_ONBOARD_GREEN_LED
     McuLED_Toggle(led);
@@ -128,13 +136,6 @@ void APP_Run(void) {
   PL_Init();
 #if PICO_CONFIG_USE_RADIO
   radio_init();
-#endif
-
-#if PL_CONFIG_USE_LITTLE_FS
-  McuLog_info("Mounting litteFS volume.");
-  if(McuLFS_Mount(McuShell_GetStdio())==ERR_FAILED){
-    McuLog_info("Mounting failed please format device first");
-  }
 #endif
 
   McuLog_info("Create task 'App' ... ");
