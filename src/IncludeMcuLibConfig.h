@@ -27,7 +27,7 @@
 #define configMINIMAL_STACK_SIZE                    (500/sizeof(StackType_t))
 #define configTIMER_TASK_STACK_DEPTH                (800/sizeof(StackType_t)) /* stack size for Timer Service task */
 #define configTOTAL_HEAP_SIZE                       (64*1024)
-#define configUSE_SEGGER_SYSTEM_VIEWER_HOOKS        (0)
+#define configUSE_SEGGER_SYSTEM_VIEWER_HOOKS        (1)
 /* -------------------------------------------------*/
 /* I2C */
 #define CONFIG_USE_HW_I2C                           (1) /* if using HW I2C, otherwise use software bit banging */
