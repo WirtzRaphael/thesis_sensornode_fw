@@ -86,7 +86,7 @@ void McuRTOS_vApplicationMallocFailedHook(void)
 */
 void McuRTOS_vApplicationTickHook(void)
 {
-  /* Hook called for every RTOS tick. */
+  McuTimeDate_AddTick();
 }
 
 /*
