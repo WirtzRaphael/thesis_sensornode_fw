@@ -19,7 +19,11 @@
         "mculog.h": "c",
         "mcugpio.h": "c",
         "mcuspi.h": "c",
-        "mculittlefs.h": "c"
+        "mculittlefs.h": "c",
+        "mcuw25q128.h": "c",
+        "mcuutility.h": "c",
+        "segger_sysview_freertos.h": "c",
+        "trcrecorder.h": "c"
     },
     "cmake.configureSettings": {
         "PICO_SDK_PATH": "/home/rw/repos/3_resources/pico-sdk",
