@@ -10,6 +10,8 @@
 #include "McuLibconfig.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "McuTimeDate.h"
+
 /*
 ** ===================================================================
 **     Event       :  McuRTOS_vApplicationStackOverflowHook (module Events)
