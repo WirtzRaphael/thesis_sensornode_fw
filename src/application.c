@@ -25,6 +25,9 @@
 #if PL_CONFIG_USE_LITTLE_FS
   #include "littleFS/McuLittleFS.h"
 #endif
+#if MCUW25Q128_CONFIG_ENABLED
+  #include "McuW25Q128.h"
+#endif
 
 #include "McuLED.h"
 #include "McuLog.h"
@@ -68,6 +71,17 @@ static void AppTask(void *pv) {
     McuLog_info("Mounting failed please format device first");
   }
 #endif
+
+  // Test McuW25Q128 communication
+  uint8_t buffer_mcuw25 [3];
+  uint8_t errorCode = McuW25_ReadID(buffer_mcuw25, 3);
+  if (errorCode != ERR_OK) {
+    McuLog_trace("McuW25_ReadID error code: %d", errorCode);
+  } else {
+    McuLog_trace("McuW25_ReadID returned ID: %d %d %d",
+      buffer_mcuw25[0], buffer_mcuw25[1], buffer_mcuw25[2]);
+  }
+  McuLog_trace("McuW25_ReadID returned: %d", buffer_mcuw25[0]);
 
   for(;;) {
   #if APP_HAS_ONBOARD_GREEN_LED
