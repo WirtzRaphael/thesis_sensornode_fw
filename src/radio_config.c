@@ -42,7 +42,8 @@ static void send_exit_config(void) {
 }
 
 void radio_init(){
-    uart_init(UART_RADIO_ID, 9600);
+    //uart_init(UART_RADIO_ID, UART_BAUD_RATE);
+    uart_init(UART_RADIO_ID, 19200);
     gpio_set_function(RADIO_PIN_TX, GPIO_FUNC_UART);
     gpio_set_function(RADIO_PIN_RX, GPIO_FUNC_UART);
 
@@ -87,10 +88,44 @@ void radio_send(void) {
     uart_wait();
 }
 
+void radio_read_temperature(void) {
+    bool continueConfig = false;
+
+    // be sure to not be already in config mode
+    send_exit_config();
+
+    McuLog_trace("Enter config mode, pin low");
     gpio_put(RADIO_PIN_CONFIG, false);
 
-    bool continueConfig = false;
-    // receive '>'
+    // -- Send command 
+    //uart_write_blocking(UART_ID, &pre, 1);
+    uart_puts(UART_RADIO_ID, "U");
+    McuLog_trace("Send U to radio");
+    uart_wait();
+
+    // wait for '>'
+    uint8_t rec_buffer[2];
+    rec_buffer[1] = '\0';
+    uart_read_blocking(UART_RADIO_ID, rec_buffer, 1);
+    printf("Received %s from radio\n", rec_buffer);
+    McuLog_trace("Received %s from radio (should '<')", rec_buffer);
+
+    // -- Send command parameters
+    // nones
+
+     // -- Receive response
+    uint8_t rec_buffer2[2];
+    rec_buffer2[1] = '\0';
+    uart_read_blocking(UART_RADIO_ID, rec_buffer2, 1);
+    printf("Received %d from radio\n", rec_buffer2[0]);
+    McuLog_trace("Received %s from radio", rec_buffer2[0]);
+
+    gpio_put(RADIO_PIN_CONFIG, true);
+    McuLog_trace("Exit config mode, pin high");
+    send_exit_config();
+    McuLog_trace("Finished read temperature");
+}
+
     for (int i = 0; i < 5; i++) {
         sleep_ms(200);
         if(uart_is_readable(UART_RADIO_ID)){
@@ -102,9 +137,4 @@ void radio_send(void) {
         }
             McuLog_trace("Wait radio receive");
     }
-
-
-
-    gpio_put(RADIO_PIN_CONFIG, true);
-   McuLog_trace("Finished read temperature");
-}
+    */
