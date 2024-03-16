@@ -32,6 +32,7 @@
 #endif
 
 static void AppTask(void *pv) {
+  /* -- TASK INIT -- */
   #define APP_HAS_ONBOARD_GREEN_LED   (!PL_CONFIG_USE_PICO_W)
 #if !PL_CONFIG_USE_WIFI && PL_CONFIG_USE_PICO_W
   if (cyw43_arch_init()==0)  { /* need to init for accessing LEDs and other pins */
@@ -57,6 +58,9 @@ static void AppTask(void *pv) {
 #elif PL_CONFIG_USE_PICO_W && !PL_CONFIG_USE_WIFI
   bool ledIsOn = false;
 #endif
+
+
+  /* -- TASK LOOP -- */
   for(;;) {
   #if APP_HAS_ONBOARD_GREEN_LED
     McuLED_Toggle(led);
@@ -70,10 +74,18 @@ static void AppTask(void *pv) {
     printf("Enter character: ");
     char userCmd = getchar();
 
-    if(userCmd == 'a') {
-      printf("You entered a\n");
-      McuLog_trace("You entered a");
+    if(userCmd == 't') {
+      printf("You entered t\n");
+      McuLog_trace("You entered t");
       radio_read_temperature();
+    } else if (userCmd == 'r') {
+      printf("You entered r\n");
+      McuLog_trace("You entered r");
+      radio_reset();
+    } else if (userCmd =='s') {
+      printf("You entered s\n");
+      McuLog_trace("You entered s");
+      radio_send();
     } else if (userCmd == 'd') {
       printf("You entered d\n");
       McuLog_trace("You entered d");
