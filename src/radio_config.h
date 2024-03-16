@@ -10,5 +10,6 @@ void radio_init(void);
 void radio_read_temperature(void);
 void radio_uart_read_all(void);
 void radio_memory_read_one_byte(uint8_t address);
+void radio_memory_configuration(void);
 
 #endif /* RADIO_H_ */

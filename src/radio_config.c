@@ -27,6 +27,8 @@
 #define LOG_LEVEL_DEBUG (0)
 #define PRINTF (1)
 
+char payload_separator_char[1] = "-";
+
 static void uart_wait(void) {
     sleep_ms(50); // todo : decrease
 }
