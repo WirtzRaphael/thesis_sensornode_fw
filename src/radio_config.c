@@ -33,12 +33,27 @@ static void send_payload_separator(void) {
     uart_wait();
 }
 
-static void send_exit_config(void) {
+static void enter_config_mode(void) {
+    McuLog_trace("Enter config mode");
+    #if LOG_LEVEL_DEBUG
+    McuLog_debug("Config pin low");
+    #endif
+    gpio_put(RADIO_PIN_CONFIG, false);
+    sleep_ms(50);
+}
+
+
+static void exit_config_mode(void) {
+    McuLog_trace("Exit config mode");
+    #if LOG_LEVEL_DEBUG
+    McuLog_debug("Config pin high");
+    McuLog_debug("Send X to radio");
+    #endif
     gpio_put(RADIO_PIN_CONFIG, true);
     sleep_ms(50);
+
     uart_puts(UART_RADIO_ID, "X");
     uart_wait();
-    McuLog_trace("Exit config mode with X");
 }
 
 void radio_init(){
@@ -92,10 +107,9 @@ void radio_read_temperature(void) {
     bool continueConfig = false;
 
     // be sure to not be already in config mode
-    send_exit_config();
+    exit_config_mode();
 
-    McuLog_trace("Enter config mode, pin low");
-    gpio_put(RADIO_PIN_CONFIG, false);
+    enter_config_mode();
 
     // -- Send command 
     //uart_write_blocking(UART_ID, &pre, 1);
@@ -103,26 +117,16 @@ void radio_read_temperature(void) {
     McuLog_trace("Send U to radio");
     uart_wait();
 
-    // wait for '>'
-    uint8_t rec_buffer[2];
-    rec_buffer[1] = '\0';
-    uart_read_blocking(UART_RADIO_ID, rec_buffer, 1);
-    printf("Received %s from radio\n", rec_buffer);
+    uint8_t rec_buffer[3];
+    uart_read_blocking(UART_RADIO_ID, rec_buffer, 3);
+    printf("========== \n");
+    printf("Received %d from radio\n", rec_buffer[0]);
+    printf("===== \n");
+    printf("Received %d from radio\n", rec_buffer[1]);
+    printf("Received %d from radio\n", rec_buffer[2]);
     McuLog_trace("Received %s from radio (should '<')", rec_buffer);
 
-    // -- Send command parameters
-    // nones
-
-     // -- Receive response
-    uint8_t rec_buffer2[2];
-    rec_buffer2[1] = '\0';
-    uart_read_blocking(UART_RADIO_ID, rec_buffer2, 1);
-    printf("Received %d from radio\n", rec_buffer2[0]);
-    McuLog_trace("Received %s from radio", rec_buffer2[0]);
-
-    gpio_put(RADIO_PIN_CONFIG, true);
-    McuLog_trace("Exit config mode, pin high");
-    send_exit_config();
+    exit_config_mode();
     McuLog_trace("Finished read temperature");
 }
 
