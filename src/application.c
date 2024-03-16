@@ -70,41 +70,48 @@ static void AppTask(void *pv) {
   #endif
     vTaskDelay(pdMS_TO_TICKS(5*100));
 
-
-    printf("Enter character: ");
+    printf("[r]adio \n");
+    printf("Enter character: \n");
     char userCmd = getchar();
+    printf("You entered : %c\n", userCmd);
+    McuLog_trace("You entered : %c", userCmd);
 
-    if(userCmd == 't') {
-      printf("You entered t\n");
-      McuLog_trace("You entered t");
-      radio_read_temperature();
-    } else if (userCmd == 'r') {
-      printf("You entered r\n");
-      McuLog_trace("You entered r");
-      radio_reset();
-    } else if (userCmd == 'b') {
-      printf("You entered b\n");
-      McuLog_trace("You entered b");
-      radio_uart_read_all();
-    } else if (userCmd =='s') {
-      printf("You entered s\n");
-      McuLog_trace("You entered s");
-      radio_send();
-    } else if (userCmd == 'd') {
-      printf("You entered d\n");
-      McuLog_trace("You entered d");
-    } else if (userCmd == 'm') {
-      printf("You entered m\n");
-      McuLog_trace("You entered m");
-      // RF_CHANNEL
-      radio_memory_read_one_byte(0x00);
-    }
-    else {
-      printf("You entered something else\n");
-      McuLog_trace("You entered something else");
-    }
+    if(userCmd == 'r') {
+      printf("# Radio\n");
+      McuLog_trace("# Radio");
+      //
+      printf("[b]uffer read outs\n");
+      printf("[r]eset\n");
+      printf("[s]end\n");
+      printf("[t]emperature\n");
 
-    //McuShell_SendStatusStr((unsigned char*)"app", (const unsigned char*)"Led blinking\r\n", io->stdOut);
+      userCmd = getchar();
+      printf("You entered : %c\n", userCmd);
+      McuLog_trace("You entered : %c", userCmd);
+
+      switch(userCmd) {
+        case 'b':
+          radio_uart_read_all();
+          break;
+        case 'm': 
+          radio_memory_read_one_byte(0x00);
+          break;
+        case 't':
+          radio_read_temperature();
+          break;
+        case 'r':
+          radio_reset();
+          break;
+        case 's':
+          radio_send();
+          break;
+        default:
+          printf("You entered something else\n");
+          McuLog_trace("You entered something else");
+          break;
+      }
+      printf("\n");
+    }
   }
 }
 
