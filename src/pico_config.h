@@ -15,7 +15,7 @@ extern uint32_t SystemCoreClock;
 */
 #define UART0_ID uart0
 //#define UART0_BAUD_RATE 19200
-#define UART0_BAUD_RATE 9600
+//#define UART0_BAUD_RATE 9600
 
 #define UART1_ID uart1
 #define UART1_BAUD_RATE 19200
@@ -50,6 +50,8 @@ extern uint32_t SystemCoreClock;
     //#define PICO_PINS_UART1_TX 4
     //#define PICO_PINS_UART1_RX 5
     #define PL_GPIO_DISPLAY_ENABLE 3
+    #define PL_GPIO_ENABLE_VCC_RF 28
+    #define PL_GPIO_RADIO_RESET 26
     #define PL_GPIO_TEST_OUTPUT 29
     // todo UART, Radio
 #endif
