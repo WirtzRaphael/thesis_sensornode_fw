@@ -102,6 +102,56 @@ void radio_send(void) {
     uart_putc_raw(UART_RADIO_ID, 5);
     uart_wait();
 }
+void radio_memory_read_one_byte(uint8_t address) {
+    uint8_t rec_prompt[1];
+
+    // be sure to not be already in config mode
+    exit_config_mode();
+
+    enter_config_mode();
+
+    // -- Wait for '>'
+    uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
+    McuLog_trace("Received %d from radio\n", rec_prompt[0]);
+    if (rec_prompt[0] != 62) {
+        McuLog_error("Haven't received '>'");
+        return; 
+    } else {
+        rec_prompt[0] = 0;
+    }
+
+    // -- Send command
+    uart_puts(UART_RADIO_ID, "Y");
+    McuLog_trace("Send Y to radio");
+    uart_wait();
+
+    // -- Wait for '>'
+    uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
+    McuLog_trace("Received %d from radio\n", rec_prompt[0]);
+    if (rec_prompt[0] != 62) {
+        McuLog_error("Haven't received '>'");
+        return; 
+    } else {
+        rec_prompt[0] = 0;
+    }
+
+    // -- Send parameters
+    uart_write_blocking(UART_RADIO_ID, &address, 1);
+    McuLog_trace("parameter: %d \n", address);
+    uart_wait();
+
+    // -- Receive (1byte value + Prompt ('>'))
+    uint8_t buffer_size = 2;
+    uint8_t rec_buffer[buffer_size];
+    uart_read_blocking(UART_RADIO_ID, rec_buffer, buffer_size);
+    for (uint8_t i = 0; i < buffer_size; i++) {
+        McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
+    }
+ 
+    exit_config_mode();
+
+    McuLog_trace("Finished memory read");
+}
 
 void radio_read_temperature(void) {
     bool continueConfig = false;
@@ -117,6 +167,7 @@ void radio_read_temperature(void) {
     McuLog_trace("Send U to radio");
     uart_wait();
 
+    // -- Receive
     uint8_t buffer_size = 3;
     uint8_t rec_buffer[buffer_size];
     uart_read_blocking(UART_RADIO_ID, rec_buffer, buffer_size);

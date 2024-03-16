@@ -89,6 +89,11 @@ static void AppTask(void *pv) {
     } else if (userCmd == 'd') {
       printf("You entered d\n");
       McuLog_trace("You entered d");
+    } else if (userCmd == 'm') {
+      printf("You entered m\n");
+      McuLog_trace("You entered m");
+      // RF_CHANNEL
+      radio_memory_read_one_byte(0x00);
     }
     else {
       printf("You entered something else\n");
