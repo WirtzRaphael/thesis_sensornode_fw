@@ -7,3 +7,7 @@ pico-extras
 pico-sdk
 
 src_v1
+
+.idea
+
+*copy*
