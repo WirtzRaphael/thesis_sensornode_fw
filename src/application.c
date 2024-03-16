@@ -73,14 +73,16 @@ static void AppTask(void *pv) {
     printf("[r]adio \n");
     printf("Enter character: \n");
     char userCmd = getchar();
-    printf("You entered : %c\n", userCmd);
+    printf("You entered : %c\n\n", userCmd);
     McuLog_trace("You entered : %c", userCmd);
 
     if(userCmd == 'r') {
       printf("# Radio\n");
       McuLog_trace("# Radio");
       //
-      printf("[b]uffer read outs\n");
+      printf("[b]uffer read out\n");
+      printf("[m]emory read\n");
+      printf("memory [w]rite\n");
       printf("[r]eset\n");
       printf("[s]end\n");
       printf("[t]emperature\n");
@@ -104,6 +106,9 @@ static void AppTask(void *pv) {
           break;
         case 's':
           radio_send();
+          break;
+        case 'w':
+          radio_memory_configuration();
           break;
         default:
           printf("You entered something else\n");

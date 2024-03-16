@@ -184,10 +184,21 @@ void radio_memory_configuration(void) {
         rec_prompt[0] = 0;
     }
 
-    // -- Send : Command byte
+    // -- Send : Memory configuration mode
     uart_puts(UART_RADIO_ID, "M");
     McuLog_trace("Send M to radio");
+    McuLog_trace("Memory configuration mode !");
     uart_wait();
+
+    // -- Send : Change channel
+    // {address, data}
+    unsigned char data0[] = {0x00, 5};
+    uart_write_blocking(UART_RADIO_ID, data0, 2);
+    McuLog_trace("Send %d to radio", data0[0]);
+    McuLog_trace("Send %d to radio", data0[1]);
+    uart_wait();
+    
+
 
     // -- Send : Exit
     //uint8_t send_buffer[1] = 255; // 0xFF
@@ -210,9 +221,11 @@ void radio_memory_configuration(void) {
         rec_prompt[0] = 0;
     }
 
+    // fixme : still '>' in buffer
+
     exit_config_mode();
 
-    McuLog_trace("Finished memory configuration");
+    McuLog_trace("Exit memory configuration mode !");
 }
 
 void radio_read_temperature(void) {
