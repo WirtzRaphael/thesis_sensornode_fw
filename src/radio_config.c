@@ -261,7 +261,7 @@ void radio_read_temperature(void) {
     uart_read_blocking(UART_RADIO_ID, rec_buffer, buffer_size);
     for (uint8_t i = 0; i < buffer_size; i++) {
         McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
-        }
+    }
 
     // Check for '>'
     if (!rec_buffer[1] == 62) {
@@ -270,10 +270,10 @@ void radio_read_temperature(void) {
 
     // Temperature calculation
     uint8_t temperature = rec_buffer[0] - 128;
-        McuLog_trace("Temperature is : %d", temperature);
-        #if PRINTF
-        printf("Temperature is : %d\n", temperature);
-        #endif
+    McuLog_trace("Temperature is : %d", temperature);
+    #if PRINTF
+    printf("Temperature is : %d\n", temperature);
+    #endif
 
     exit_config_mode();
     McuLog_trace("Finished read temperature");

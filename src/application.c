@@ -95,7 +95,7 @@ static void AppTask(void *pv) {
         case 'b':
           radio_uart_read_all();
           break;
-        case 'm': 
+        case 'm':
           radio_memory_read_one_byte(0x00);
           break;
         case 't':
