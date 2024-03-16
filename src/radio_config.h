@@ -8,6 +8,7 @@ void radio_send(void);
 void radio_reset(void);
 void radio_init(void);
 void radio_read_temperature(void);
+void radio_uart_read_all(void);
 void radio_memory_read_one_byte(uint8_t address);
 
 #endif /* RADIO_H_ */

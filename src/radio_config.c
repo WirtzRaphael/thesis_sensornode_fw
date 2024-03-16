@@ -105,6 +105,15 @@ void radio_send(void) {
     uart_putc_raw(UART_RADIO_ID, 5);
     uart_wait();
 }
+
+void radio_uart_read_all(void) {
+    uint8_t rec_buffer[1];
+    while (uart_is_readable(UART_RADIO_ID)) {
+        uart_read_blocking(UART_RADIO_ID, rec_buffer, 1);
+        printf("Received %s from radio\n", rec_buffer);
+    }
+}
+
 void radio_memory_read_one_byte(uint8_t address) {
     uint8_t rec_prompt[1];
 

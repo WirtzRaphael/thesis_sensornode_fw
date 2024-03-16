@@ -82,6 +82,10 @@ static void AppTask(void *pv) {
       printf("You entered r\n");
       McuLog_trace("You entered r");
       radio_reset();
+    } else if (userCmd == 'b') {
+      printf("You entered b\n");
+      McuLog_trace("You entered b");
+      radio_uart_read_all();
     } else if (userCmd =='s') {
       printf("You entered s\n");
       McuLog_trace("You entered s");
