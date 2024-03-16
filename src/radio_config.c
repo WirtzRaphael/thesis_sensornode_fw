@@ -24,6 +24,9 @@
 #define STOP_BITS 1
 #define PARITY    UART_PARITY_NONE
 
+#define LOG_LEVEL_DEBUG (0)
+#define PRINTF (1)
+
 static void uart_wait(void) {
     sleep_ms(50); // todo : decrease
 }
