@@ -117,28 +117,37 @@ void radio_read_temperature(void) {
     McuLog_trace("Send U to radio");
     uart_wait();
 
-    uint8_t rec_buffer[3];
-    uart_read_blocking(UART_RADIO_ID, rec_buffer, 3);
-    printf("========== \n");
-    printf("Received %d from radio\n", rec_buffer[0]);
-    printf("===== \n");
-    printf("Received %d from radio\n", rec_buffer[1]);
-    printf("Received %d from radio\n", rec_buffer[2]);
-    McuLog_trace("Received %s from radio (should '<')", rec_buffer);
+    uint8_t buffer_size = 3;
+    uint8_t rec_buffer[buffer_size];
+    uart_read_blocking(UART_RADIO_ID, rec_buffer, buffer_size);
+    McuLog_trace("Received %d from radio\n", rec_buffer[0]);
+    McuLog_trace("Received %d from radio\n", rec_buffer[1]);
+    McuLog_trace("Received %d from radio\n", rec_buffer[2]);
+
+    // check if the buffer contains '>'
+    // save the position of the temperature
+    uint8_t count = 0;
+    uint8_t pos = 10;
+    for (uint8_t i = 0; i < buffer_size; i++) {
+        if (rec_buffer[i] == 62) {
+            count++;
+        } else if (rec_buffer[i] != 0) {
+            pos = i;
+        }
+    }
+
+    // calculate temperature if the buffer contains '>' and not 0
+    if (count >= 1 && pos != 10) {
+        uint8_t temperature = rec_buffer[pos] - 128;
+        McuLog_trace("Temperature is : %d", temperature);
+        #if PRINTF
+        printf("Temperature is : %d\n", temperature);
+        #endif
+    } else{
+        McuLog_trace("Response invalid");
+    }
 
     exit_config_mode();
     McuLog_trace("Finished read temperature");
 }
 
-    for (int i = 0; i < 5; i++) {
-        sleep_ms(200);
-        if(uart_is_readable(UART_RADIO_ID)){
-            McuLog_trace("UART is readable");
-            //char ch = uart_getc(UART_RADIO_ID);          
-            //printf("Received %c from radio", ch);
-            continueConfig = true;
-            break;
-        }
-            McuLog_trace("Wait radio receive");
-    }
-    */
