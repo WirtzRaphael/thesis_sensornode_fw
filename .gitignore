@@ -1,4 +1,4 @@
-
+# project
 ARCHIVE
 build
 deploy
@@ -8,6 +8,11 @@ pico-sdk
 
 src_v1
 
+# ide
 .idea
 
+# clangd
+.cache
+
+# general
 *copy*
