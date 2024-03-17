@@ -3,36 +3,26 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include <stdio.h>
 
-/*
- * Project files
- */
 #include "app_platform.h"
-#include "application.h"
-#include "pico_config.h"
-#if PL_CONFIG_USE_PICO_W
-  #include "PicoWiFi.h"
-#endif
-#include "radio_config.h"
-
-/*
- * Pico SDK
- */
 #if PL_CONFIG_USE_PICO_W
   #include "pico/cyw43_arch.h"
+  #include "PicoWiFi.h"
 #endif
-#include "pico/stdlib.h"
 
-/*
- * McuLib
- */
+#include "pico_config.h"
+#include "radio_config.h"
+
+#include "pico/stdlib.h"
+#include "stdio.h"
+
+#include "McuRTOS.h"
+#include "application.h"
 #if PL_CONFIG_USE_RTT
   #include "McuRTT.h"
 #endif
 #include "McuLED.h"
 #include "McuLog.h"
-#include "McuRTOS.h"
 #include "McuUtility.h"
 #include "hardware/gpio.h"
 
