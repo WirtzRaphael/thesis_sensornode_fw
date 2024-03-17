@@ -7,9 +7,7 @@
 // todo
 #include "app_platform.h"
 #if PL_CONFIG_USE_PICO_W
-  #if PL_CONFIG_USE_PICO_W
-    #include "pico/cyw43_arch.h"
-  #endif
+  #include "pico/cyw43_arch.h"
   #include "PicoWiFi.h"
 #endif
 
