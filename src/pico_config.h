@@ -14,8 +14,7 @@ extern uint32_t SystemCoreClock;
 /* UART
 */
 #define UART0_ID uart0
-//#define UART0_BAUD_RATE 19200
-//#define UART0_BAUD_RATE 9600
+#define UART0_BAUD_RATE 19200
 
 #define UART1_ID uart1
 #define UART1_BAUD_RATE 19200
