@@ -8,6 +8,7 @@
 
 int main(void) {
   APP_Run();
-  for(;;) {}
+  for (;;) {
+  }
   return 0;
 }

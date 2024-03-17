@@ -1,3 +1,7 @@
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_compile_options(-fdiagnostics-color=always)
+endif()
+
 set(THIS_LIBRARY_NAME SrcLib)
 
 # file: Collect all files that need to be compiled. 
