@@ -5,10 +5,11 @@
  */
 
 #include "app_platform.h"
-#include "stdio.h"
-
+#include <stdio.h>
 #if PL_CONFIG_USE_PICO_W
-  #include "pico/cyw43_arch.h"
+  #include "pico/cyw43_arch.h" // before PicoWiFi.h
+#endif
+#if PL_CONFIG_USE_PICO_W
   #include "PicoWiFi.h"
 #endif
 #include "pico/stdlib.h"
