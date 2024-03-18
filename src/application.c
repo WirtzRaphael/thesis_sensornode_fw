@@ -80,24 +80,24 @@ static void AppTask(void *pv) {
 
 #if PL_CONFIG_USE_LITTLE_FS
   McuLog_info("Mounting litteFS volume.");
-  if(McuLFS_Mount(McuShell_GetStdio())==ERR_FAILED){
+  if (McuLFS_Mount(McuShell_GetStdio()) == ERR_FAILED) {
     McuLog_info("Mounting failed please format device first");
   }
 #endif
 
   // Test McuW25Q128 communication
-  uint8_t buffer_mcuw25 [3];
+  uint8_t buffer_mcuw25[3];
   uint8_t errorCode = McuW25_ReadID(buffer_mcuw25, 3);
   if (errorCode != ERR_OK) {
     McuLog_trace("McuW25_ReadID error code: %d", errorCode);
   } else {
-    McuLog_trace("McuW25_ReadID returned ID: %d %d %d",
-      buffer_mcuw25[0], buffer_mcuw25[1], buffer_mcuw25[2]);
+    McuLog_trace("McuW25_ReadID returned ID: %d %d %d", buffer_mcuw25[0],
+                 buffer_mcuw25[1], buffer_mcuw25[2]);
   }
   McuLog_trace("McuW25_ReadID returned: %d", buffer_mcuw25[0]);
 
-  for(;;) {
-  #if APP_HAS_ONBOARD_GREEN_LED
+  for (;;) {
+#if APP_HAS_ONBOARD_GREEN_LED
     McuLED_Toggle(led);
 #elif PL_CONFIG_USE_PICO_W && !PL_CONFIG_USE_WIFI
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, ledIsOn);
