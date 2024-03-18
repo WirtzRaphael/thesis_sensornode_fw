@@ -16,6 +16,8 @@
 ```
 env |  grep PICO
 ```
+*** clangd
+- https://clangd.llvm.org/installation.html
 
 *Fish shell*
 - edit config
