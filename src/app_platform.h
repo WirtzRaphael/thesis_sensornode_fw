@@ -19,6 +19,7 @@
    #error "needs to be defined in IncludeMcuLibConfig.h!"
 #endif
 
+// fixme : not required for rp2040 only
 #define PL_CONFIG_USE_PICO_W          (1) /* if using Pico W board */
   /* Note:
    * if using Pico-W:
