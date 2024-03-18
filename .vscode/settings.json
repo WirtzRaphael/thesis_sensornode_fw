@@ -32,5 +32,6 @@
     },
     "clangd.arguments": [
         "--query-driver=/usr/bin/arm-none-eabi-gcc"
-    ]
+    ],
+    "cSpell.diagnosticLevel": "Hint"
 }
