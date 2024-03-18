@@ -29,5 +29,8 @@
         "PICO_SDK_PATH": "/home/rw/repos/3_resources/pico-sdk",
         "PICO_SEGGER_PATH": "/home/rw/bin/jlink",
         "PICO_TOOLCHAIN_PATH": "/usr/bin/arm-none-eabi-gcc-12.2"
-    }
+    },
+    "clangd.arguments": [
+        "--query-driver=/usr/bin/arm-none-eabi-gcc"
+    ]
 }
