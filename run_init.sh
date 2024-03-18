@@ -1,3 +1,4 @@
 #!/bin/bash
 
-cmake -G "Ninja" . -B build
+# - generate files with build flags for clangd
+cmake -G "Ninja" . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=1
