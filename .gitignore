@@ -8,6 +8,9 @@ pico-sdk
 
 src_v1
 
+# doxygen
+doc
+
 # ide
 .idea
 
