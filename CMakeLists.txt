@@ -13,6 +13,10 @@ set(
 set(PICO_PLATFORM rp2040)
 set(PICO_BOARD pico_w) # pico or pico_w
 
+# set compiler flags and optimization level
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_CXX_FLAGS_DEBUG "-O2 -g")
+
 # set build type. Without 'Debug', it won't generate line information if using build subfolders.
 set(CMAKE_BUILD_TYPE Debug)
 
