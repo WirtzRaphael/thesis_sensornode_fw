@@ -109,6 +109,7 @@ void radio_uart_read_all(void) {
   uint8_t rec_buffer[1];
   while (uart_is_readable(UART_RADIO_ID)) {
     uart_read_blocking(UART_RADIO_ID, rec_buffer, 1);
+    McuLog_trace("Received %s from radio\n", rec_buffer);
     printf("Received %s from radio\n", rec_buffer);
   }
 }
@@ -189,7 +190,7 @@ void radio_memory_configuration(void) {
   uart_wait();
 
   // -- Send : Change channel
-  // {address, data}
+  // data : {address, data}
   unsigned char data0[] = {0x00, 5};
   uart_write_blocking(UART_RADIO_ID, data0, 2);
   McuLog_trace("Send %d to radio", data0[0]);
@@ -197,10 +198,6 @@ void radio_memory_configuration(void) {
   uart_wait();
 
   // -- Send : Exit
-  // uint8_t send_buffer[1] = 255; // 0xFF
-  // const
-  // char *hexstring = "FF";
-  // uint8_t send_buffer[1] = (uint8_t)strtol(hexstring, NULL, 16);
   unsigned char data1[] = {0xFF};
   uart_write_blocking(UART_RADIO_ID, data1, 1);
   // uart_write_blocking(UART_RADIO_ID, data1, sizeof(data1));
@@ -217,10 +214,10 @@ void radio_memory_configuration(void) {
     rec_prompt[0] = 0;
   }
 
-  // fixme : still '>' in buffer
+  // fixme : '>' and values in buffer
+  radio_uart_read_all();
 
   exit_config_mode();
-
   McuLog_trace("Exit memory configuration mode !");
 }
 
