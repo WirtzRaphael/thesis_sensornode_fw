@@ -27,6 +27,7 @@
 
 char payload_separator_char[1] = "-";
 
+// TODO : timing informations from rc1701hp datasheet (v1.14)
 static void uart_wait(void) {
   sleep_ms(50); // todo : decrease
 }
