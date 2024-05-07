@@ -232,6 +232,32 @@ void radio_memory_configuration(void) {
   McuLog_trace("Exit memory configuration state !");
 }
 
+/* Destination address
+ * @param address : destination address (length dependent on addressing mode)
+*/
+void radio_destination_address(uint8_t address) {
+  // be sure to not be already in config state
+  exit_config_state();
+
+  enter_config_state();
+  // -- Wait for '>'
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+
+  // -- Send : Command byte
+  uart_puts(UART_RADIO_ID, "T");
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+
+  // -- Send : Address
+  uart_write_blocking(UART_RADIO_ID, &address, 1);
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+}
+
 void radio_read_temperature(void) {
   uint8_t rec_prompt[1];
   bool continueConfig = false;
