@@ -103,12 +103,35 @@ void radio_reset(void) {
 }
 
 void radio_send(void) {
-  uart_putc_raw(UART_RADIO_ID, 21);
-  uart_wait();
-  send_payload_separator();
-  // printf("send: %s \r\n", strId);
-  uart_putc_raw(UART_RADIO_ID, 5);
-  uart_wait();
+  if (!uart_is_writable(UART_RADIO_ID)) {
+    McuLog_error("Radio UART not writable");
+    return;
+  }
+  /* RXD
+  */
+  // send characters on UART line
+  for (uint8_t i = 0; i < 100; i++) {
+    uart_putc_raw(UART_RADIO_ID, 'H');
+    sleep_us(100);
+  }
+  // sleep packet timeout?
+
+  if (UART_RADIO_CTS) {
+    sleep_us(t_RXD_CTS_US);
+  } else {
+    sleep_us(t_RXD_TX_US);
+  }
+
+  sleep_ms(100); // T_TX : depends on packet size and data rate, see formula datasheet
+  sleep_us(t_TX_IDLE_US);
+
+  // uart_putc_raw(UART_RADIO_ID, 21);
+  // uart_wait();
+  // send_payload_separator();
+  // // printf("send: %s \r\n", strId);
+  // uart_putc_raw(UART_RADIO_ID, 5);
+
+
 }
 
 void radio_uart_read_all(void) {
