@@ -331,7 +331,26 @@ uint8_t wait_config_prompt(void) {
   uint8_t rec_prompt[1];
   uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
   McuLog_trace("Received %d from radio\n", rec_prompt[0]);
-  if (rec_prompt[0] != 62) {
+
+void radio_get_configuration_memory(void){
+  // be sure to not be already in config state
+  exit_config_state();
+
+  enter_config_state();
+  // -- Wait for '>'
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+
+  // -- Send : Command byte
+  uart_puts(UART_RADIO_ID, "0");
+  McuLog_trace("Send 0 to radio");
+  uart_wait();
+
+  // Readout buffer
+  // fixme : values encoding in terminal
+  radio_uart_read_all();
+}
     McuLog_error("Haven't received '>'");
     return ERR_FAULT;
   } else {
