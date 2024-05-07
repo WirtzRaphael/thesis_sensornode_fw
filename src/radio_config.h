@@ -13,4 +13,6 @@ void radio_uart_read_all(void);
 void radio_memory_read_one_byte(uint8_t address);
 void radio_memory_configuration(void);
 
+uint8_t wait_config_prompt(void);
+
 #endif /* RADIO_H_ */

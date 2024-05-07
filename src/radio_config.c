@@ -1,3 +1,4 @@
+#include "radio_config.h"
 #include "stdio.h"
 
 #include "pico/stdlib.h"
@@ -8,6 +9,7 @@
 #include "McuWait.h"
 
 #include "hardware/uart.h"
+#include <stdint.h>
 
 #define RADIO_PIN_TX PICO_PINS_UART0_TX
 #define RADIO_PIN_RX PICO_PINS_UART0_RX
@@ -37,7 +39,7 @@ static void send_payload_separator(void) {
   uart_wait();
 }
 
-static void enter_config_mode(void) {
+static void enter_config_state(void) {
   McuLog_trace("Enter config mode");
 #if LOG_LEVEL_DEBUG
   McuLog_debug("Config pin low");
@@ -46,7 +48,7 @@ static void enter_config_mode(void) {
   sleep_ms(50);
 }
 
-static void exit_config_mode(void) {
+static void exit_config_state(void) {
   McuLog_trace("Exit config mode");
 #if LOG_LEVEL_DEBUG
   McuLog_debug("Config pin high");
@@ -115,21 +117,16 @@ void radio_uart_read_all(void) {
 }
 
 void radio_memory_read_one_byte(uint8_t address) {
-  uint8_t rec_prompt[1];
+  
 
   // be sure to not be already in config mode
-  exit_config_mode();
+  exit_config_state();
 
-  enter_config_mode();
+  enter_config_state();
 
   // -- Wait for '>'
-  uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
-  McuLog_trace("Received %d from radio\n", rec_prompt[0]);
-  if (rec_prompt[0] != 62) {
-    McuLog_error("Haven't received '>'");
+  if (wait_config_prompt() == ERR_FAULT) {
     return;
-  } else {
-    rec_prompt[0] = 0;
   }
 
   // -- Send : Command byte
@@ -138,13 +135,8 @@ void radio_memory_read_one_byte(uint8_t address) {
   uart_wait();
 
   // -- Wait for '>'
-  uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
-  McuLog_trace("Received %d from radio\n", rec_prompt[0]);
-  if (rec_prompt[0] != 62) {
-    McuLog_error("Haven't received '>'");
+  if (wait_config_prompt() == ERR_FAULT) {
     return;
-  } else {
-    rec_prompt[0] = 0;
   }
 
   // -- Send : Parameters
@@ -160,7 +152,7 @@ void radio_memory_read_one_byte(uint8_t address) {
     McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
   }
 
-  exit_config_mode();
+  exit_config_state();
 
   McuLog_trace("Finished memory read");
 }
@@ -169,18 +161,13 @@ void radio_memory_configuration(void) {
   uint8_t rec_prompt[1];
 
   // be sure to not be already in config mode
-  exit_config_mode();
+  exit_config_state();
 
-  enter_config_mode();
+  enter_config_state();
 
   // -- Wait for '>'
-  uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
-  McuLog_trace("Received %d from radio\n", rec_prompt[0]);
-  if (rec_prompt[0] != 62) {
-    McuLog_error("Haven't received '>'");
+  if (wait_config_prompt() == ERR_FAULT) {
     return;
-  } else {
-    rec_prompt[0] = 0;
   }
 
   // -- Send : Memory configuration mode
@@ -205,19 +192,14 @@ void radio_memory_configuration(void) {
   uart_wait();
 
   // -- Wait for '>'
-  uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
-  McuLog_trace("Received %d from radio\n", rec_prompt[0]);
-  if (rec_prompt[0] != 62) {
-    McuLog_error("Haven't received '>'");
+  if (wait_config_prompt() == ERR_FAULT) {
     return;
-  } else {
-    rec_prompt[0] = 0;
   }
 
   // fixme : '>' and values in buffer
   radio_uart_read_all();
 
-  exit_config_mode();
+  exit_config_state();
   McuLog_trace("Exit memory configuration mode !");
 }
 
@@ -226,18 +208,13 @@ void radio_read_temperature(void) {
   bool continueConfig = false;
 
   // be sure to not be already in config mode
-  exit_config_mode();
+  exit_config_state();
 
-  enter_config_mode();
+  enter_config_state();
 
   // -- Wait for '>'
-  uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
-  McuLog_trace("Received %d from radio\n", rec_prompt[0]);
-  if (rec_prompt[0] != 62) {
-    McuLog_error("Haven't received '>'");
+  if (wait_config_prompt() == ERR_FAULT) {
     return;
-  } else {
-    rec_prompt[0] = 0;
   }
 
   // -- Send : Command byte
@@ -266,6 +243,21 @@ void radio_read_temperature(void) {
   printf("Temperature is : %d\n", temperature);
 #endif
 
-  exit_config_mode();
+  exit_config_state();
   McuLog_trace("Finished read temperature");
+}
+
+uint8_t wait_config_prompt(void) {
+  sleep_us(t_CONFIG_PROMPT_US);
+
+  uint8_t rec_prompt[1];
+  uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
+  McuLog_trace("Received %d from radio\n", rec_prompt[0]);
+  if (rec_prompt[0] != 62) {
+    McuLog_error("Haven't received '>'");
+    return ERR_FAULT;
+  } else {
+    rec_prompt[0] = 0;
+    return ERR_OK;
+  }
 }
