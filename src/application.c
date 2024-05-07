@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2022, Erich Styger
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
-
 #include "app_platform.h"
 #include <stdio.h>
 #if PL_CONFIG_USE_PICO_W
@@ -105,12 +99,14 @@ static void AppTask(void *pv) {
 #endif
     vTaskDelay(pdMS_TO_TICKS(5 * 100));
 
+    // Select part
     printf("[r]adio \n");
     printf("Enter character: \n");
     char userCmd = getchar();
     printf("You entered : %c\n\n", userCmd);
     McuLog_trace("You entered : %c", userCmd);
 
+    // Select operation
     if (userCmd == 'r') {
       printf("# Radio\n");
       McuLog_trace("# Radio");
