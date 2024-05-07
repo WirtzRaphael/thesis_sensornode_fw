@@ -117,6 +117,7 @@ static void AppTask(void *pv) {
       printf("[r]eset\n");
       printf("[s]end\n");
       printf("[t]emperature\n");
+      printf("[d]estination address\n");
 
       userCmd = getchar();
       printf("You entered : %c\n", userCmd);
@@ -126,12 +127,15 @@ static void AppTask(void *pv) {
       case 'b':
         radio_uart_read_all();
         break;
+      case 'd':
+        radio_destination_address(123);
+        break;
       case 'm':
         radio_memory_read_one_byte(0x00);
         radio_memory_read_one_byte(0x01);
         radio_memory_read_one_byte(0x02);
         break;
-      case 't':
+      case 'u':
         radio_read_temperature();
         break;
       case 'r':
@@ -142,6 +146,9 @@ static void AppTask(void *pv) {
         break;
       case 'w':
         radio_memory_configuration();
+        break;
+      case '0':
+        radio_get_configuration_memory();
         break;
       default:
         printf("You entered something else\n");
