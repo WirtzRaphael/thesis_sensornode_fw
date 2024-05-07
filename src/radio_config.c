@@ -17,8 +17,9 @@
 #define RADIO_HW_FLOW_CONTROL (0)
 
 #define UART_RADIO_ID UART0_ID
-#define UART_BAUD_RATE UART0_BAUD_RATE
-#define UART_DELAY (50)
+#define UART_RADIO_BAUD_RATE UART0_BAUD_RATE
+#define UART_RADIO_CTS UART0_CTS
+#define UART_RADIO_RTS UART0_RTS
 
 #define DATA_BITS 8
 #define STOP_BITS 1
@@ -66,7 +67,7 @@ static void exit_config_state(void) {
 }
 
 void radio_init() {
-  // uart_init(UART_RADIO_ID, UART_BAUD_RATE);
+  // uart_init(UART_RADIO_ID, UART_RADIO_BAUD_RATE);
   uart_init(UART_RADIO_ID, 19200);
   gpio_set_function(RADIO_PIN_TX, GPIO_FUNC_UART);
   gpio_set_function(RADIO_PIN_RX, GPIO_FUNC_UART);
@@ -215,7 +216,7 @@ void radio_memory_configuration(void) {
   uart_wait();
 
   // -- Power
-  unsigned char config1[] = {0x01, 1};
+  unsigned char config1[] = {ADDR_RF_POWER, 1};
   uart_write_blocking(UART_RADIO_ID, config1, 2);
   McuLog_trace("Send %d to radio", config1[0]);
   McuLog_trace("Send %d to radio", config1[1]);
@@ -223,7 +224,7 @@ void radio_memory_configuration(void) {
 
   // -- Data rate
   // 4 : 1.2kbit/s
-  unsigned char config2[] = {0x02, 4};
+  unsigned char config2[] = {ADDR_RF_DATA_RATE, 4};
   uart_write_blocking(UART_RADIO_ID, config2, 2);
   McuLog_trace("Send %d to radio", config2[0]);
   McuLog_trace("Send %d to radio", config2[1]);
@@ -237,7 +238,7 @@ void radio_memory_configuration(void) {
   // todo : de-, enryption with key, vector (later)
 
   // -- Send : Exit
-  unsigned char cmdExit[] = {0xFF};
+  unsigned char cmdExit[] = {CMD_NVM_EXIT};
   uart_write_blocking(UART_RADIO_ID, cmdExit, 1);
   // uart_write_blocking(UART_RADIO_ID, data1, sizeof(data1));
   McuLog_trace("Send %d to radio", cmdExit[0]);
@@ -289,7 +290,6 @@ void radio_read_temperature(void) {
   exit_config_state();
 
   enter_config_state();
-
   // -- Wait for '>'
   if (wait_config_prompt() == ERR_FAULT) {
     return;
@@ -309,10 +309,7 @@ void radio_read_temperature(void) {
     McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
   }
 
-  // Check for '>'
-  if (!rec_buffer[1] == 62) {
-    return;
-  }
+  check_config_prompt(rec_buffer[1]);
 
   // Temperature calculation
   uint8_t temperature = rec_buffer[0] - 128;
@@ -331,6 +328,8 @@ uint8_t wait_config_prompt(void) {
   uint8_t rec_prompt[1];
   uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
   McuLog_trace("Received %d from radio\n", rec_prompt[0]);
+  return check_config_prompt(rec_prompt[0]);
+}
 
 void radio_get_configuration_memory(void){
   // be sure to not be already in config state
@@ -351,10 +350,13 @@ void radio_get_configuration_memory(void){
   // fixme : values encoding in terminal
   radio_uart_read_all();
 }
+
+uint8_t check_config_prompt(uint8_t received) {
+  if (received != 62) {
     McuLog_error("Haven't received '>'");
     return ERR_FAULT;
   } else {
-    rec_prompt[0] = 0;
+    received = 0;
     return ERR_OK;
   }
 }

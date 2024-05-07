@@ -2,6 +2,7 @@
 #define RADIO_H_
 // #define STRING_LENGTH_UINT8 ((CHAR_BIT * sizeof(uint8_t) - 1) / 3 + 2)
 #include "stdint.h"
+#include <stdint.h>
 
 /* Timing
  * timing informations from rc1701hp datasheet (v1.14)
@@ -67,6 +68,7 @@
 #define ADDR_RF_CHANNEL   0X00
 #define ADDR_RF_POWER     0X01
 #define ADDR_RF_DATA_RATE 0X02
+#define CMD_NVM_EXIT      0XFF
 
 // void radio_send_test_messages(void);
 /*! Sends a message via radio
@@ -74,11 +76,14 @@
 void radio_send(void);
 void radio_reset(void);
 void radio_init(void);
+void radio_destination_address(uint8_t address);
+void radio_get_configuration_memory(void);
 void radio_read_temperature(void);
 void radio_uart_read_all(void);
 void radio_memory_read_one_byte(uint8_t address);
 void radio_memory_configuration(void);
 
 uint8_t wait_config_prompt(void);
+uint8_t check_config_prompt(uint8_t received);
 
 #endif /* RADIO_H_ */
