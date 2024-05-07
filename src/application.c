@@ -128,6 +128,8 @@ static void AppTask(void *pv) {
         break;
       case 'm':
         radio_memory_read_one_byte(0x00);
+        radio_memory_read_one_byte(0x01);
+        radio_memory_read_one_byte(0x02);
         break;
       case 't':
         radio_read_temperature();
