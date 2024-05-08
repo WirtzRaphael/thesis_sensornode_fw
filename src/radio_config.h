@@ -69,11 +69,13 @@
 #define NVM_ADDR_RF_POWER     0X01
 #define NVM_ADDR_RF_DATA_RATE 0X02
 #define NVM_ADDR_LED_CONTROL       0X3A
+#define NVM_ADDR_CRC 0x15
 #define NVM_CMD_EXIT          0XFF
 
 // void radio_send_test_messages(void);
 /*! Sends a message via radio
  */
+void exit_config_state(void);
 void radio_send(void);
 void radio_reset(void);
 void radio_init(void);

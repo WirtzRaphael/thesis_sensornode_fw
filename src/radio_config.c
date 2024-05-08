@@ -15,6 +15,7 @@
 #define RADIO_PIN_RX          PICO_PINS_UART0_RX
 #define RADIO_PIN_CONFIG      (20)
 #define RADIO_HW_FLOW_CONTROL (0)
+#define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
 
 #define UART_RADIO_ID        UART0_ID
 #define UART_RADIO_BAUD_RATE UART0_BAUD_RATE
@@ -62,7 +63,7 @@ static void enter_config_state(void) {
  * @brief Exit the configuration state. Change from CONFIG to IDLE state.
  *
  */
-static void exit_config_state(void) {
+void exit_config_state(void) {
   McuLog_trace("Exit config state");
 #if LOG_LEVEL_DEBUG
   McuLog_debug("Config pin high");
@@ -79,6 +80,8 @@ static void exit_config_state(void) {
  * @brief Initialize the radio module.
  */
 void radio_init() {
+  /* Pin configuration
+  */
   // uart_init(UART_RADIO_ID, UART_RADIO_BAUD_RATE);
   uart_init(UART_RADIO_ID, 19200);
   gpio_set_function(RADIO_PIN_TX, GPIO_FUNC_UART);
@@ -94,18 +97,30 @@ void radio_init() {
   gpio_set_dir(PL_GPIO_RADIO_RESET, GPIO_OUT);
   gpio_put(PL_GPIO_RADIO_RESET, true);
 
+  // Config Pin
+  gpio_init(RADIO_PIN_CONFIG);
+  gpio_set_dir(RADIO_PIN_CONFIG, GPIO_OUT);
+  gpio_put(RADIO_PIN_CONFIG, true);
+
+  /* UART configuration
+  */
   // HW flow control (default)
 #if RADIO_HW_FLOW_CONTROL
   uart_set_hw_flow(UART_RADIO_ID, true, true);
 #else
   uart_set_hw_flow(UART_RADIO_ID, false, false);
 #endif
-
   uart_set_format(UART_RADIO_ID, DATA_BITS, STOP_BITS, PARITY);
 
-  gpio_init(RADIO_PIN_CONFIG);
-  gpio_set_dir(RADIO_PIN_CONFIG, GPIO_OUT);
-  gpio_put(RADIO_PIN_CONFIG, true);
+#if RADIO_CONFIG_NON_VOLATILE_MEMORY
+  radio_memory_configuration();
+#endif
+  /* Radio configuration (volatile memory)
+  */
+  //radio_uart_read_all(); // clear buffer
+  //radio_config_rf_channel_number(1);
+  //radio_config_rf_power(1);
+  //radio_config_destination_address(20);
 }
 
 /**
@@ -132,7 +147,7 @@ void radio_send(void) {
    */
   // todo send (end character? max buffer size, packeg length?)
   // send characters on UART line
-  for (uint8_t i = 0; i < 100; i++) {
+  for (uint8_t i = 0; i < 10; i++) {
     uart_putc_raw(UART_RADIO_ID, 'H');
     sleep_us(100);
   }
@@ -147,7 +162,7 @@ void radio_send(void) {
   // time T_TX : depends on packet size and data rate, see formula datasheet
   sleep_ms(100);
 
-  sleep_us(t_TX_IDLE_US);
+  //sleep_us(t_TX_IDLE_US);
 }
 
 /**
@@ -257,8 +272,7 @@ void radio_memory_configuration(void) {
   uart_wait();
 
   // -- Led Control
-  // 4 : 1.2kbit/s
-  unsigned char config_led[] = {NVM_ADDR_LED_CONTROL, 1};
+  unsigned char config_led[] = {NVM_ADDR_LED_CONTROL, 0};
   uart_write_blocking(UART_RADIO_ID, config_led, 2);
   uart_wait();
   McuLog_trace("Config NVM : Led Control (Addr : %d, Value : %d)",
