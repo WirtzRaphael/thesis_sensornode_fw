@@ -27,6 +27,8 @@
 
 #define LOG_LEVEL_DEBUG (0)
 #define PRINTF          (1)
+// exit config state before entering new config state
+#define RADIO_PRE_EXIT_CONFIG (1) 
 
 char payload_separator_char[1] = "-";
 
@@ -142,15 +144,10 @@ void radio_send(void) {
     sleep_us(t_RXD_TX_US);
   }
 
-  sleep_ms(100); // T_TX : depends on packet size and data rate, see formula
-                 // datasheet
-  sleep_us(t_TX_IDLE_US);
+  //time T_TX : depends on packet size and data rate, see formula datasheet
+  sleep_ms(100); 
 
-  // uart_putc_raw(UART_RADIO_ID, 21);
-  // uart_wait();
-  // send_payload_separator();
-  // // printf("send: %s \r\n", strId);
-  // uart_putc_raw(UART_RADIO_ID, 5);
+  sleep_us(t_TX_IDLE_US);
 }
 
 /**
@@ -173,8 +170,9 @@ void radio_uart_read_all(void) {
  */
 void radio_memory_read_one_byte(uint8_t address) {
 
-  // be sure to not be already in config state
+#if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
+#endif
 
   enter_config_state();
 
@@ -217,8 +215,9 @@ void radio_memory_read_one_byte(uint8_t address) {
  *
  */
 void radio_memory_configuration(void) {
-  // be sure to not be already in config state
+#if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
+#endif
 
   /* IDLE -> CONFIG
    */
@@ -233,40 +232,41 @@ void radio_memory_configuration(void) {
    */
   // -- Send : Memory configuration state
   uart_puts(UART_RADIO_ID, "M");
+  uart_wait();
   McuLog_trace("Send M to radio");
   McuLog_trace("Memory configuration state !");
-  uart_wait();
 
   // Configuration parameters {address, data}
-  // -- Channel
+  // -- RF Channel
   unsigned char config_channel[] = {0x00, 5};
   uart_write_blocking(UART_RADIO_ID, config_channel, 2);
-  McuLog_trace("Send %d to radio", config_channel[0]);
-  McuLog_trace("Send %d to radio", config_channel[1]);
   uart_wait();
+  McuLog_trace("Config NVM : RF Channel (Addr : %d, Value : %d)",
+               config_channel[0], config_channel[1]);
 
-  // -- Power
+
+  // -- RF Power
   unsigned char config_power[] = {NVM_ADDR_RF_POWER, 1};
   uart_write_blocking(UART_RADIO_ID, config_power, 2);
-  McuLog_trace("Send %d to radio", config_power[0]);
-  McuLog_trace("Send %d to radio", config_power[1]);
   uart_wait();
+  McuLog_trace("Config NVM : RF Power (Addr : %d, Value : %d)",
+               config_power[0], config_power[1]);
 
-  // -- Data rate
+  // -- RF Data rate
   // 4 : 1.2kbit/s
   unsigned char config_data_rate[] = {NVM_ADDR_RF_DATA_RATE, 4};
   uart_write_blocking(UART_RADIO_ID, config_data_rate, 2);
-  McuLog_trcae("Config NVM : Data rate (Addr : %d, Value : %d)",
+  McuLog_trace("Config NVM : Data rate (Addr : %d, Value : %d)",
                config_data_rate[0], config_data_rate[1]);
   uart_wait();
 
   // -- Led Control
   // 4 : 1.2kbit/s
-  unsigned char config_led[] = {NVM_ADDR_RF_DATA_RATE, 1};
+  unsigned char config_led[] = {NVM_ADDR_LED_CONTROL, 1};
   uart_write_blocking(UART_RADIO_ID, config_led, 2);
-  McuLog_trace("Send %d to radio", config_led[0]);
-  McuLog_trace("Send %d to radio", config_led[1]);
   uart_wait();
+  McuLog_trace("Config NVM : Led Control (Addr : %d, Value : %d)",
+               config_led[0], config_led[1]);
 
   // todo : packet end character
   // todo : addressing (later)
@@ -300,8 +300,9 @@ void radio_memory_configuration(void) {
  * @note address length is dependent on addressing mode
  */
 void radio_destination_address(uint8_t address) {
-  // be sure to not be already in config state
+#if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
+#endif
 
   enter_config_state();
   // -- Wait for '>'
@@ -326,8 +327,9 @@ void radio_destination_address(uint8_t address) {
  * @brief Read the temperature from the radio module.
  */
 void radio_read_temperature(void) {
-  // be sure to not be already in config state
+#if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
+#endif
 
   enter_config_state();
   // -- Wait for '>'
@@ -367,8 +369,9 @@ void radio_read_temperature(void) {
  *
  */
 void radio_sleep(void) {
-  // be sure to not be already in config state
+#if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
+#endif
 
   enter_config_state();
   // -- Wait for '>'
@@ -408,8 +411,9 @@ uint8_t wait_config_prompt(void) {
  * @brief Get the configuration memory from the radio module.
  */
 void radio_get_configuration_memory(void) {
-  // be sure to not be already in config state
+#if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
+#endif
 
   enter_config_state();
   // -- Wait for '>'
