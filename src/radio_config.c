@@ -410,7 +410,45 @@ void radio_read_temperature(void) {
 #endif
 
   exit_config_state();
-  McuLog_trace("Finished read temperature");
+
+/**
+ * @brief Read the voltage from the radio module.
+ */
+void radio_read_voltage(void) {
+#if RADIO_PRE_EXIT_CONFIG
+  exit_config_state();
+#endif
+
+  enter_config_state();
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+
+  // -- Send : Command byte
+  // uart_write_blocking(UART_ID, &pre, 1);
+  uart_puts(UART_RADIO_ID, "V");
+  McuLog_trace("Send U to radio");
+  uart_wait();
+
+  // -- Receive : 1byte value + Prompt ('>')
+  uint8_t buffer_size = 2;
+  uint8_t rec_buffer[buffer_size];
+  uart_read_blocking(UART_RADIO_ID, rec_buffer, buffer_size);
+  for (uint8_t i = 0; i < buffer_size; i++) {
+    McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
+  }
+
+  check_config_prompt(rec_buffer[1]);
+
+  // Voltage calculation
+  uint8_t voltage = rec_buffer[0] * 0.030;
+  McuLog_trace("Voltage is : %d", voltage);
+#if PRINTF
+  printf("Voltage is : %d\n", voltage);
+#endif
+
+  exit_config_state();
+}
 }
 
 /**
