@@ -344,6 +344,36 @@ void radio_config_channel_number(uint8_t channel) {
 }
 
 /**
+ * @brief Set the RF power.
+ *
+ * @param power RF power
+ * @note volatile memory
+ */
+void radio_config_rf_power(uint8_t power) {
+#if RADIO_PRE_EXIT_CONFIG
+  exit_config_state();
+#endif
+  enter_config_state();
+
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+
+  // -- Send : Command byte
+  uart_puts(UART_RADIO_ID, "P");
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+
+  // -- Send : Power
+  uart_write_blocking(UART_RADIO_ID, &power, 1);
+
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+}
+
+/**
  * @brief Read the temperature from the radio module.
  */
 void radio_read_temperature(void) {
