@@ -128,7 +128,7 @@ static void AppTask(void *pv) {
         radio_uart_read_all();
         break;
       case 'd':
-        radio_destination_address(123);
+        radio_config_destination_address(123);
         break;
       case 'm':
         radio_memory_read_one_byte(0x00);
@@ -136,16 +136,39 @@ static void AppTask(void *pv) {
         radio_memory_read_one_byte(0x02);
         break;
       case 'u':
-        radio_read_temperature();
+        radio_config_read_temperature();
         break;
       case 'r':
         radio_reset();
         break;
       case 's':
         radio_send();
+        // todo
+        break;
+      case '4':
+        // todo radio receive
+        break;
+      case 'p':
+        // todo power volatile
+        break;
+      case 'c': 
+        // todo channel volatile
+        radio_config_channel_number(1);
+        break;
+      case 'i':
+        // todo rssi
         break;
       case 'w':
         radio_memory_configuration();
+        break;
+      case 'v':
+        // todo battery (see formula)
+        break;
+      case 'z':
+        radio_sleep();
+        break;
+      case '5':
+        radio_wakeup();
         break;
       case '0':
         radio_get_configuration_memory();
