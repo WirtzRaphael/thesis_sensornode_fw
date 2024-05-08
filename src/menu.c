@@ -95,9 +95,15 @@ void menu_handler_radio_config(void) {
     rssi = radio_signal_strength_indicator();
     break;
   case 'b':
-    radio_memory_read_one_byte(0x00);
-    radio_memory_read_one_byte(0x01);
-    radio_memory_read_one_byte(0x02);
+    // todo : separate function and use addr defines
+    radio_memory_read_one_byte(0x00); // channel
+    radio_memory_read_one_byte(0x01); // power
+    radio_memory_read_one_byte(0x02); // data rate
+    radio_memory_read_one_byte(0x3A); // LED
+    radio_memory_read_one_byte(0x15); // CRC
+    radio_memory_read_one_byte(0x19); // UID
+    radio_memory_read_one_byte(0x1A); // SID
+    radio_memory_read_one_byte(0x21); // DID
     break;
   case 'm':
     radio_get_configuration_memory();
