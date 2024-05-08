@@ -104,6 +104,7 @@ void menu_handler_radio_config(void) {
     radio_memory_read_one_byte(0x19); // UID
     radio_memory_read_one_byte(0x1A); // SID
     radio_memory_read_one_byte(0x21); // DID
+    radio_memory_read_one_byte(0x14); // address mode
     break;
   case 'm':
     radio_get_configuration_memory();
@@ -119,6 +120,9 @@ void menu_handler_radio_config(void) {
     break;
   case 'x':
     exit_config_state();
+    break;
+  case '0':
+    // todo return config and check if already in config mode
     break;
   default:
     printf("Invalid option\n");

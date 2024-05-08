@@ -306,11 +306,18 @@ void radio_memory_configuration(void) {
                config_destination_id[0], config_destination_id[1]);
   */ // AVOID MULIPLE WRITES
 
-  unsigned char config_packet_end_char[] = {0x11, 0x0A}; // 0x0A = 10 => LF
+  //unsigned char config_packet_end_char[] = {0x11, 0x0A}; // 0x0A = 10 => LF
+  unsigned char config_packet_end_char[] = {0x11, 0x00}; // 0 => NONE 
   uart_write_blocking(UART_RADIO_ID, config_packet_end_char, 2);
   uart_wait();
   McuLog_trace("Config NVM : Packet end character (Addr : %d, Value : %d)",
                config_packet_end_char[0], config_packet_end_char[1]);
+
+  unsigned char config_address_mode[] = {0x14, 0x02};
+  uart_write_blocking(UART_RADIO_ID, config_address_mode, 2);
+  uart_wait();
+  McuLog_trace("Config NVM : Packet end character (Addr : %d, Value : %d)",
+               config_address_mode[0], config_address_mode[1]);
 
   // todo : addressing (later)
   // todo : crc mode (later)
