@@ -45,7 +45,7 @@
 
 // Delay after channel-byte is sent until prompt (“>”). (For other commands like
 // ’M’, ’T’ there is no delay but immediate prompt)
-#define t_C_CONFIG_US 1100
+#define t_CHANNEL_CONFIG_US 1100
 
 // In this period the internal flash is programmed. Do not reset, turn the
 // module off, or allow any power supply dips in this period as it may cause
@@ -65,10 +65,11 @@
 
 /* ADDRESSES
  */
-#define ADDR_RF_CHANNEL   0X00
-#define ADDR_RF_POWER     0X01
-#define ADDR_RF_DATA_RATE 0X02
-#define CMD_NVM_EXIT      0XFF
+#define NVM_ADDR_RF_CHANNEL   0X00
+#define NVM_ADDR_RF_POWER     0X01
+#define NVM_ADDR_RF_DATA_RATE 0X02
+#define NVM_ADDR_LED_CONTROL       0X3A
+#define NVM_CMD_EXIT          0XFF
 
 // void radio_send_test_messages(void);
 /*! Sends a message via radio
@@ -76,9 +77,15 @@
 void radio_send(void);
 void radio_reset(void);
 void radio_init(void);
-void radio_destination_address(uint8_t address);
+void radio_config_destination_address(uint8_t address);
+void radio_config_rf_channel_number(uint8_t channel);
+void radio_config_rf_power(uint8_t power);
+void radio_sleep(void);
+void radio_wakeup(void);
 void radio_get_configuration_memory(void);
 void radio_read_temperature(void);
+void radio_read_voltage(void);
+uint8_t radio_signal_strength_indicator(void);
 void radio_uart_read_all(void);
 void radio_memory_read_one_byte(uint8_t address);
 void radio_memory_configuration(void);

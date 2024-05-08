@@ -164,7 +164,7 @@ void radio_uart_read_all(void) {
 }
 
 /**
- * @brief Read one byte from the radio memory.
+ * @brief Read one byte from the non-volatile memory (NVM).
  *
  * @param address Data address in non-volatile memory (NVM)
  */
@@ -293,6 +293,7 @@ void radio_memory_configuration(void) {
  *
  * @param address destination address
  * @note address length is dependent on addressing mode
+ * @note volatile memory
  */
 void radio_config_destination_address(uint8_t address) {
 #if RADIO_PRE_EXIT_CONFIG
@@ -317,7 +318,13 @@ void radio_config_destination_address(uint8_t address) {
   }
 }
 
-void radio_config_channel_number(uint8_t channel) {
+/** 
+ * @brief Set the RF channel number.
+ *
+ * @param channel RF channel number
+ * @note volatile memory
+*/
+void radio_config_rf_channel_number(uint8_t channel) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -333,7 +340,7 @@ void radio_config_channel_number(uint8_t channel) {
     return;
   }
 
-  // -- Send : Address
+  // -- Send : Channel
   uart_write_blocking(UART_RADIO_ID, &channel, 1);
 
   sleep_us(t_CHANNEL_CONFIG_US);
@@ -410,6 +417,8 @@ void radio_read_temperature(void) {
 #endif
 
   exit_config_state();
+}
+
 
 /**
  * @brief Read the voltage from the radio module.
