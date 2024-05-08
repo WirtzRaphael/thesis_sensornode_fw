@@ -323,6 +323,33 @@ void radio_destination_address(uint8_t address) {
   }
 }
 
+void radio_config_channel_number(uint8_t channel) {
+#if RADIO_PRE_EXIT_CONFIG
+  exit_config_state();
+#endif
+  enter_config_state();
+
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+
+  // -- Send : Command byte
+  uart_puts(UART_RADIO_ID, "C");
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+
+  // -- Send : Address
+  uart_write_blocking(UART_RADIO_ID, &channel, 1);
+
+  sleep_us(t_CHANNEL_CONFIG_US);
+
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+
+}
+
 /**
  * @brief Read the temperature from the radio module.
  */
