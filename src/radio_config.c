@@ -151,6 +151,10 @@ void radio_send(void) {
     uart_putc_raw(UART_RADIO_ID, 'H');
     sleep_us(100);
   }
+
+  // packet end character
+    uart_puts(UART_RADIO_ID, "LF");
+    sleep_us(100);
   // sleep packet timeout?
 
   if (UART_RADIO_CTS) {
@@ -248,6 +252,8 @@ void radio_memory_configuration(void) {
   McuLog_trace("Send M to radio");
   McuLog_trace("Memory configuration state !");
 
+  // todo : define addresses
+  /* AVOID MULTIPLE WRITES
   // Configuration parameters {address, data}
   // -- RF Channel
   unsigned char config_channel[] = {0x00, 5};
@@ -272,13 +278,40 @@ void radio_memory_configuration(void) {
   uart_wait();
 
   // -- Led Control
-  unsigned char config_led[] = {NVM_ADDR_LED_CONTROL, 0};
+  unsigned char config_led[] = {NVM_ADDR_LED_CONTROL, 1};
   uart_write_blocking(UART_RADIO_ID, config_led, 2);
   uart_wait();
   McuLog_trace("Config NVM : Led Control (Addr : %d, Value : %d)",
                config_led[0], config_led[1]);
 
-  // todo : packet end character
+  // -- Unique ID
+  unsigned char config_unique_id[] = {0x19, 6};
+  uart_write_blocking(UART_RADIO_ID, config_unique_id, 2);
+  uart_wait();
+  McuLog_trace("Config NVM : Unique ID (UID) (Addr : %d, Value : %d)",
+               config_unique_id[0], config_unique_id[1]);
+
+  // -- System ID
+  unsigned char config_system_id[] = {0x1A, 1};
+  uart_write_blocking(UART_RADIO_ID, config_system_id, 2);
+  uart_wait();
+  McuLog_trace("Config NVM : System ID (SID) (Addr : %d, Value : %d)",
+               config_system_id[0], config_system_id[1]);
+
+  // -- Destination ID
+  unsigned char config_destination_id[] = {0x21, 20};
+  uart_write_blocking(UART_RADIO_ID, config_destination_id, 2);
+  uart_wait();
+  McuLog_trace("Config NVM : Destination ID (DID) (Addr : %d, Value : %d)",
+               config_destination_id[0], config_destination_id[1]);
+  */ // AVOID MULIPLE WRITES
+
+  unsigned char config_packet_end_char[] = {0x11, 0x0A}; // 0x0A = 10 => LF
+  uart_write_blocking(UART_RADIO_ID, config_packet_end_char, 2);
+  uart_wait();
+  McuLog_trace("Config NVM : Packet end character (Addr : %d, Value : %d)",
+               config_packet_end_char[0], config_packet_end_char[1]);
+
   // todo : addressing (later)
   // todo : crc mode (later)
   // todo : uart flow control (later)
@@ -289,13 +322,14 @@ void radio_memory_configuration(void) {
   uart_write_blocking(UART_RADIO_ID, cmdExit, 1);
   // uart_write_blocking(UART_RADIO_ID, data1, sizeof(data1));
   McuLog_trace("Send %d to radio", cmdExit[0]);
+
   sleep_ms(t_MEMORY_CONFIG_MS);
 
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
 
-  // fixme : '>' and values in buffer
+  // fixme : clean buffer, contains '>' and values
   radio_uart_read_all();
 
   exit_config_state();
