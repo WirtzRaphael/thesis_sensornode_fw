@@ -13,6 +13,7 @@
 #include "application.h"
 #include "pico_config.h"
 #include "radio_config.h"
+#include "menu.h"
 
 #include "pico/stdlib.h"
 #include "stdio.h"
@@ -99,86 +100,17 @@ static void AppTask(void *pv) {
 #endif
     vTaskDelay(pdMS_TO_TICKS(5 * 100));
 
-    // Select part
-    printf("[r]adio \n");
-    printf("Enter character: \n");
-    char userCmd = getchar();
-    printf("You entered : %c\n\n", userCmd);
-    McuLog_trace("You entered : %c", userCmd);
+    const char *mainMenuOptions[] = {"[r]adio"};
+    menu_display(mainMenuOptions, 1);
 
-    // Select operation
-    if (userCmd == 'r') {
-      printf("# Radio\n");
-      McuLog_trace("# Radio");
-      //
-      printf("[b]uffer read out\n");
-      printf("[m]emory read\n");
-      printf("memory [w]rite\n");
-      printf("[r]eset\n");
-      printf("[s]end\n");
-      printf("[t]emperature\n");
-      printf("[d]estination address\n");
-
-      userCmd = getchar();
-      printf("You entered : %c\n", userCmd);
-      McuLog_trace("You entered : %c", userCmd);
-
-      switch (userCmd) {
-      case 'b':
-        radio_uart_read_all();
-        break;
-      case 'd':
-        radio_config_destination_address(123);
-        break;
-      case 'm':
-        radio_memory_read_one_byte(0x00);
-        radio_memory_read_one_byte(0x01);
-        radio_memory_read_one_byte(0x02);
-        break;
-      case 'u':
-        radio_config_read_temperature();
-        break;
-      case 'r':
-        radio_reset();
-        break;
-      case 's':
-        radio_send();
-        // todo
-        break;
-      case '4':
-        // todo radio receive
-        break;
-      case 'p':
-        // todo power volatile
-        break;
-      case 'c': 
-        // todo channel volatile
-        radio_config_channel_number(1);
-        break;
-      case 'i':
-        // todo rssi
-        break;
-      case 'w':
-        radio_memory_configuration();
-        break;
-      case 'v':
-        // todo battery (see formula)
-        break;
-      case 'z':
-        radio_sleep();
-        break;
-      case '5':
-        radio_wakeup();
-        break;
-      case '0':
-        radio_get_configuration_memory();
-        break;
-      default:
-        printf("You entered something else\n");
-        McuLog_trace("You entered something else");
-        break;
-      }
-      printf("\n");
+    char userCmd = menu_get_user_input();
+    switch (userCmd) {
+    case 'r':
+      menu_handler_radio();
+      break;
+    default:
+      printf("Invalid option\n");
+      break;
     }
   }
 }
