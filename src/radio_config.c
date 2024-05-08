@@ -35,12 +35,17 @@ static void uart_wait(void) {
   sleep_ms(50); // todo : decrease
 }
 
+/** 
+ * @brief Send payload separator character.
+ */
+ // todo : protocol specific
 static void send_payload_separator(void) {
   uart_puts(UART_RADIO_ID, payload_separator_char);
   uart_wait();
 }
 
-/* Change from IDLE to CONFIG state
+/**
+ * @brief Enter the configuration state. Change from IDLE to CONFIG state.
 */
 static void enter_config_state(void) {
   McuLog_trace("Enter config state");
@@ -51,7 +56,9 @@ static void enter_config_state(void) {
   sleep_us(50); // additional delay for gpio to be set
 }
 
-/* Change from CONFIG to IDLE state
+/**
+  * @brief Exit the configuration state. Change from CONFIG to IDLE state.
+  *
 */
 static void exit_config_state(void) {
   McuLog_trace("Exit config state");
@@ -66,6 +73,9 @@ static void exit_config_state(void) {
   sleep_us(t_CONFIG_IDLE_US);
 }
 
+/**
+ * @brief Initialize the radio module.
+ */
 void radio_init() {
   // uart_init(UART_RADIO_ID, UART_RADIO_BAUD_RATE);
   uart_init(UART_RADIO_ID, 19200);
@@ -96,6 +106,10 @@ void radio_init() {
   gpio_put(RADIO_PIN_CONFIG, true);
 }
 
+/**
+ * @brief Reset the radio module via reset pin.
+ * 
+ */
 void radio_reset(void) {
   McuLog_trace("Reset radio");
   gpio_put(PL_GPIO_RADIO_RESET, false);
@@ -103,6 +117,10 @@ void radio_reset(void) {
   gpio_put(PL_GPIO_RADIO_RESET, true);
 }
 
+/**
+ * @brief Send a message to transmit.
+ * 
+ */
 void radio_send(void) {
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
@@ -110,6 +128,7 @@ void radio_send(void) {
   }
   /* RXD
   */
+  // todo send (end character? max buffer size, packeg length?)
   // send characters on UART line
   for (uint8_t i = 0; i < 100; i++) {
     uart_putc_raw(UART_RADIO_ID, 'H');
@@ -135,6 +154,10 @@ void radio_send(void) {
 
 }
 
+/**
+ * @brief Readout all data from the radio buffer
+ * 
+ */
 void radio_uart_read_all(void) {
   uint8_t rec_buffer[1];
   while (uart_is_readable(UART_RADIO_ID)) {
@@ -144,6 +167,11 @@ void radio_uart_read_all(void) {
   }
 }
 
+/**
+ * @brief Read one byte from the radio memory.
+ * 
+ * @param address Data address in non-volatile memory (NVM)
+ */
 void radio_memory_read_one_byte(uint8_t address) {
   
 
@@ -186,6 +214,10 @@ void radio_memory_read_one_byte(uint8_t address) {
   McuLog_trace("Finished memory read");
 }
 
+/**
+ * @brief Non-volatile memory (NVM) configuration.
+ * 
+ */
 void radio_memory_configuration(void) {
   // be sure to not be already in config state
   exit_config_state();
@@ -209,36 +241,43 @@ void radio_memory_configuration(void) {
 
   // Configuration parameters {address, data}
   // -- Channel
-  unsigned char config0[] = {0x00, 5};
-  uart_write_blocking(UART_RADIO_ID, config0, 2);
-  McuLog_trace("Send %d to radio", config0[0]);
-  McuLog_trace("Send %d to radio", config0[1]);
+  unsigned char config_channel[] = {0x00, 5};
+  uart_write_blocking(UART_RADIO_ID, config_channel, 2);
+  McuLog_trace("Send %d to radio", config_channel[0]);
+  McuLog_trace("Send %d to radio", config_channel[1]);
   uart_wait();
 
   // -- Power
-  unsigned char config1[] = {ADDR_RF_POWER, 1};
-  uart_write_blocking(UART_RADIO_ID, config1, 2);
-  McuLog_trace("Send %d to radio", config1[0]);
-  McuLog_trace("Send %d to radio", config1[1]);
+  unsigned char config_power[] = {NVM_ADDR_RF_POWER, 1};
+  uart_write_blocking(UART_RADIO_ID, config_power, 2);
+  McuLog_trace("Send %d to radio", config_power[0]);
+  McuLog_trace("Send %d to radio", config_power[1]);
   uart_wait();
 
   // -- Data rate
   // 4 : 1.2kbit/s
-  unsigned char config2[] = {ADDR_RF_DATA_RATE, 4};
-  uart_write_blocking(UART_RADIO_ID, config2, 2);
-  McuLog_trace("Send %d to radio", config2[0]);
-  McuLog_trace("Send %d to radio", config2[1]);
+  unsigned char config_data_rate[] = {NVM_ADDR_RF_DATA_RATE, 4};
+  uart_write_blocking(UART_RADIO_ID, config_data_rate, 2);
+  McuLog_trcae("Config NVM : Data rate (Addr : %d, Value : %d)",
+  config_data_rate[0], config_data_rate[1]);
+  uart_wait();
+
+  // -- Led Control
+  // 4 : 1.2kbit/s
+  unsigned char config_led[] = {NVM_ADDR_RF_DATA_RATE, 1};
+  uart_write_blocking(UART_RADIO_ID, config_led, 2);
+  McuLog_trace("Send %d to radio", config_led[0]);
+  McuLog_trace("Send %d to radio", config_led[1]);
   uart_wait();
 
   // todo : packet end character
   // todo : addressing (later)
   // todo : crc mode (later)
   // todo : uart flow control (later)
-  // todo : led control (optional)
   // todo : de-, enryption with key, vector (later)
 
   // -- Send : Exit
-  unsigned char cmdExit[] = {CMD_NVM_EXIT};
+  unsigned char cmdExit[] = {NVM_CMD_EXIT};
   uart_write_blocking(UART_RADIO_ID, cmdExit, 1);
   // uart_write_blocking(UART_RADIO_ID, data1, sizeof(data1));
   McuLog_trace("Send %d to radio", cmdExit[0]);
@@ -256,9 +295,12 @@ void radio_memory_configuration(void) {
   McuLog_trace("Exit memory configuration state !");
 }
 
-/* Destination address
- * @param address : destination address (length dependent on addressing mode)
-*/
+/**
+ * @brief Set the destination address for transmission.
+ * 
+ * @param address destination address
+ * @note address length is dependent on addressing mode
+ */
 void radio_destination_address(uint8_t address) {
   // be sure to not be already in config state
   exit_config_state();
@@ -282,10 +324,10 @@ void radio_destination_address(uint8_t address) {
   }
 }
 
+/**
+ * @brief Read the temperature from the radio module.
+ */
 void radio_read_temperature(void) {
-  uint8_t rec_prompt[1];
-  bool continueConfig = false;
-
   // be sure to not be already in config state
   exit_config_state();
 
@@ -322,6 +364,39 @@ void radio_read_temperature(void) {
   McuLog_trace("Finished read temperature");
 }
 
+/**
+ * @brief Enters low current sleep mode for the radio module.
+ * 
+ */
+void radio_sleep(void){
+  // be sure to not be already in config state
+  exit_config_state();
+
+  enter_config_state();
+  // -- Wait for '>'
+  if (wait_config_prompt() == ERR_FAULT) {
+    return;
+  }
+
+  gpio_put(RADIO_PIN_CONFIG, false);
+  sleep_us(50); // additional delay for gpio to be set
+
+  // -- Send : Command byte
+  // uart_write_blocking(UART_ID, &pre, 1);
+  uart_puts(UART_RADIO_ID, "Z");
+  McuLog_trace("Send Z to radio");
+  uart_wait();
+  // don't exit config state. i.e hold gpio low.
+}
+
+/**
+ * @brief Wakeup the radio from sleep mode.
+ */
+void radio_wakeup(void){
+  gpio_put(RADIO_PIN_CONFIG, true);
+  sleep_us(50); // additional delay for gpio to be set
+}
+
 uint8_t wait_config_prompt(void) {
   sleep_us(t_CONFIG_PROMPT_US);
 
@@ -331,6 +406,9 @@ uint8_t wait_config_prompt(void) {
   return check_config_prompt(rec_prompt[0]);
 }
 
+/**
+ * @brief Get the configuration memory from the radio module.
+ */
 void radio_get_configuration_memory(void){
   // be sure to not be already in config state
   exit_config_state();
@@ -349,8 +427,16 @@ void radio_get_configuration_memory(void){
   // Readout buffer
   // fixme : values encoding in terminal
   radio_uart_read_all();
+
+  exit_config_state();
 }
 
+/**
+ * @brief Check if the value received is equal to the prompt character '>'.
+ * 
+ * @param received Value to check
+ * @return uint8_t Error code 
+ */
 uint8_t check_config_prompt(uint8_t received) {
   if (received != 62) {
     McuLog_error("Haven't received '>'");
