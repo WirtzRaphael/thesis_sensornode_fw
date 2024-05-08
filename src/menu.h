@@ -4,5 +4,6 @@
 void menu_display(const char *options[], int numOptions);
 char menu_get_user_input(void);
 void menu_handler_radio(void);
+void menu_handler_radio_config(void);
 
 #endif /* RADIO_HANDLER_H_ */
