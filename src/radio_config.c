@@ -28,7 +28,7 @@
 #define LOG_LEVEL_DEBUG (0)
 #define PRINTF          (1)
 // exit config state before entering new config state
-#define RADIO_PRE_EXIT_CONFIG (1) 
+#define RADIO_PRE_EXIT_CONFIG (1)
 
 char payload_separator_char[1] = "-";
 
@@ -144,8 +144,8 @@ void radio_send(void) {
     sleep_us(t_RXD_TX_US);
   }
 
-  //time T_TX : depends on packet size and data rate, see formula datasheet
-  sleep_ms(100); 
+  // time T_TX : depends on packet size and data rate, see formula datasheet
+  sleep_ms(100);
 
   sleep_us(t_TX_IDLE_US);
 }
@@ -176,7 +176,6 @@ void radio_memory_read_one_byte(uint8_t address) {
 
   enter_config_state();
 
-  // -- Wait for '>'
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
@@ -186,7 +185,6 @@ void radio_memory_read_one_byte(uint8_t address) {
   McuLog_trace("Send Y to radio");
   // uart_wait();
 
-  // -- Wait for '>'
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
@@ -223,7 +221,6 @@ void radio_memory_configuration(void) {
    */
   enter_config_state();
 
-  // -- Wait for '>'
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
@@ -244,13 +241,12 @@ void radio_memory_configuration(void) {
   McuLog_trace("Config NVM : RF Channel (Addr : %d, Value : %d)",
                config_channel[0], config_channel[1]);
 
-
   // -- RF Power
   unsigned char config_power[] = {NVM_ADDR_RF_POWER, 1};
   uart_write_blocking(UART_RADIO_ID, config_power, 2);
   uart_wait();
-  McuLog_trace("Config NVM : RF Power (Addr : %d, Value : %d)",
-               config_power[0], config_power[1]);
+  McuLog_trace("Config NVM : RF Power (Addr : %d, Value : %d)", config_power[0],
+               config_power[1]);
 
   // -- RF Data rate
   // 4 : 1.2kbit/s
@@ -281,7 +277,6 @@ void radio_memory_configuration(void) {
   McuLog_trace("Send %d to radio", cmdExit[0]);
   sleep_ms(t_MEMORY_CONFIG_MS);
 
-  // -- Wait for '>'
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
@@ -299,13 +294,12 @@ void radio_memory_configuration(void) {
  * @param address destination address
  * @note address length is dependent on addressing mode
  */
-void radio_destination_address(uint8_t address) {
+void radio_config_destination_address(uint8_t address) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
 
   enter_config_state();
-  // -- Wait for '>'
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
@@ -347,7 +341,6 @@ void radio_config_channel_number(uint8_t channel) {
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
-
 }
 
 /**
@@ -359,7 +352,6 @@ void radio_read_temperature(void) {
 #endif
 
   enter_config_state();
-  // -- Wait for '>'
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
@@ -401,7 +393,6 @@ void radio_sleep(void) {
 #endif
 
   enter_config_state();
-  // -- Wait for '>'
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
@@ -443,7 +434,6 @@ void radio_get_configuration_memory(void) {
 #endif
 
   enter_config_state();
-  // -- Wait for '>'
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
