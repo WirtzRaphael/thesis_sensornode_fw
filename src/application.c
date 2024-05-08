@@ -11,9 +11,9 @@
 #include "hardware/gpio.h"
 
 #include "application.h"
+#include "menu.h"
 #include "pico_config.h"
 #include "radio_config.h"
-#include "menu.h"
 
 #include "pico/stdlib.h"
 #include "stdio.h"
@@ -100,13 +100,19 @@ static void AppTask(void *pv) {
 #endif
     vTaskDelay(pdMS_TO_TICKS(5 * 100));
 
-    const char *mainMenuOptions[] = {"[r]adio"};
-    menu_display(mainMenuOptions, 1);
+    const char *mainMenuOptions[] = {
+        "[r]adio",
+        "radio [c]onfiguration",
+    };
+    menu_display(mainMenuOptions, 2);
 
     char userCmd = menu_get_user_input();
     switch (userCmd) {
     case 'r':
       menu_handler_radio();
+      break;
+    case 'c':
+      menu_handler_radio_config();
       break;
     default:
       printf("Invalid option\n");
