@@ -28,7 +28,7 @@ char menu_get_user_input() {
 }
 
 /**
- * @brief
+ * @brief menu for radio features
  *
  */
 void menu_handler_radio(void) {
@@ -78,17 +78,18 @@ void menu_handler_radio_config(void) {
                                 "memory [w]rite (NVM)",
                                 "[m]emory read config",
                                 "[p]ower",
-                                "[r]eset"};
-  menu_display(radioOptions, 7);
+                                "[r]eset",
+                                "e[x]it config state"};
+  menu_display(radioOptions, 9);
 
   char userCmd = menu_get_user_input();
   uint8_t rssi;
   switch (userCmd) {
   case 'c':
-    radio_config_rf_channel_number(1);
+    radio_config_rf_channel_number(5);
     break;
   case 'd':
-    radio_config_destination_address(123);
+    radio_config_destination_address(20);
     break;
   case 'i':
     rssi = radio_signal_strength_indicator();
@@ -109,6 +110,9 @@ void menu_handler_radio_config(void) {
     break;
   case 'r':
     radio_reset();
+    break;
+  case 'x':
+    exit_config_state();
     break;
   default:
     printf("Invalid option\n");
