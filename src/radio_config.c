@@ -449,6 +449,47 @@ void radio_read_voltage(void) {
 
   exit_config_state();
 }
+
+/**
+ * @brief Read the signal strength from the radio module.
+ * 
+ * @note Dependent on input signal strength P
+ * @note P = - RSSI /2
+ */
+uint8_t radio_signal_strength_indicator(void) {
+  #if RADIO_PRE_EXIT_CONFIG
+  exit_config_state();
+#endif
+
+  enter_config_state();
+  if (wait_config_prompt() == ERR_FAULT) {
+    return 0; // fixme : error code, use pointer for value
+  }
+
+  // -- Send : Command byte
+  // uart_write_blocking(UART_ID, &pre, 1);
+  uart_puts(UART_RADIO_ID, "S");
+  McuLog_trace("Send S to radio");
+  uart_wait();
+
+  // -- Receive : 1byte value + Prompt ('>')
+  uint8_t buffer_size = 2;
+  uint8_t rec_buffer[buffer_size];
+  uart_read_blocking(UART_RADIO_ID, rec_buffer, buffer_size);
+  for (uint8_t i = 0; i < buffer_size; i++) {
+    McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
+  }
+
+  check_config_prompt(rec_buffer[1]);
+
+  // -- Signal strenght calculation
+  uint8_t rssi = rec_buffer[0];
+  McuLog_trace("RSSI is : %d", rssi);
+#if PRINTF
+  printf("RSSI is : %d\n", rssi);
+#endif
+
+  exit_config_state();
 }
 
 /**
