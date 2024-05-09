@@ -79,8 +79,9 @@ void menu_handler_radio_config(void) {
                                 "[m]emory read config",
                                 "[p]ower",
                                 "[r]eset",
-                                "e[x]it config state"};
-  menu_display(radioOptions, 9);
+                                "e[x]it config state",
+                                "[0] get config / check if config mode"};
+  menu_display(radioOptions, 10);
 
   char userCmd = menu_get_user_input();
   uint8_t rssi;
@@ -95,25 +96,18 @@ void menu_handler_radio_config(void) {
     rssi = radio_signal_strength_indicator();
     break;
   case 'b':
-    // todo : separate function and use addr defines
-    radio_memory_read_one_byte(0x00); // channel
-    radio_memory_read_one_byte(0x01); // power
-    radio_memory_read_one_byte(0x02); // data rate
-    radio_memory_read_one_byte(0x3A); // LED
-    radio_memory_read_one_byte(0x15); // CRC
-    radio_memory_read_one_byte(0x19); // UID
-    radio_memory_read_one_byte(0x1A); // SID
-    radio_memory_read_one_byte(0x21); // DID
-    radio_memory_read_one_byte(0x14); // address mode
+    radio_memory_read_one_byte(NVM_ADDR_RF_CHANNEL);
+    radio_memory_read_one_byte(NVM_ADDR_RF_POWER);
+    radio_memory_read_one_byte(NVM_ADDR_RF_DATA_RATE);
     break;
   case 'm':
-    radio_get_configuration_memory();
+    radio_memory_read_configuration();
     break;
   case 'p':
     radio_config_rf_power(1);
     break;
   case 'w':
-    radio_memory_configuration();
+    radio_memory_write_configuration();
     break;
   case 'r':
     radio_reset();
@@ -122,7 +116,7 @@ void menu_handler_radio_config(void) {
     exit_config_state();
     break;
   case '0':
-    // todo return config and check if already in config mode
+    radio_get_configuration_memory();
     break;
   default:
     printf("Invalid option\n");

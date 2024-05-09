@@ -188,7 +188,6 @@ void radio_uart_read_all(void) {
  * @param address Data address in non-volatile memory (NVM)
  */
 void radio_memory_read_one_byte(uint8_t address) {
-
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -201,16 +200,18 @@ void radio_memory_read_one_byte(uint8_t address) {
 
   // -- Send : Command byte
   uart_puts(UART_RADIO_ID, "Y");
-  McuLog_trace("Send Y to radio");
-  // uart_wait();
-
+  // McuLog_trace("Send Y to radio");
+  McuLog_trace("Get NVM byte from radio");
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
 
   // -- Send : Parameters
   uart_write_blocking(UART_RADIO_ID, &address, 1);
-  McuLog_trace("parameter: %d \n", address);
+#if PRINTF
+  printf("address: %d\n", address);
+#endif
+  McuLog_trace("address: %d", address);
   uart_wait();
   // todo : sleep
 
@@ -218,20 +219,41 @@ void radio_memory_read_one_byte(uint8_t address) {
   uint8_t buffer_size = 2;
   uint8_t rec_buffer[buffer_size];
   uart_read_blocking(UART_RADIO_ID, rec_buffer, buffer_size);
-  for (uint8_t i = 0; i < buffer_size; i++) {
-    McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
-  }
+/* debug : print received buffer
+for (uint8_t i = 0; i < buffer_size; i++) {
+  McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
+}
+*/
+#if PRINTF
+  printf("config value : %d \n", rec_buffer[0]);
+#endif
+  McuLog_trace("config value : %d \n", rec_buffer[0]);
 
   exit_config_state();
-
-  McuLog_trace("Finished memory read");
 }
 
 /**
- * @brief Non-volatile memory (NVM) configuration.
+ * @brief Read the configurations from the non-volatile memory (NVM).
  *
  */
-void radio_memory_configuration(void) {
+void radio_memory_read_configuration(void) {
+  radio_memory_read_one_byte(NVM_ADDR_RF_CHANNEL);
+  radio_memory_read_one_byte(NVM_ADDR_RF_POWER);
+  radio_memory_read_one_byte(NVM_ADDR_RF_DATA_RATE);
+  radio_memory_read_one_byte(NVM_ADDR_PACKET_END_CHAR);
+  radio_memory_read_one_byte(NVM_ADDR_ADDRESS_MODE);
+  radio_memory_read_one_byte(NVM_ADDR_CRC);
+  radio_memory_read_one_byte(NVM_ADDR_UID);
+  radio_memory_read_one_byte(NVM_ADDR_SID);
+  radio_memory_read_one_byte(NVM_ADDR_DID);
+  radio_memory_read_one_byte(NVM_ADDR_LED_CONTROL);
+}
+
+/**
+ * @brief Write into non-volatile memory (NVM) configuration.
+ *
+ */
+void radio_memory_write_configuration(void) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
