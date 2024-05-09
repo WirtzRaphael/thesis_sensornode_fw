@@ -11,10 +11,10 @@
 #include "hardware/uart.h"
 #include <stdint.h>
 
-#define RADIO_PIN_TX          PICO_PINS_UART0_TX
-#define RADIO_PIN_RX          PICO_PINS_UART0_RX
-#define RADIO_PIN_CONFIG      (20)
-#define RADIO_HW_FLOW_CONTROL (0)
+#define RADIO_PIN_TX                     PICO_PINS_UART0_TX
+#define RADIO_PIN_RX                     PICO_PINS_UART0_RX
+#define RADIO_PIN_CONFIG                 (20)
+#define RADIO_HW_FLOW_CONTROL            (0)
 #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
 
 #define UART_RADIO_ID        UART0_ID
@@ -81,7 +81,7 @@ void exit_config_state(void) {
  */
 void radio_init() {
   /* Pin configuration
-  */
+   */
   // uart_init(UART_RADIO_ID, UART_RADIO_BAUD_RATE);
   uart_init(UART_RADIO_ID, 19200);
   gpio_set_function(RADIO_PIN_TX, GPIO_FUNC_UART);
@@ -103,7 +103,7 @@ void radio_init() {
   gpio_put(RADIO_PIN_CONFIG, true);
 
   /* UART configuration
-  */
+   */
   // HW flow control (default)
 #if RADIO_HW_FLOW_CONTROL
   uart_set_hw_flow(UART_RADIO_ID, true, true);
@@ -116,11 +116,11 @@ void radio_init() {
   radio_memory_configuration();
 #endif
   /* Radio configuration (volatile memory)
-  */
-  //radio_uart_read_all(); // clear buffer
-  //radio_config_rf_channel_number(1);
-  //radio_config_rf_power(1);
-  //radio_config_destination_address(20);
+   */
+  // radio_uart_read_all(); // clear buffer
+  // radio_config_rf_channel_number(1);
+  // radio_config_rf_power(1);
+  // radio_config_destination_address(20);
 }
 
 /**
@@ -153,8 +153,8 @@ void radio_send(void) {
   }
 
   // packet end character
-    uart_puts(UART_RADIO_ID, "LF");
-    sleep_us(100);
+  uart_puts(UART_RADIO_ID, "LF");
+  sleep_us(100);
   // sleep packet timeout?
 
   if (UART_RADIO_CTS) {
@@ -166,7 +166,7 @@ void radio_send(void) {
   // time T_TX : depends on packet size and data rate, see formula datasheet
   sleep_ms(100);
 
-  //sleep_us(t_TX_IDLE_US);
+  // sleep_us(t_TX_IDLE_US);
 }
 
 /**
@@ -252,11 +252,10 @@ void radio_memory_configuration(void) {
   McuLog_trace("Send M to radio");
   McuLog_trace("Memory configuration state !");
 
-  // todo : define addresses
-  /* AVOID MULTIPLE WRITES
+  /* AVOID MULTIPLE WRITES <--
   // Configuration parameters {address, data}
   // -- RF Channel
-  unsigned char config_channel[] = {0x00, 5};
+  unsigned char config_channel[] = {NVM_ADDR_RF_CHANNEL, 5};
   uart_write_blocking(UART_RADIO_ID, config_channel, 2);
   uart_wait();
   McuLog_trace("Config NVM : RF Channel (Addr : %d, Value : %d)",
@@ -285,42 +284,50 @@ void radio_memory_configuration(void) {
                config_led[0], config_led[1]);
 
   // -- Unique ID
-  unsigned char config_unique_id[] = {0x19, 6};
+  unsigned char config_unique_id[] = {NVM_ADDR_UID, 6};
   uart_write_blocking(UART_RADIO_ID, config_unique_id, 2);
   uart_wait();
   McuLog_trace("Config NVM : Unique ID (UID) (Addr : %d, Value : %d)",
                config_unique_id[0], config_unique_id[1]);
 
   // -- System ID
-  unsigned char config_system_id[] = {0x1A, 1};
+  unsigned char config_system_id[] = {NVM_ADDR_SID, 1};
   uart_write_blocking(UART_RADIO_ID, config_system_id, 2);
   uart_wait();
   McuLog_trace("Config NVM : System ID (SID) (Addr : %d, Value : %d)",
                config_system_id[0], config_system_id[1]);
 
   // -- Destination ID
-  unsigned char config_destination_id[] = {0x21, 20};
+  unsigned char config_destination_id[] = {NVM_ADDR_DID, 20};
   uart_write_blocking(UART_RADIO_ID, config_destination_id, 2);
   uart_wait();
   McuLog_trace("Config NVM : Destination ID (DID) (Addr : %d, Value : %d)",
                config_destination_id[0], config_destination_id[1]);
-  */ // AVOID MULIPLE WRITES
 
-  //unsigned char config_packet_end_char[] = {0x11, 0x0A}; // 0x0A = 10 => LF
-  unsigned char config_packet_end_char[] = {0x11, 0x00}; // 0 => NONE 
+  // -- Packet end character
+  // 00 : NONE
+  // 10 : LF
+  unsigned char config_packet_end_char[] = {NVM_ADDR_PACKET_END_CHAR, 0x00};
   uart_write_blocking(UART_RADIO_ID, config_packet_end_char, 2);
   uart_wait();
   McuLog_trace("Config NVM : Packet end character (Addr : %d, Value : %d)",
                config_packet_end_char[0], config_packet_end_char[1]);
 
-  unsigned char config_address_mode[] = {0x14, 0x02};
+  // -- Address mode
+  unsigned char config_address_mode[] = {NVM_ADDR_ADDRESS_MODE, 0x02};
   uart_write_blocking(UART_RADIO_ID, config_address_mode, 2);
   uart_wait();
   McuLog_trace("Config NVM : Packet end character (Addr : %d, Value : %d)",
                config_address_mode[0], config_address_mode[1]);
 
-  // todo : addressing (later)
-  // todo : crc mode (later)
+  // -- CRC mode
+  unsigned char config_crc[] = {NVM_ADDR_CRC, 0x02};
+  uart_write_blocking(UART_RADIO_ID, config_crc, 2);
+  uart_wait();
+  McuLog_trace("Config NVM : CRC mode (Addr : %d, Value : %d)", config_crc[0],
+               config_crc[1]);
+  */ // --> AVOID MULIPLE WRITES
+
   // todo : uart flow control (later)
   // todo : de-, enryption with key, vector (later)
 
@@ -373,12 +380,12 @@ void radio_config_destination_address(uint8_t address) {
   }
 }
 
-/** 
+/**
  * @brief Set the RF channel number.
  *
  * @param channel RF channel number
  * @note volatile memory
-*/
+ */
 void radio_config_rf_channel_number(uint8_t channel) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
@@ -474,7 +481,6 @@ void radio_read_temperature(void) {
   exit_config_state();
 }
 
-
 /**
  * @brief Read the voltage from the radio module.
  */
@@ -516,12 +522,12 @@ void radio_read_voltage(void) {
 
 /**
  * @brief Read the signal strength from the radio module.
- * 
+ *
  * @note Dependent on input signal strength P
  * @note P = - RSSI /2
  */
 uint8_t radio_signal_strength_indicator(void) {
-  #if RADIO_PRE_EXIT_CONFIG
+#if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
 

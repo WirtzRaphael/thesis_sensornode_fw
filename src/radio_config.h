@@ -65,12 +65,17 @@
 
 /* ADDRESSES
  */
-#define NVM_ADDR_RF_CHANNEL   0X00
-#define NVM_ADDR_RF_POWER     0X01
-#define NVM_ADDR_RF_DATA_RATE 0X02
-#define NVM_ADDR_LED_CONTROL       0X3A
-#define NVM_ADDR_CRC 0x15
-#define NVM_CMD_EXIT          0XFF
+#define NVM_ADDR_RF_CHANNEL      0X00
+#define NVM_ADDR_RF_POWER        0X01
+#define NVM_ADDR_RF_DATA_RATE    0X02
+#define NVM_ADDR_PACKET_END_CHAR 0x11
+#define NVM_ADDR_ADDRESS_MODE    0x14
+#define NVM_ADDR_CRC             0x15
+#define NVM_ADDR_UID             0x19
+#define NVM_ADDR_SID             0x1A
+#define NVM_ADDR_DID             0x21
+#define NVM_ADDR_LED_CONTROL     0X3A
+#define NVM_CMD_EXIT             0XFF
 
 // void radio_send_test_messages(void);
 /*! Sends a message via radio
