@@ -83,6 +83,7 @@
 /*! Sends a message via radio
  */
 void exit_config_state(void);
+void rc232_send_string(const char *message);
 void rc232_send_test(void);
 void rc232_reset(void);
 void rc232_init(void);

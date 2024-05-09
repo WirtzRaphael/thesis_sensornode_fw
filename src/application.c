@@ -13,6 +13,9 @@
 #include "application.h"
 #include "menu.h"
 #include "pico_config.h"
+
+#include "menu.h"
+#include "radio.h"
 #include "rc232.h"
 
 #include "pico/stdlib.h"
@@ -100,19 +103,24 @@ static void AppTask(void *pv) {
 #endif
     vTaskDelay(pdMS_TO_TICKS(5 * 100));
 
+    // todo : move to menu file
     const char *mainMenuOptions[] = {
         "[r]adio",
-        "radio [c]onfiguration",
+        "rc[2]32",
+        "rc232 [c]onfiguration"
     };
-    menu_display(mainMenuOptions, 2);
+    menu_display(mainMenuOptions, 3);
 
     char userCmd = menu_get_user_input();
     switch (userCmd) {
     case 'r':
       menu_handler_radio();
       break;
+    case '2':
+      menu_handler_rc232();
+      break;
     case 'c':
-      menu_handler_radio_config();
+      menu_handler_rc232_config();
       break;
     default:
       printf("Invalid option\n");

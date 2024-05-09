@@ -135,6 +135,35 @@ void rc232_reset(void) {
   gpio_put(PL_GPIO_RADIO_RESET, true);
 }
 
+/** 
+ * @brief Send a message to transmit.
+*/
+void rc232_send_string(const char *message) {
+  if (!uart_is_writable(UART_RADIO_ID)) {
+    McuLog_error("Radio UART not writable");
+    return;
+  }
+
+  // RXD
+  uart_puts(UART_RADIO_ID, message);
+
+  // packet end character
+  uart_puts(UART_RADIO_ID, "LF");
+  sleep_us(100);
+  // sleep packet timeout?
+
+  if (UART_RADIO_CTS) {
+    sleep_us(t_RXD_CTS_US);
+  } else {
+    sleep_us(t_RXD_TX_US);
+  }
+
+  // time T_TX : depends on packet size and data rate, see formula datasheet
+  sleep_ms(100);
+
+  // sleep_us(t_TX_IDLE_US);
+}
+
 /**
  * @brief Send a message to transmit.
  *

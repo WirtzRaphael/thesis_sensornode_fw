@@ -1,5 +1,6 @@
 #include "menu.h"
 #include "rc232.h"
+#include "radio.h"
 #include "stdio.h"
 #include <stdint.h>
 
@@ -34,17 +35,43 @@ char menu_get_user_input() {
  *
  */
 void menu_handler_radio(void) {
-  const char *radioOptions[] = {
-    "[a]uthenticate",
-    "[b]uffer read out / receive",
-                                "broad[c]ast",
-                                "[r]eceive",
-                                "[s]end",
-                                "[t]emperature",
-                                "[v]oltage",
-                                "s[l]eep",
+  const char *radioOptions[] = {"[a]uthenticate", "[s]end",
+                                "send [t]est message"};
+  menu_display(radioOptions, 3);
+
+  char userCmd = menu_get_user_input();
+  switch (userCmd) {
+  case 'a':
+    // send broadcast, board id / UUID
+    // scan channels
+    // receive response
+    // - Free UID network (optional)
+    // - UID gateway -> DID
+    // - time sync (optional)
+    break;
+  case 's':
+    radio_send_temperature();
+    break;
+  case 't':
+    radio_send_test();
+    break;
+  default:
+    printf("Invalid option\n");
+    break;
+  }
+}
+
+/**
+ * @brief menu for rc232 features
+ *
+ */
+void menu_handler_rc232(void) {
+  const char *rc232Options[] = {"[a]uthenticate", "[b]uffer read out / receive",
+                                "broad[c]ast",    "[r]eceive",
+                                "[s]end",         "[t]emperature",
+                                "[v]oltage",      "s[l]eep",
                                 "[w]ake up"};
-  menu_display(radioOptions, 8);
+  menu_display(rc232Options, 8);
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
@@ -63,7 +90,7 @@ void menu_handler_radio(void) {
     // todo : variable DID
     rc232_config_destination_address(RADIO_BROADCAST_ADDRESS);
     rc232_send_test();
-    sleep_ms(200); // fixme : magic delay until sent
+    sleep_ms(200);                        // fixme : magic delay until sent
     rc232_config_destination_address(20); // set back to default
     break;
   case 'l':
@@ -101,8 +128,8 @@ void menu_handler_radio(void) {
  * @brief
  *
  */
-void menu_handler_radio_config(void) {
-  const char *radioOptions[] = {"[c]hannel",
+void menu_handler_rc232_config(void) {
+  const char *rc232Options[] = {"[c]hannel",
                                 "[d]estination address",
                                 "rss[i]",
                                 "memory read [b]yte (NVM)",
@@ -112,7 +139,7 @@ void menu_handler_radio_config(void) {
                                 "[r]eset",
                                 "e[x]it config state",
                                 "[0] get config / check if config mode"};
-  menu_display(radioOptions, 10);
+  menu_display(rc232Options, 10);
 
   char userCmd = menu_get_user_input();
   uint8_t rssi;
