@@ -1,5 +1,5 @@
 /**
- * @file radio_config.c
+ * @file rc232_config.c
  * @author raphael wirtz
  * @brief Configuration and usage of the radiocrafts rc17xxhp moodule with the RC-232 protocol.
  * @version 1
@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2024
  * 
  */
-#include "radio_config.h"
+#include "rc232.h"
 #include "stdio.h"
 
 #include "pico/stdlib.h"
@@ -80,7 +80,7 @@ void exit_config_state(void) {
 /**
  * @brief Initialize the radio module.
  */
-void radio_init() {
+void rc232_init() {
   /* Pin configuration
    */
   // uart_init(UART_RADIO_ID, UART_RADIO_BAUD_RATE);
@@ -114,21 +114,21 @@ void radio_init() {
   uart_set_format(UART_RADIO_ID, DATA_BITS, STOP_BITS, PARITY);
 
 #if RADIO_CONFIG_NON_VOLATILE_MEMORY
-  radio_memory_configuration();
+  rc232_memory_configuration();
 #endif
   /* Radio configuration (volatile memory)
    */
-  // radio_uart_read_all(); // clear buffer
-  // radio_config_rf_channel_number(1);
-  // radio_config_rf_power(1);
-  // radio_config_destination_address(20);
+  // rc232_uart_read_all(); // clear buffer
+  // rc232_config_rf_channel_number(1);
+  // rc232_config_rf_power(1);
+  // rc232_config_destination_address(20);
 }
 
 /**
  * @brief Reset the radio module via reset pin.
  *
  */
-void radio_reset(void) {
+void rc232_reset(void) {
   McuLog_trace("Reset radio");
   gpio_put(PL_GPIO_RADIO_RESET, false);
   sleep_ms(100);
@@ -139,7 +139,7 @@ void radio_reset(void) {
  * @brief Send a message to transmit.
  *
  */
-void radio_send_test(void) {
+void rc232_send_test(void) {
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
     return;
@@ -174,7 +174,7 @@ void radio_send_test(void) {
  * @brief Readout all data from the radio buffer
  *
  */
-void radio_uart_read_all(void) {
+void rc232_uart_read_all(void) {
   uint8_t rec_buffer[1];
   while (uart_is_readable(UART_RADIO_ID)) {
     uart_read_blocking(UART_RADIO_ID, rec_buffer, 1);
@@ -188,7 +188,7 @@ void radio_uart_read_all(void) {
  *
  * @param address Data address in non-volatile memory (NVM)
  */
-void radio_memory_read_one_byte(uint8_t address) {
+void rc232_memory_read_one_byte(uint8_t address) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -237,24 +237,24 @@ for (uint8_t i = 0; i < buffer_size; i++) {
  * @brief Read the configurations from the non-volatile memory (NVM).
  *
  */
-void radio_memory_read_configuration(void) {
-  radio_memory_read_one_byte(NVM_ADDR_RF_CHANNEL);
-  radio_memory_read_one_byte(NVM_ADDR_RF_POWER);
-  radio_memory_read_one_byte(NVM_ADDR_RF_DATA_RATE);
-  radio_memory_read_one_byte(NVM_ADDR_PACKET_END_CHAR);
-  radio_memory_read_one_byte(NVM_ADDR_ADDRESS_MODE);
-  radio_memory_read_one_byte(NVM_ADDR_CRC);
-  radio_memory_read_one_byte(NVM_ADDR_UID);
-  radio_memory_read_one_byte(NVM_ADDR_SID);
-  radio_memory_read_one_byte(NVM_ADDR_DID);
-  radio_memory_read_one_byte(NVM_ADDR_LED_CONTROL);
+void rc232_memory_read_configuration(void) {
+  rc232_memory_read_one_byte(NVM_ADDR_RF_CHANNEL);
+  rc232_memory_read_one_byte(NVM_ADDR_RF_POWER);
+  rc232_memory_read_one_byte(NVM_ADDR_RF_DATA_RATE);
+  rc232_memory_read_one_byte(NVM_ADDR_PACKET_END_CHAR);
+  rc232_memory_read_one_byte(NVM_ADDR_ADDRESS_MODE);
+  rc232_memory_read_one_byte(NVM_ADDR_CRC);
+  rc232_memory_read_one_byte(NVM_ADDR_UID);
+  rc232_memory_read_one_byte(NVM_ADDR_SID);
+  rc232_memory_read_one_byte(NVM_ADDR_DID);
+  rc232_memory_read_one_byte(NVM_ADDR_LED_CONTROL);
 }
 
 /**
  * @brief Write into non-volatile memory (NVM) configuration.
  *
  */
-void radio_memory_write_configuration(void) {
+void rc232_memory_write_configuration(void) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -367,7 +367,7 @@ void radio_memory_write_configuration(void) {
   }
 
   // fixme : clean buffer, contains '>' and values
-  radio_uart_read_all();
+  rc232_uart_read_all();
 
   exit_config_state();
   McuLog_trace("Exit memory configuration state !");
@@ -380,7 +380,7 @@ void radio_memory_write_configuration(void) {
  * @note address length is dependent on addressing mode
  * @note volatile memory
  */
-void radio_config_destination_address(uint8_t address) {
+void rc232_config_destination_address(uint8_t address) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -411,7 +411,7 @@ void radio_config_destination_address(uint8_t address) {
  * @param channel RF channel number
  * @note volatile memory
  */
-void radio_config_rf_channel_number(uint8_t channel) {
+void rc232_config_rf_channel_number(uint8_t channel) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -445,7 +445,7 @@ void radio_config_rf_channel_number(uint8_t channel) {
  * @param power RF power
  * @note volatile memory
  */
-void radio_config_rf_power(uint8_t power) {
+void rc232_config_rf_power(uint8_t power) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -474,7 +474,7 @@ void radio_config_rf_power(uint8_t power) {
 /**
  * @brief Read the temperature from the radio module.
  */
-void radio_read_temperature(void) {
+void rc232_read_temperature(void) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -513,7 +513,7 @@ void radio_read_temperature(void) {
 /**
  * @brief Read the voltage from the radio module.
  */
-void radio_read_voltage(void) {
+void rc232_read_voltage(void) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -555,7 +555,7 @@ void radio_read_voltage(void) {
  * @note Dependent on input signal strength P
  * @note P = - RSSI /2
  */
-uint8_t radio_signal_strength_indicator(void) {
+uint8_t rc232_signal_strength_indicator(void) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -595,7 +595,7 @@ uint8_t radio_signal_strength_indicator(void) {
  * @brief Enters low current sleep mode for the radio module.
  *
  */
-void radio_sleep(void) {
+void rc232_sleep(void) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -619,7 +619,7 @@ void radio_sleep(void) {
 /**
  * @brief Wakeup the radio from sleep mode.
  */
-void radio_wakeup(void) {
+void rc232_wakeup(void) {
   gpio_put(RADIO_PIN_CONFIG, true);
   sleep_us(50); // additional delay for gpio to be set
 }
@@ -636,7 +636,7 @@ uint8_t wait_config_prompt(void) {
 /**
  * @brief Get the configuration memory from the radio module.
  */
-void radio_get_configuration_memory(void) {
+void rc232_get_configuration_memory(void) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
@@ -653,7 +653,7 @@ void radio_get_configuration_memory(void) {
 
   // Readout buffer
   // fixme : values encoding in terminal
-  radio_uart_read_all();
+  rc232_uart_read_all();
 
   exit_config_state();
 }

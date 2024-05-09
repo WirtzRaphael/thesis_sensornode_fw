@@ -79,26 +79,26 @@
 
 #define RADIO_BROADCAST_ADDRESS 0xFF
 
-// void radio_send_test_messages(void);
+// void rc232_send_test_messages(void);
 /*! Sends a message via radio
  */
 void exit_config_state(void);
-void radio_send_test(void);
-void radio_reset(void);
-void radio_init(void);
-void radio_config_destination_address(uint8_t address);
-void radio_config_rf_channel_number(uint8_t channel);
-void radio_config_rf_power(uint8_t power);
-void radio_sleep(void);
-void radio_wakeup(void);
-void radio_get_configuration_memory(void);
-void radio_read_temperature(void);
-void radio_read_voltage(void);
-uint8_t radio_signal_strength_indicator(void);
-void radio_uart_read_all(void);
-void radio_memory_read_one_byte(uint8_t address);
-void radio_memory_write_configuration(void);
-void radio_memory_read_configuration(void);
+void rc232_send_test(void);
+void rc232_reset(void);
+void rc232_init(void);
+void rc232_config_destination_address(uint8_t address);
+void rc232_config_rf_channel_number(uint8_t channel);
+void rc232_config_rf_power(uint8_t power);
+void rc232_sleep(void);
+void rc232_wakeup(void);
+void rc232_get_configuration_memory(void);
+void rc232_read_temperature(void);
+void rc232_read_voltage(void);
+uint8_t rc232_signal_strength_indicator(void);
+void rc232_uart_read_all(void);
+void rc232_memory_read_one_byte(uint8_t address);
+void rc232_memory_write_configuration(void);
+void rc232_memory_read_configuration(void);
 
 uint8_t wait_config_prompt(void);
 uint8_t check_config_prompt(uint8_t received);

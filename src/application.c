@@ -13,7 +13,7 @@
 #include "application.h"
 #include "menu.h"
 #include "pico_config.h"
-#include "radio_config.h"
+#include "rc232.h"
 
 #include "pico/stdlib.h"
 #include "stdio.h"
@@ -167,7 +167,7 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
 void APP_Run(void) {
   PL_Init();
 #if PICO_CONFIG_USE_RADIO
-  radio_init();
+  rc232_init();
 #endif
 
   McuLog_info("Create task 'App' ... ");

@@ -1,5 +1,5 @@
 #include "menu.h"
-#include "radio_config.h"
+#include "rc232.h"
 #include "stdio.h"
 #include <stdint.h>
 
@@ -57,21 +57,21 @@ void menu_handler_radio(void) {
     // - time sync (optional)
     break;
   case 'b':
-    radio_uart_read_all();
+    rc232_uart_read_all();
     break;
   case 'c':
     // todo : variable DID
-    radio_config_destination_address(RADIO_BROADCAST_ADDRESS);
-    radio_send_test();
+    rc232_config_destination_address(RADIO_BROADCAST_ADDRESS);
+    rc232_send_test();
     sleep_ms(200); // fixme : magic delay until sent
-    radio_config_destination_address(20); // set back to default
+    rc232_config_destination_address(20); // set back to default
     break;
   case 'l':
-    radio_sleep();
+    rc232_sleep();
     break;
   case 'r':
     // todo radio protocol
-    radio_uart_read_all(); // same as buffer read out
+    rc232_uart_read_all(); // same as buffer read out
     break;
   case 's':
     /* test sending to not existing device
@@ -80,16 +80,16 @@ void menu_handler_radio(void) {
     sleep_ms(200); // fixme : magic delay until sent
     radio_config_destination_address(20); // set back to default
     */
-    radio_send_test();
+    rc232_send_test();
     break;
   case 't':
-    radio_read_temperature();
+    rc232_read_temperature();
     break;
   case 'v':
-    radio_read_voltage();
+    rc232_read_voltage();
     break;
   case 'w':
-    radio_wakeup();
+    rc232_wakeup();
     break;
   default:
     printf("Invalid option\n");
@@ -118,36 +118,36 @@ void menu_handler_radio_config(void) {
   uint8_t rssi;
   switch (userCmd) {
   case 'c':
-    radio_config_rf_channel_number(5);
+    rc232_config_rf_channel_number(5);
     break;
   case 'd':
-    radio_config_destination_address(20);
+    rc232_config_destination_address(20);
     break;
   case 'i':
-    rssi = radio_signal_strength_indicator();
+    rssi = rc232_signal_strength_indicator();
     break;
   case 'b':
-    radio_memory_read_one_byte(NVM_ADDR_RF_CHANNEL);
-    radio_memory_read_one_byte(NVM_ADDR_RF_POWER);
-    radio_memory_read_one_byte(NVM_ADDR_RF_DATA_RATE);
+    rc232_memory_read_one_byte(NVM_ADDR_RF_CHANNEL);
+    rc232_memory_read_one_byte(NVM_ADDR_RF_POWER);
+    rc232_memory_read_one_byte(NVM_ADDR_RF_DATA_RATE);
     break;
   case 'm':
-    radio_memory_read_configuration();
+    rc232_memory_read_configuration();
     break;
   case 'p':
-    radio_config_rf_power(1);
+    rc232_config_rf_power(1);
     break;
   case 'w':
-    radio_memory_write_configuration();
+    rc232_memory_write_configuration();
     break;
   case 'r':
-    radio_reset();
+    rc232_reset();
     break;
   case 'x':
     exit_config_state();
     break;
   case '0':
-    radio_get_configuration_memory();
+    rc232_get_configuration_memory();
     break;
   default:
     printf("Invalid option\n");
