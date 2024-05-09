@@ -3,6 +3,8 @@
 #include "stdio.h"
 #include <stdint.h>
 
+#include "pico/stdlib.h"
+
 /**
  * @brief Display the menu options
  *
@@ -32,24 +34,53 @@ char menu_get_user_input() {
  *
  */
 void menu_handler_radio(void) {
-  const char *radioOptions[] = {"[b]uffer read out", "[r]eceive", "[s]end",
-                                "[t]emperature",     "[v]oltage", "s[l]eep",
+  const char *radioOptions[] = {
+    "[a]uthenticate",
+    "[b]uffer read out / receive",
+                                "broad[c]ast",
+                                "[r]eceive",
+                                "[s]end",
+                                "[t]emperature",
+                                "[v]oltage",
+                                "s[l]eep",
                                 "[w]ake up"};
-  menu_display(radioOptions, 7);
+  menu_display(radioOptions, 8);
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
+  case 'a':
+    // send broadcast, board id / UUID
+    // scan channels
+    // receive response
+    // - Free UID network (optional)
+    // - UID gateway -> DID
+    // - time sync (optional)
+    break;
   case 'b':
     radio_uart_read_all();
+    break;
+  case 'c':
+    // todo : variable DID
+    radio_config_destination_address(RADIO_BROADCAST_ADDRESS);
+    radio_send_test();
+    sleep_ms(200); // fixme : magic delay until sent
+    radio_config_destination_address(20); // set back to default
     break;
   case 'l':
     radio_sleep();
     break;
   case 'r':
-    // todo radio receive
+    // todo radio protocol
+    radio_uart_read_all(); // same as buffer read out
     break;
   case 's':
-    radio_send();
+    /* test sending to not existing device
+    radio_config_destination_address(99); // set back to default
+    radio_send_test();
+    sleep_ms(200); // fixme : magic delay until sent
+    radio_config_destination_address(20); // set back to default
+    */
+    radio_send_test();
     break;
   case 't':
     radio_read_temperature();

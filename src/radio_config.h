@@ -77,11 +77,13 @@
 #define NVM_ADDR_LED_CONTROL     0X3A
 #define NVM_CMD_EXIT             0XFF
 
+#define RADIO_BROADCAST_ADDRESS 0xFF
+
 // void radio_send_test_messages(void);
 /*! Sends a message via radio
  */
 void exit_config_state(void);
-void radio_send(void);
+void radio_send_test(void);
 void radio_reset(void);
 void radio_init(void);
 void radio_config_destination_address(uint8_t address);

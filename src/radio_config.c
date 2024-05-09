@@ -138,7 +138,7 @@ void radio_reset(void) {
  * @brief Send a message to transmit.
  *
  */
-void radio_send(void) {
+void radio_send_test(void) {
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
     return;
@@ -400,6 +400,8 @@ void radio_config_destination_address(uint8_t address) {
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
+
+  exit_config_state();
 }
 
 /**
@@ -432,6 +434,8 @@ void radio_config_rf_channel_number(uint8_t channel) {
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
+
+ exit_config_state();
 }
 
 /**
@@ -462,6 +466,8 @@ void radio_config_rf_power(uint8_t power) {
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
+
+  exit_config_state();
 }
 
 /**
