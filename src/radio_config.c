@@ -1,3 +1,13 @@
+/**
+ * @file radio_config.c
+ * @author raphael wirtz
+ * @brief Configuration and usage of the radiocrafts rc17xxhp moodule with the RC-232 protocol.
+ * @version 1
+ * @date 2024-05-09
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #include "radio_config.h"
 #include "stdio.h"
 
@@ -36,15 +46,6 @@ char payload_separator_char[1] = "-";
 // TODO : remove / reduce
 static void uart_wait(void) {
   sleep_ms(50); // todo : decrease
-}
-
-/**
- * @brief Send payload separator character.
- */
-// todo : protocol specific
-static void send_payload_separator(void) {
-  uart_puts(UART_RADIO_ID, payload_separator_char);
-  uart_wait();
 }
 
 /**

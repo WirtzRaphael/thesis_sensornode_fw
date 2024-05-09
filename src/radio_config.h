@@ -1,5 +1,5 @@
-#ifndef RADIO_H_
-#define RADIO_H_
+#ifndef RADIO_CONFIG_H_
+#define RADIO_CONFIG_H_
 // #define STRING_LENGTH_UINT8 ((CHAR_BIT * sizeof(uint8_t) - 1) / 3 + 2)
 #include "stdint.h"
 #include <stdint.h>
@@ -103,4 +103,4 @@ void radio_memory_read_configuration(void);
 uint8_t wait_config_prompt(void);
 uint8_t check_config_prompt(uint8_t received);
 
-#endif /* RADIO_H_ */
+#endif /* RADIO_CONFIG_H_ */
