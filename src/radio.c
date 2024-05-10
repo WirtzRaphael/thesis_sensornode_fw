@@ -184,31 +184,49 @@ static void radio_send_authentication_request(void) {
  *
  * @return error_t
  */
+/*
+ * Wait for response and read control character
+ * todo : refactor, don't read byte by byte
+ * todo : hscl lite protocol
+ */
 // todo : timeout parameter
-static error_t radio_receive_authentication(void) {
-  // todo : protocol authentication response
-  // receive via broadcast
+// todo : rename to wait for authentication response
+static error_t radio_wait_for_authentication_response(void) {
   // uint8_t buffer[PROTOCOL_AUTH_SIZE_BYTES] = {0};
-  uint8_t buffer[10];
-  if (rc232_rx_read_byte(buffer) != ERR_OK) {
-    return ERR_FAILED;
-  }
-  if (buffer[0] != 'A') {
-    return ERR_FAILED;
-  }
-  if (rc232_rx_read_byte(buffer) != ERR_OK) {
-    return ERR_FAILED;
-  }
-  if (buffer[1] != 'A') {
-    return ERR_FAILED;
-  }
-  if (rc232_rx_read_byte(buffer) != ERR_OK) {
-    return ERR_FAILED;
-  }
-  if (buffer[2] != 'C') {
-    return ERR_FAILED;
-  }
+  uint8_t buffer1[1];
+  uint8_t buffer2[1];
+  error_t err = ERR_ARBITR;
+  for (int t = 0; t <= 500; t++) {
+    err = rc232_rx_read_byte(buffer1);
 
+    if (err == ERR_OK) {
+      // first char
+      McuLog_trace("radio : received %c\n", buffer1[0]);
+      printf("radio : received %c\n", buffer1[0]);
+      err = rc232_rx_read_byte(buffer2);
+      if (err == ERR_OK) {
+        // second char
+        printf("radio : received %c\n", buffer2[0]);
+        McuLog_trace("radio : received %c\n", buffer2[0]);
+        printf("radio: received %c %c\n", buffer1[0], buffer2[0]);
+        /*
+         * Action based on received control character
+         */
+        if (buffer1[0] == 'A' && buffer2[0] == 'C') {
+          McuLog_trace("radio : acknowledge received\n");
+          // todo : action after acknowledge (payload values, set uid,
+          // channel) receive response
+          // - Free UID network (optional)
+          // - UID gateway -> DID
+          // - time sync (optional)
+          break;
+        }
+      }
+    }
+    if (err == ERR_OK) {
+      sleep_ms(10); // fixme : delay until sent
+    }
+  }
   return ERR_OK;
 }
 
