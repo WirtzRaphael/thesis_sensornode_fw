@@ -51,7 +51,7 @@ static void vRadioTask( void * pvParameters )
     {
         /* Task code goes here. */
         sleep_ms(5000);
-        printf("radio killed the video star.");
+        //printf("radio killed the video star.");
     }
 }
 
