@@ -79,12 +79,12 @@ void menu_handler_rc232(void) {
     // - time sync (optional)
     break;
   case 'b':
-    rc232_uart_read_all();
+    rc232_rx_read_buffer_full();
     break;
   case 'c':
     // todo : variable DID
     rc232_config_destination_address(RC232_BROADCAST_ADDRESS);
-    rc232_send_test();
+    rc232_tx_test();
     sleep_ms(200);                        // fixme : magic delay until sent
     rc232_config_destination_address(20); // set back to default
     break;
@@ -93,7 +93,7 @@ void menu_handler_rc232(void) {
     break;
   case 'r':
     // todo radio protocol
-    rc232_uart_read_all(); // same as buffer read out
+    rc232_rx_read_buffer_full(); // same as buffer read out
     break;
   case 's':
     /* test sending to not existing device
@@ -102,7 +102,7 @@ void menu_handler_rc232(void) {
     sleep_ms(200); // fixme : magic delay until sent
     radio_config_destination_address(20); // set back to default
     */
-    rc232_send_test();
+    rc232_tx_test();
     break;
   case 't':
     rc232_read_temperature();

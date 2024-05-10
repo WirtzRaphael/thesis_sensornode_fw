@@ -87,8 +87,8 @@
 /*! Sends a message via radio
  */
 void exit_config_state(void);
-void rc232_send_string(char *message);
-void rc232_send_test(void);
+void rc232_tx_string(char *message);
+void rc232_tx_test(void);
 void rc232_reset(void);
 void rc232_init(void);
 void rc232_config_destination_address(uint8_t address);
@@ -100,9 +100,9 @@ void rc232_get_configuration_memory(void);
 void rc232_read_temperature(void);
 void rc232_read_voltage(void);
 uint8_t rc232_signal_strength_indicator(void);
-void rc232_uart_read_all(void);
+void rc232_rx_read_buffer_full(void);
 //error_t rc232_uart_read_bytes(uint8_t *buffer, uint8_t buffer_size);
-error_t rc232_uart_read_byte(uint8_t *buffer);
+error_t rc232_rx_read_byte(uint8_t *buffer);
 void rc232_memory_read_one_byte(uint8_t address);
 void rc232_memory_write_configuration(void);
 void rc232_memory_read_configuration(void);

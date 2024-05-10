@@ -139,7 +139,7 @@ void rc232_reset(void) {
 /** 
  * @brief Send a message to transmit.
 */
-void rc232_send_string(char *message) {
+void rc232_tx_string(char *message) {
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
     return;
@@ -169,7 +169,7 @@ void rc232_send_string(char *message) {
  * @brief Send a message to transmit.
  *
  */
-void rc232_send_test(void) {
+void rc232_tx_test(void) {
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
     return;
@@ -204,7 +204,7 @@ void rc232_send_test(void) {
  * @brief Readout all data from the radio buffer
  *
  */
-void rc232_uart_read_all(void) {
+void rc232_rx_read_buffer_full(void) {
   uint8_t rec_buffer[1];
   while (uart_is_readable(UART_RADIO_ID)) {
     uart_read_blocking(UART_RADIO_ID, rec_buffer, 1);
@@ -213,7 +213,7 @@ void rc232_uart_read_all(void) {
   }
 }
 
-error_t rc232_uart_read_byte(uint8_t *buffer) {
+error_t rc232_rx_read_byte(uint8_t *buffer) {
   if (!uart_is_readable(UART_RADIO_ID)) {
     return ERR_FAILED;
   }
@@ -406,7 +406,7 @@ void rc232_memory_write_configuration(void) {
   }
 
   // fixme : clean buffer, contains '>' and values
-  rc232_uart_read_all();
+  rc232_rx_read_buffer_full();
 
   exit_config_state();
   McuLog_trace("Exit memory configuration state !");
@@ -692,7 +692,7 @@ void rc232_get_configuration_memory(void) {
 
   // Readout buffer
   // fixme : values encoding in terminal
-  rc232_uart_read_all();
+  rc232_rx_read_buffer_full();
 
   exit_config_state();
 }
