@@ -19,6 +19,7 @@
 #include "McuWait.h"
 
 #include "hardware/uart.h"
+#include <errno.h>
 #include <stdint.h>
 
 #define RADIO_PIN_TX                     PICO_PINS_UART0_TX
@@ -37,7 +38,7 @@
 #define PARITY    UART_PARITY_NONE
 
 #define LOG_LEVEL_DEBUG (0)
-#define PRINTF          (1)
+#define PRINTF          (true)
 // exit config state before entering new config state
 #define RADIO_PRE_EXIT_CONFIG (1)
 
@@ -138,7 +139,7 @@ void rc232_reset(void) {
 /** 
  * @brief Send a message to transmit.
 */
-void rc232_send_string(const char *message) {
+void rc232_send_string(char *message) {
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
     return;
@@ -210,6 +211,15 @@ void rc232_uart_read_all(void) {
     McuLog_trace("Received %s from radio\n", rec_buffer);
     printf("Received %s from radio\n", rec_buffer);
   }
+}
+
+error_t rc232_uart_read_byte(uint8_t *buffer) {
+  if (!uart_is_readable(UART_RADIO_ID)) {
+    return ERR_FAILED;
+  }
+  uart_read_blocking(UART_RADIO_ID, buffer, 1);
+  
+  return ERR_OK;
 }
 
 /**
