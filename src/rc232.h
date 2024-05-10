@@ -89,7 +89,6 @@
  */
 void exit_config_state(void);
 void rc232_tx_string(char *message);
-void rc232_tx_test(void);
 void rc232_reset(void);
 void rc232_init(void);
 void rc232_config_destination_address(uint8_t address);
