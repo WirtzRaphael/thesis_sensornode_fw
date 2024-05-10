@@ -81,7 +81,15 @@ void radio_init(void) {
 /**
  * @brief Scan radio network and authenticate.
  *
- * todo : refactor when not direct radio buffer used
+ * - Scans channels (optional)
+ * - Send authentication request
+ * - Waiting for acknowledge
+ * - 
+ * todo : save or directly use response, like:
+ * - Free UID network (optional)
+ * - UID gateway -> DID
+ * - time sync (optional)
+ * todo : refactor when not direct radio buffer used i.e. radio task
  */
 void radio_authentication(void) {
   rc232_rx_read_buffer_full(); // empty buffer

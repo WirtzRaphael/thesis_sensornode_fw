@@ -93,7 +93,9 @@ void rc232_init() {
   uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS,
                    UART_HW_FLOW_CONTROL_RTS);
                    */
-  uart_set_hw_flow(UART_RADIO_ID, 0,0 );
+  // todo : activate CTS and check (nvm already changed)
+  // todo : activate RTS, configure nvm new and check
+  uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS,0 );
 
   uart_set_format(UART_RADIO_ID, DATA_BITS, STOP_BITS, PARITY);
 
@@ -222,6 +224,12 @@ void rc232_rx_read_buffer_full(void) {
   }
 }
 
+/**
+ * @brief Read one byte from the radio buffer.
+ *
+ * @param buffer Buffer to store the received byte
+ * @return error_t Error code
+ */
 error_t rc232_rx_read_byte(uint8_t *buffer) {
   if (!uart_is_readable(UART_RADIO_ID)) {
     return ERR_FAILED;
