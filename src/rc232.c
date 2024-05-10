@@ -25,7 +25,7 @@
 #define RADIO_PIN_TX                     PICO_PINS_UART0_TX
 #define RADIO_PIN_RX                     PICO_PINS_UART0_RX
 #define RADIO_PIN_CONFIG                 (20)
-#define RADIO_HW_FLOW_CONTROL            (0)
+#define RADIO_HW_FLOW_CONTROL            (2)
 #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
 
 #define UART_RADIO_ID        UART0_ID
@@ -108,7 +108,8 @@ void rc232_init() {
    */
   // HW flow control (default)
 #if RADIO_HW_FLOW_CONTROL
-  uart_set_hw_flow(UART_RADIO_ID, true, true);
+  uart_set_hw_flow(UART_RADIO_ID, true, false);
+  //uart_set_hw_flow(UART_RADIO_ID, true, true);
 #else
   uart_set_hw_flow(UART_RADIO_ID, false, false);
 #endif
@@ -389,6 +390,18 @@ void rc232_memory_write_configuration(void) {
   McuLog_trace("Config NVM : CRC mode (Addr : %d, Value : %d)", config_crc[0],
                config_crc[1]);
   */ // --> AVOID MULIPLE WRITES
+
+  // -- UART 
+  // 0 : None
+  // 1 : CTS only
+  // 3 : CTS/RTS only
+  // 4 : RXTS (RS485)
+  unsigned char config_uart_flow[] = {NVM_ADDR_UART_FW_CTRL, 0x01};
+  uart_write_blocking(UART_RADIO_ID, config_uart_flow, 2);
+  uart_wait();
+  McuLog_trace("Config NVM : UART HW flow control (Addr : %d, Value : %d)", config_uart_flow[0],
+               config_uart_flow[1]);
+
 
   // todo : uart flow control (later)
   // todo : de-, enryption with key, vector (later)

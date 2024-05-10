@@ -2,8 +2,8 @@
 #define RADIO_CONFIG_H_
 // #define STRING_LENGTH_UINT8 ((CHAR_BIT * sizeof(uint8_t) - 1) / 3 + 2)
 #include "stdint.h"
-#include <stdint.h>
 #include <errno.h>
+#include <stdint.h>
 
 /* TIMING
  * timing informations from rc1701hp datasheet (v1.14)
@@ -75,6 +75,7 @@
 #define NVM_ADDR_UID             0x19
 #define NVM_ADDR_SID             0x1A
 #define NVM_ADDR_DID             0x21
+#define NVM_ADDR_UART_FW_CTRL    0x35
 #define NVM_ADDR_LED_CONTROL     0X3A
 #define NVM_CMD_EXIT             0XFF
 
@@ -101,7 +102,7 @@ void rc232_read_temperature(void);
 void rc232_read_voltage(void);
 uint8_t rc232_signal_strength_indicator(void);
 void rc232_rx_read_buffer_full(void);
-//error_t rc232_uart_read_bytes(uint8_t *buffer, uint8_t buffer_size);
+// error_t rc232_uart_read_bytes(uint8_t *buffer, uint8_t buffer_size);
 error_t rc232_rx_read_byte(uint8_t *buffer);
 void rc232_memory_read_one_byte(uint8_t address);
 void rc232_memory_write_configuration(void);
