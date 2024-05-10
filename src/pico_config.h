@@ -45,6 +45,7 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_PINS_I2C0_SCL 9
   #define PICO_PINS_I2C1_SDA 6
   #define PICO_PINS_I2C1_SCL 7
+  // UART 0 : Radio
   #define PICO_PINS_UART0_TX 16
   #define PICO_PINS_UART0_RX 17
   #define PICO_PINS_UART0_RTS 18
@@ -55,7 +56,6 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PL_GPIO_ENABLE_VCC_RF  28
   #define PL_GPIO_RADIO_RESET    26
   #define PL_GPIO_TEST_OUTPUT    29
-  // todo UART, Radio
 #endif
 
 /* PL : AEMBS Board
