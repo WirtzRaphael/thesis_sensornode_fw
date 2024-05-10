@@ -82,7 +82,6 @@ void menu_handler_rc232(void) {
     rc232_sleep();
     break;
   case 'r':
-    // todo radio protocol
     rc232_rx_read_buffer_full(); // same as buffer read out
     break;
   case 's':
