@@ -1,12 +1,13 @@
 /**
  * @file rc232_config.c
  * @author raphael wirtz
- * @brief Configuration and usage of the radiocrafts rc17xxhp moodule with the RC-232 protocol.
+ * @brief Configuration and usage of the radiocrafts rc17xxhp moodule with the
+ * RC-232 protocol.
  * @version 1
  * @date 2024-05-09
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 #include "rc232.h"
 #include "stdio.h"
@@ -24,14 +25,15 @@
 
 #define RADIO_PIN_TX                     PICO_PINS_UART0_TX
 #define RADIO_PIN_RX                     PICO_PINS_UART0_RX
+#define RADIO_PIN_CTS                    (0)
+#define RADIO_PIN_RTS                    (0)
 #define RADIO_PIN_CONFIG                 (20)
-#define RADIO_HW_FLOW_CONTROL            (2)
 #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
 
-#define UART_RADIO_ID        UART0_ID
-#define UART_RADIO_BAUD_RATE UART0_BAUD_RATE
-#define UART_RADIO_CTS       UART0_CTS
-#define UART_RADIO_RTS       UART0_RTS
+#define UART_RADIO_ID             UART0_ID
+#define UART_RADIO_BAUD_RATE      UART0_BAUD_RATE
+#define UART_HW_FLOW_CONTROL_CTS UART0_CTS
+#define UART_HW_FLOW_CONTROL_RTS UART0_RTS
 
 #define DATA_BITS 8
 #define STOP_BITS 1
@@ -82,13 +84,30 @@ void exit_config_state(void) {
  * @brief Initialize the radio module.
  */
 void rc232_init() {
-  /* Pin configuration
-   */
   // uart_init(UART_RADIO_ID, UART_RADIO_BAUD_RATE);
+
+  /* UART configuration
+   */
   uart_init(UART_RADIO_ID, 19200);
+  /*
+  uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS,
+                   UART_HW_FLOW_CONTROL_RTS);
+                   */
+  uart_set_hw_flow(UART_RADIO_ID, 0,0 );
+
+  uart_set_format(UART_RADIO_ID, DATA_BITS, STOP_BITS, PARITY);
+
   gpio_set_function(RADIO_PIN_TX, GPIO_FUNC_UART);
   gpio_set_function(RADIO_PIN_RX, GPIO_FUNC_UART);
+#if UART_HW_FLOW_CONTROL_CTS
+  gpio_set_function(RADIO_PIN_CTS, GPIO_FUNC_UART);
+#endif
+#if UART_HW_FLOW_CONTROL_RTS
+  gpio_set_function(RADIO_PIN_RTS, GPIO_FUNC_UART);
+#endif
 
+  /* Pin configuration
+   */
   // Enable VCC_RF
   gpio_init(PL_GPIO_ENABLE_VCC_RF);
   gpio_set_dir(PL_GPIO_ENABLE_VCC_RF, GPIO_OUT);
@@ -103,17 +122,6 @@ void rc232_init() {
   gpio_init(RADIO_PIN_CONFIG);
   gpio_set_dir(RADIO_PIN_CONFIG, GPIO_OUT);
   gpio_put(RADIO_PIN_CONFIG, true);
-
-  /* UART configuration
-   */
-  // HW flow control (default)
-#if RADIO_HW_FLOW_CONTROL
-  uart_set_hw_flow(UART_RADIO_ID, true, false);
-  //uart_set_hw_flow(UART_RADIO_ID, true, true);
-#else
-  uart_set_hw_flow(UART_RADIO_ID, false, false);
-#endif
-  uart_set_format(UART_RADIO_ID, DATA_BITS, STOP_BITS, PARITY);
 
 #if RADIO_CONFIG_NON_VOLATILE_MEMORY
   rc232_memory_configuration();
@@ -137,9 +145,9 @@ void rc232_reset(void) {
   gpio_put(PL_GPIO_RADIO_RESET, true);
 }
 
-/** 
+/**
  * @brief Send a message to transmit.
-*/
+ */
 void rc232_tx_string(char *message) {
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
@@ -154,7 +162,7 @@ void rc232_tx_string(char *message) {
   sleep_us(100);
   // sleep packet timeout?
 
-  if (UART_RADIO_CTS) {
+  if (UART_HW_FLOW_CONTROL_CTS) {
     sleep_us(t_RXD_CTS_US);
   } else {
     sleep_us(t_RXD_TX_US);
@@ -189,7 +197,7 @@ void rc232_tx_test(void) {
   sleep_us(100);
   // sleep packet timeout?
 
-  if (UART_RADIO_CTS) {
+  if (UART_HW_FLOW_CONTROL_CTS) {
     sleep_us(t_RXD_CTS_US);
   } else {
     sleep_us(t_RXD_TX_US);
@@ -219,7 +227,7 @@ error_t rc232_rx_read_byte(uint8_t *buffer) {
     return ERR_FAILED;
   }
   uart_read_blocking(UART_RADIO_ID, buffer, 1);
-  
+
   return ERR_OK;
 }
 
@@ -391,7 +399,7 @@ void rc232_memory_write_configuration(void) {
                config_crc[1]);
   */ // --> AVOID MULIPLE WRITES
 
-  // -- UART 
+  // -- UART
   // 0 : None
   // 1 : CTS only
   // 3 : CTS/RTS only
@@ -399,9 +407,8 @@ void rc232_memory_write_configuration(void) {
   unsigned char config_uart_flow[] = {NVM_ADDR_UART_FW_CTRL, 0x01};
   uart_write_blocking(UART_RADIO_ID, config_uart_flow, 2);
   uart_wait();
-  McuLog_trace("Config NVM : UART HW flow control (Addr : %d, Value : %d)", config_uart_flow[0],
-               config_uart_flow[1]);
-
+  McuLog_trace("Config NVM : UART HW flow control (Addr : %d, Value : %d)",
+               config_uart_flow[0], config_uart_flow[1]);
 
   // todo : uart flow control (later)
   // todo : de-, enryption with key, vector (later)
@@ -488,7 +495,7 @@ void rc232_config_rf_channel_number(uint8_t channel) {
     return;
   }
 
- exit_config_state();
+  exit_config_state();
 }
 
 /**
