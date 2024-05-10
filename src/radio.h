@@ -4,8 +4,8 @@
 #include <errno.h>
 
 void radio_authentication(void);
-void radio_send_authentication_request(void);
-error_t radio_receive_authentication(void);
+static void radio_send_authentication_request(void);
+static error_t radio_receive_authentication(void);
 void radio_init(void);
 void radio_send_temperature(void);
 void radio_send_test(void);
