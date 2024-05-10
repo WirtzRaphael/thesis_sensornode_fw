@@ -82,11 +82,9 @@ void menu_handler_rc232(void) {
     rc232_rx_read_buffer_full();
     break;
   case 'c':
-    // todo : variable DID
     rc232_config_destination_address(RC232_BROADCAST_ADDRESS);
-    rc232_tx_test();
-    sleep_ms(200);                        // fixme : magic delay until sent
-    rc232_config_destination_address(20); // set back to default
+    radio_send_test();
+    rc232_config_destination_address(radio_get_rf_destination_address()); // set back to default
     break;
   case 'l':
     rc232_sleep();
@@ -96,13 +94,7 @@ void menu_handler_rc232(void) {
     rc232_rx_read_buffer_full(); // same as buffer read out
     break;
   case 's':
-    /* test sending to not existing device
-    radio_config_destination_address(99); // set back to default
     radio_send_test();
-    sleep_ms(200); // fixme : magic delay until sent
-    radio_config_destination_address(20); // set back to default
-    */
-    rc232_tx_test();
     break;
   case 't':
     rc232_read_temperature();

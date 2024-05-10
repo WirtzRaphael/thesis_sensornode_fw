@@ -78,6 +78,10 @@ void radio_init(void) {
   }
 }
 
+char radio_get_rf_destination_address(void) {
+  return rf_destination_address;
+}
+
 /**
  * @brief Scan radio network and authenticate.
  *
