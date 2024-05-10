@@ -180,30 +180,31 @@ static void radio_send_authentication_request(void) {
 }
 
 /**
- * @brief Receive authentication response.
+ * @brief Wait for authentication response.
  *
  * @return error_t
- */
-/*
- * Wait for response and read control character
  * todo : refactor, don't read byte by byte
  * todo : hscl lite protocol
  */
-// todo : timeout parameter
-// todo : rename to wait for authentication response
-static error_t radio_wait_for_authentication_response(void) {
+static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
   // uint8_t buffer[PROTOCOL_AUTH_SIZE_BYTES] = {0};
   uint8_t buffer1[1];
   uint8_t buffer2[1];
   error_t err = ERR_ARBITR;
-  for (int t = 0; t <= 500; t++) {
+
+  // wait until response or timeout
+  for (int t = 0; t <= timeout_ms; t++) {
+    // read buffer - one char
     err = rc232_rx_read_byte(buffer1);
 
+    // check if received
     if (err == ERR_OK) {
       // first char
       McuLog_trace("radio : received %c\n", buffer1[0]);
       printf("radio : received %c\n", buffer1[0]);
+      // read buffer - one char
       err = rc232_rx_read_byte(buffer2);
+      // check if received
       if (err == ERR_OK) {
         // second char
         printf("radio : received %c\n", buffer2[0]);
@@ -214,7 +215,7 @@ static error_t radio_wait_for_authentication_response(void) {
          */
         if (buffer1[0] == 'A' && buffer2[0] == 'C') {
           McuLog_trace("radio : acknowledge received\n");
-          // todo : action after acknowledge (payload values, set uid,
+          // todo : action after acknowledge (payload values, set uid, etc.)
           // channel) receive response
           // - Free UID network (optional)
           // - UID gateway -> DID
@@ -223,9 +224,7 @@ static error_t radio_wait_for_authentication_response(void) {
         }
       }
     }
-    if (err == ERR_OK) {
-      sleep_ms(10); // fixme : delay until sent
-    }
+    sleep_ms(1);
   }
   return ERR_OK;
 }
