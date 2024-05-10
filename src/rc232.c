@@ -177,41 +177,6 @@ void rc232_tx_string(char *message) {
 }
 
 /**
- * @brief Send a message to transmit.
- *
- */
-void rc232_tx_test(void) {
-  if (!uart_is_writable(UART_RADIO_ID)) {
-    McuLog_error("Radio UART not writable");
-    return;
-  }
-  /* RXD
-   */
-  // todo send (end character? max buffer size, packeg length?)
-  // send characters on UART line
-  for (uint8_t i = 0; i < 10; i++) {
-    uart_putc_raw(UART_RADIO_ID, 'H');
-    sleep_us(100);
-  }
-
-  // packet end character
-  uart_puts(UART_RADIO_ID, "LF");
-  sleep_us(100);
-  // sleep packet timeout?
-
-  if (UART_HW_FLOW_CONTROL_CTS) {
-    sleep_us(t_RXD_CTS_US);
-  } else {
-    sleep_us(t_RXD_TX_US);
-  }
-
-  // time T_TX : depends on packet size and data rate, see formula datasheet
-  sleep_ms(100);
-
-  // sleep_us(t_TX_IDLE_US);
-}
-
-/**
  * @brief Readout all data from the radio buffer
  *
  */
