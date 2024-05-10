@@ -25,8 +25,8 @@
 
 #define RADIO_PIN_TX                     PICO_PINS_UART0_TX
 #define RADIO_PIN_RX                     PICO_PINS_UART0_RX
-#define RADIO_PIN_CTS                    (0)
-#define RADIO_PIN_RTS                    (0)
+#define RADIO_PIN_CTS                    PICO_PINS_UART0_CTS
+#define RADIO_PIN_RTS                    PICO_PINS_UART0_RTS
 #define RADIO_PIN_CONFIG                 (20)
 #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
 
@@ -418,7 +418,6 @@ void rc232_memory_write_configuration(void) {
   McuLog_trace("Config NVM : UART HW flow control (Addr : %d, Value : %d)",
                config_uart_flow[0], config_uart_flow[1]);
 
-  // todo : uart flow control (later)
   // todo : de-, enryption with key, vector (later)
 
   // -- Send : Exit
