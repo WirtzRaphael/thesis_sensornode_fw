@@ -12,6 +12,7 @@
 
 #include "application.h"
 #include "menu.h"
+#include "radio.h"
 #include "pico_config.h"
 
 #include "menu.h"
@@ -174,6 +175,7 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
 
 void APP_Run(void) {
   PL_Init();
+  radio_init();
 #if PICO_CONFIG_USE_RADIO
   rc232_init();
   radio_init();
