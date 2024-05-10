@@ -176,6 +176,7 @@ void APP_Run(void) {
   PL_Init();
 #if PICO_CONFIG_USE_RADIO
   rc232_init();
+  radio_init();
 #endif
 
   McuLog_info("Create task 'App' ... ");

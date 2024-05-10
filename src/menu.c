@@ -42,12 +42,7 @@ void menu_handler_radio(void) {
   char userCmd = menu_get_user_input();
   switch (userCmd) {
   case 'a':
-    // send broadcast, board id / UUID
-    // scan channels
-    // receive response
-    // - Free UID network (optional)
-    // - UID gateway -> DID
-    // - time sync (optional)
+    radio_authentication();
     break;
   case 's':
     radio_send_temperature();
@@ -88,7 +83,7 @@ void menu_handler_rc232(void) {
     break;
   case 'c':
     // todo : variable DID
-    rc232_config_destination_address(RADIO_BROADCAST_ADDRESS);
+    rc232_config_destination_address(RC232_BROADCAST_ADDRESS);
     rc232_send_test();
     sleep_ms(200);                        // fixme : magic delay until sent
     rc232_config_destination_address(20); // set back to default

@@ -1,7 +1,12 @@
 #ifndef RADIO_H_
 #define RADIO_H_
 
+#include <errno.h>
 
+void radio_authentication(void);
+void radio_send_authentication_request(void);
+error_t radio_receive_authentication(void);
+void radio_init(void);
 void radio_send_temperature(void);
 void radio_send_test(void);
 
