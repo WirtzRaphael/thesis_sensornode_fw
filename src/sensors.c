@@ -63,24 +63,12 @@ static void vSensorsTask(void *pvParameters) {
                              &temperature_measurment_sensor1);
     sensors_read_temperature(&temperatureSensor2,
                              &temperature_measurment_sensor2);
+    add_temperature_to_queue(&temperatureSensor2_queue,
+                             &temperature_measurment_sensor2);
 
     // check queue content
-    float temperature1 = 0.0;
-    error =
-        get_latest_temperature(&temperatureSensor1_queue, &temperature1);
-    if (error == ERR_OK) {
-      printf("temperature1: %f\n", temperature1);
-    } else {
-      printf("temperature1: %f\n", temperature1);
-    }
-    float temperature2 = 0.0;
-    error =
-        get_latest_temperature(&temperatureSensor2_queue, &temperature2);
-    if (error == ERR_OK) {
-      printf("temperature1: %f\n", temperature1);
-    } else {
-      printf("temperature1: %f\n", temperature1);
-    }
+    sensor_print_latest_temperatures(&temperatureSensor1_queue);
+    sensor_print_latest_temperatures(&temperatureSensor2_queue);
 
     // periodic task
     vTaskDelayUntil(&xLastWakeTime,
@@ -175,8 +163,9 @@ sensors_read_temperature(temperature_sensor_t *temperature_sensor,
  * @param temperature
  * @return error_t
  */
-error_t add_temperature_to_queue(queue_t *temperature_sensor_queue,
-                                 temperature_measurement_t *temperature) {
+static error_t
+add_temperature_to_queue(queue_t *temperature_sensor_queue,
+                         temperature_measurement_t *temperature) {
   if (queue_try_add(temperature_sensor_queue, temperature)) {
     return ERR_OK;
   } else {
@@ -192,8 +181,8 @@ error_t add_temperature_to_queue(queue_t *temperature_sensor_queue,
  * @param temperature
  * @return error_t
  */
-error_t get_latest_temperature(queue_t *temperature_sensor_queue,
-                               float *temperature) {
+error_t sensors_get_latest_temperature(queue_t *temperature_sensor_queue,
+                                       float *temperature) {
   temperature_measurement_t temperature_measurement;
   if (queue_try_peek(temperature_sensor_queue, &temperature_measurement)) {
     *temperature = temperature_measurement.temperature;
@@ -201,5 +190,15 @@ error_t get_latest_temperature(queue_t *temperature_sensor_queue,
   } else {
     McuLog_error("Temperature sensor queue peek failed\n");
     return ERR_FAILED;
+  }
+}
+
+void sensor_print_latest_temperatures(queue_t *temperature_sensor_queue) {
+  float temperature = 0.0;
+  error =
+      sensors_get_latest_temperature(temperature_sensor_queue, &temperature);
+  if (error == ERR_OK) {
+    printf("temperature: %f\n", temperature);
+  } else {
   }
 }

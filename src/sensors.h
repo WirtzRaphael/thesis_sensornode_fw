@@ -30,12 +30,12 @@ void sensors_init(void);
 error_t
 sensors_read_temperature(temperature_sensor_t *temperature_sensor,
                          temperature_measurement_t *temperature_measurement);
-error_t add_temperature_to_queue(queue_t *temperature_sensor_queue,
+static error_t add_temperature_to_queue(queue_t *temperature_sensor_queue,
                                  temperature_measurement_t *temperature);
 // todo : rename functions
-error_t get_latest_temperature(queue_t *temperature_sensor_queue,
+error_t sensors_get_latest_temperature(queue_t *temperature_sensor_queue,
                                float *temperature);
 uint16_t sensors_get_sampling_time(void);
-void print_sensor_temperatures(queue_t temperature_sensor_queue);
+void sensor_print_latest_temperatures(queue_t *temperature_sensor_queue);
 
 #endif // SENSORS_H_
