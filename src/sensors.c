@@ -1,6 +1,8 @@
 // todo : comment block
 // todo : refactor
+// todo : clen includes
 #include "sensors.h"
+#include "McuLib.h"
 #include "McuLog.h"
 #include "McuRTOS.h"
 #include "hardware/gpio.h"
@@ -11,30 +13,44 @@
 #include "i2c_operations.h"
 #include "pico_config.h"
 #include "tmp117.h"
+#include <errno.h>
+#include <stdint.h>
 
 queue_t temperatureSensor1_queue;
 queue_t temperatureSensor2_queue;
 
+// todo : reduce
 uint16_t data1_16, data2_16;
 uint16_t id1, id2;
 
-// fix : i2c1 X14 floating
-// note hw v1 : pins tmp117 and plug i2c0, i2c1 not same
+uint16_t id;
+uint16_t measurement_value;
+uint16_t measurement_value_celsius;
+
+// note hw v1 : i2c0, i2c1 pins of plugs not the same
+// note hw v1 : i2c1 x14 floating
 i2c_inst_t *I2Cx = i2c0;
 
-sensor_temp_t temperatureSensor1 = {0, 0, 0};
-sensor_temp_t temperatureSensor2 = {0, 0, 0};
-// todo : de-, activate sensor
-// todo : sensor 2
-// sensor_temp_t temperatureSensor2 = {0,0, 0};
+// todo add I2C
+temperature_sensor_t temperatureSensor1 = {.i2c_address = TMP117_1_ADDR,
+                                           .sensor_nr = 1,
+                                           .start_measurement_time = 0,
+                                           .measurments =
+                                               &temperatureSensor1_queue};
+temperature_sensor_t temperatureSensor2 = {.i2c_address = TMP117_2_ADDR,
+                                           .sensor_nr = 2,
+                                           .start_measurement_time = 0,
+                                           .measurments =
+                                               &temperatureSensor2_queue};
 
+// todo : de-, activate sensor
 // Time series of sensor values
 // todo : change format to reduce payload for transmission
-time_series_sensor_t temperatureSensor1_time_series = {
-    .sensor_nr = '1', .time_reference = 0, .queue = &temperatureSensor1_queue};
+temperature_measurement_t temperature_measurment_sensor1 = {
+    .temperature = 0.0f, .id = 0, .timediff_to_start = 0};
 
-time_series_sensor_t temperatureSensor2_time_series = {
-    .sensor_nr = '2', .time_reference = 0, .queue = &temperatureSensor2_queue};
+temperature_measurement_t temperature_measurment_sensor2 = {
+    .temperature = 0.0f, .id = 0, .timediff_to_start = 0};
 
 static void vSensorsTask(void *pvParameters) {
   TickType_t xLastWakeTime;
@@ -47,14 +63,18 @@ static void vSensorsTask(void *pvParameters) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
 
     // todo : separate functions
-    sensors_read_temperature(I2Cx);
+    sensors_read_temperature(I2Cx, &temperatureSensor1,
+                             &temperature_measurment_sensor1);
+    sleep_ms(50); // fixme : magic delay
+    sensors_read_temperature(I2Cx, &temperatureSensor2,
+                             &temperature_measurment_sensor2);
 
     // print temperature
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
 
     printf("sensors task\n");
-    float temperature1 = get_latest_temperature(temperatureSensor1_queue);
-    // printf("radio killed the video star.");
+    // float temperature1 = get_latest_temperature(temperatureSensor1_queue);
+    //  printf("radio killed the video star.");
   }
 }
 
@@ -68,11 +88,10 @@ void sensors_init(void) {
 
   // Queue of sensor values
   const int QUEUE_LENGTH = 128;
-  queue_init(&temperatureSensor1_queue, sizeof(sensor_temp_t), QUEUE_LENGTH);
-  // temperatureSensor1_time_series.time_reference =
-  // todo : time function
-  // time_operations_get_time_us();
-  temperatureSensor1_time_series.time_reference = 10;
+  queue_init(&temperatureSensor1_queue, sizeof(temperature_measurement_t),
+             QUEUE_LENGTH);
+  queue_init(&temperatureSensor2_queue, sizeof(temperature_measurement_t),
+             QUEUE_LENGTH);
 
   if (xTaskCreate(vSensorsTask, /* pointer to the task */
                   "sensors",    /* task name for kernel awareness debugging */
@@ -86,70 +105,52 @@ void sensors_init(void) {
   }
 }
 
-// todo : one function
-void sensors_read_temperature(i2c_inst_t *i2c) {
-  /* TMP117 1
-   */
-  // Read device ID to make sure that we can communicate with the ADXL343
-  sleep_ms(100); // fixme : magic delay (no connection fix)
-  // fixme : tmp117 no communication
-  /* TMP117 1 */
-  id1 = tmp117_read_id(i2c, TMP117_2_ADDR);
-  printf("TMP117 1: Sensor ID %d\r\n", id1);
-  if (id1 != 0) {
-    data1_16 = tmp117_read_temperature(i2c, TMP117_2_ADDR);
-    temperatureSensor1.temperature = tmp117_temperature_to_celsius(data1_16);
-    temperatureSensor1.id += 1;
-    // todo : time function
-    temperatureSensor1.time_relative_to_reference = 1;
-    if (queue_try_add(&temperatureSensor1_queue, &temperatureSensor1)) {
-      printf("QUEUE add success\r\n");
-    }
-    printf("TMP117 1, Temp %f\r\n", temperatureSensor1.temperature);
-    printf("TMP117 1, Data %d\r\n", data1_16);
-  } else {
-    printf("ERROR: Could not communicate with TMP117 1\r\n");
+error_t
+sensors_read_temperature(i2c_inst_t *i2c,
+                         temperature_sensor_t *temperature_sensor,
+                         temperature_measurement_t *temperature_measurement) {
+  // id = tmp117_read_id(I2Cx, temperature_sensor->i2c_address);
+  id = tmp117_read_id(I2Cx, temperature_sensor->i2c_address);
+  if (id == 0) {
+    printf("TMP117: Could not communicate with sensor number %d\n",
+           temperature_sensor->sensor_nr);
+    return ERR_FAILED;
   }
+  printf("TMP117: Sensor number %d\n", temperature_sensor->sensor_nr);
+  measurement_value =
+      tmp117_read_temperature(I2Cx, temperature_sensor->i2c_address);
+  temperature_measurement->temperature =
+      tmp117_temperature_to_celsius(measurement_value);
+  temperature_measurement->id += 1;
+  // todo : time function
+  temperature_measurement->timediff_to_start = 1;
+  printf("TMP117: Temp %f\n", temperature_measurement->temperature);
+  // todo : add measurements to queue
 
-  /* TMP117 2 */
-  id2 = tmp117_read_id(i2c, TMP117_2_ADDR);
-  printf("TMP117 2: Sensor ID %d\r\n", id2);
-  if (id2 != 0) {
-    data2_16 = tmp117_read_temperature(i2c, TMP117_2_ADDR);
-    temperatureSensor2.temperature = tmp117_temperature_to_celsius(data2_16);
-    temperatureSensor2.id += 1;
-    // todo : time function
-    temperatureSensor2.time_relative_to_reference = 1;
-    if (queue_try_add(&temperatureSensor2_queue, &temperatureSensor2)) {
-      printf("QUEUE add success\r\n");
-    }
-    printf("TMP117 2, Temp %f\r\n", temperatureSensor2.temperature);
-    printf("TMP117 2, Data %d\r\n", data2_16);
-  } else {
-    printf("ERROR: Could not communicate with TMP117 2\r\n");
-  }
+  return ERR_OK;
 }
 
 // todo : return error code, value as pointer
 // todo : static
 float get_latest_temperature(queue_t temperature_sensor_queue) {
-  sensor_temp_t temperature_entry;
-  if (queue_try_peek(&temperature_sensor_queue, &temperature_entry)) {
-    return temperature_entry.temperature;
-  } else {
-    return 0.0f;
-  }
+  //  sensor_temp_t temperature_entry;
+  //  if (queue_try_peek(&temperature_sensor_queue, &temperature_entry)) {
+  //    return temperature_entry.temperature;
+  //  } else {
+  //    return 0.0f;
+  //  }
+  return 0.0f;
 }
 
 void print_sensor_temperatures(queue_t temperature_sensor_queue) {
-  sensor_temp_t temperature_entry;
-  if (queue_try_peek(&temperature_sensor_queue, &temperature_entry)) {
-    printf("QUEUE peek success\r\n");
-    printf("QUEUE peek temperature: %f\r\n", temperature_entry.temperature);
-    printf("QUEUE peek id: %d\r\n", temperature_entry.id);
-    printf("QUEUE peek time relative: %d\r\n",
-           temperature_entry.time_relative_to_reference);
-  }
+  //  sensor_temp_t temperature_entry;
+  //  if (queue_try_peek(&temperature_sensor_queue, &temperature_entry)) {
+  //    printf("QUEUE peek success\r\n");
+  //    printf("QUEUE peek temperature: %f\r\n", temperature_entry.temperature);
+  //    printf("QUEUE peek id: %d\r\n", temperature_entry.id);
+  //    printf("QUEUE peek time relative: %d\r\n",
+  //           temperature_entry.time_relative_to_reference);
+  //  }
 
   /*
   if (queue_try_remove(&temperatureSensor1_queue, &temperature_entry)) {
