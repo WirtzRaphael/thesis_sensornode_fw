@@ -1,6 +1,7 @@
 #include "menu.h"
-#include "rc232.h"
 #include "radio.h"
+#include "rc232.h"
+#include "sensors.h"
 #include "stdio.h"
 #include <stdint.h>
 
@@ -28,6 +29,31 @@ char menu_get_user_input() {
   char userCmd = getchar();
   printf("You entered: %c\n\n", userCmd);
   return userCmd;
+}
+
+void menu_handler_main(void) {
+  const char *mainMenuOptions[] = {"[r]adio", "rc[2]32",
+                                   "rc232 [c]onfiguration", "[s]ensors"};
+  menu_display(mainMenuOptions, 4);
+
+  char userCmd = menu_get_user_input();
+  switch (userCmd) {
+  case 'r':
+    menu_handler_radio();
+    break;
+  case '2':
+    menu_handler_rc232();
+    break;
+  case 'c':
+    menu_handler_rc232_config();
+    break;
+  case 's':
+    menu_handler_sensors();
+    break;
+  default:
+    printf("Invalid option\n");
+    break;
+  }
 }
 
 /**
@@ -62,9 +88,12 @@ void menu_handler_radio(void) {
  */
 void menu_handler_rc232(void) {
   const char *rc232Options[] = {"[b]uffer read out / receive",
-                                "broad[c]ast",    "[r]eceive",
-                                "[s]end",         "[t]emperature",
-                                "[v]oltage",      "s[l]eep",
+                                "broad[c]ast",
+                                "[r]eceive",
+                                "[s]end",
+                                "[t]emperature",
+                                "[v]oltage",
+                                "s[l]eep",
                                 "[w]ake up"};
   menu_display(rc232Options, 8);
 
@@ -76,7 +105,8 @@ void menu_handler_rc232(void) {
   case 'c':
     rc232_config_destination_address(RC232_BROADCAST_ADDRESS);
     radio_send_test();
-    rc232_config_destination_address(radio_get_rf_destination_address()); // set back to default
+    rc232_config_destination_address(
+        radio_get_rf_destination_address()); // set back to default
     break;
   case 'l':
     rc232_sleep();
@@ -153,6 +183,21 @@ void menu_handler_rc232_config(void) {
     break;
   case '0':
     rc232_get_configuration_memory();
+    break;
+  default:
+    printf("Invalid option\n");
+    break;
+  }
+}
+
+void menu_handler_sensors(void) {
+  const char *sensorsOptions[] = {"[r]ead temperature (queue peak)"};
+  menu_display(sensorsOptions, 1);
+
+  char userCmd = menu_get_user_input();
+  switch (userCmd) {
+  case 'r':
+    sensors_print_temperatures_queue_peak();
     break;
   default:
     printf("Invalid option\n");
