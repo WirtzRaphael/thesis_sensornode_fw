@@ -4,8 +4,7 @@
 // project files
 #include "i2c_operations.h"
 
-enum TMP117_Register
-{
+enum TMP117_Register {
   TMP117_TEMP_RESULT = 0X00,
   TMP117_CONFIGURATION = 0x01,
   TMP117_T_HIGH_LIMIT = 0X02,
@@ -19,17 +18,17 @@ enum TMP117_Register
 };
 
 // I2C address
-static const uint8_t TMP117_1_ADDR = 0b1001000; //1001000x, 0x48
-static const uint8_t TMP117_2_ADDR = 0b1001001; //1001001x, 0x49
-static const uint8_t TMP117_3_ADDR = 0b1001010; //1001010x, 0xA0
-static const uint8_t TMP117_4_ADDR = 0b1001011; //1001011x, 0xA1
+static const uint8_t TMP117_1_ADDR = 0b1001000; // 1001000x, 0x48
+static const uint8_t TMP117_2_ADDR = 0b1001001; // 1001001x, 0x49
+static const uint8_t TMP117_3_ADDR = 0b1001010; // 1001010x, 0xA0
+static const uint8_t TMP117_4_ADDR = 0b1001011; // 1001011x, 0xA1
 
 // Device ID
 // (same as addr but with shift))
-#define     TMP117_DeviceID1 0x48<<1    //	GND
-#define     TMP117_DeviceID2 0x49<<1    //	Vcc
-#define     TMP117_DeviceID3 0x4A<<1    //	SDA
-#define     TMP117_DeviceID4 0x4B<<1    //	SCL
+#define TMP117_DeviceID1 0x48 << 1 //	GND
+#define TMP117_DeviceID2 0x49 << 1 //	Vcc
+#define TMP117_DeviceID3 0x4A << 1 //	SDA
+#define TMP117_DeviceID4 0x4B << 1 //	SCL
 
 uint16_t tmp117_read_temperature(i2c_inst_t *i2c, const uint addr);
 uint16_t tmp117_read_id(i2c_inst_t *i2c, const uint addr);
