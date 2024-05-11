@@ -532,11 +532,10 @@ void rc232_memory_read_one_byte(uint8_t address) {
   // -- Send : Parameters
   uart_write_blocking(UART_RADIO_ID, &address, 1);
 #if PRINTF
-  printf("address: %d\n", address);
+  printf("address: 0x%02hhX (%d)\n", address, address);
 #endif
   McuLog_trace("address: %d", address);
   uart_wait();
-  // todo : sleep
 
   // -- Receive : 1byte value + Prompt ('>')
   uint8_t buffer_size = 2;
@@ -569,6 +568,7 @@ void rc232_memory_read_configuration(void) {
   rc232_memory_read_one_byte(NVM_ADDR_UID);
   rc232_memory_read_one_byte(NVM_ADDR_SID);
   rc232_memory_read_one_byte(NVM_ADDR_DID);
+  rc232_memory_read_one_byte(NVM_ADDR_UART_FW_CTRL);
   rc232_memory_read_one_byte(NVM_ADDR_LED_CONTROL);
 }
 
@@ -671,18 +671,18 @@ void rc232_memory_write_configuration(void) {
   uart_wait();
   McuLog_trace("Config NVM : CRC mode (Addr : %d, Value : %d)", config_crc[0],
                config_crc[1]);
-  */ // --> AVOID MULIPLE WRITES
 
   // -- UART
   // 0 : None
   // 1 : CTS only
   // 3 : CTS/RTS only
   // 4 : RXTS (RS485)
-  unsigned char config_uart_flow[] = {NVM_ADDR_UART_FW_CTRL, 0x01};
+  unsigned char config_uart_flow[] = {NVM_ADDR_UART_FW_CTRL, 0x03};
   uart_write_blocking(UART_RADIO_ID, config_uart_flow, 2);
   uart_wait();
   McuLog_trace("Config NVM : UART HW flow control (Addr : %d, Value : %d)",
                config_uart_flow[0], config_uart_flow[1]);
+  */ // --> AVOID MULIPLE WRITES
 
   // todo : de-, enryption with key, vector (later)
 
