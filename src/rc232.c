@@ -10,6 +10,7 @@
  *
  */
 #include "rc232.h"
+#include "pico/time.h"
 #include "stdio.h"
 
 #include "pico/stdlib.h"
@@ -32,6 +33,7 @@
 
 #define UART_RADIO_ID             UART0_ID
 #define UART_RADIO_BAUD_RATE      UART0_BAUD_RATE
+// note : maybe configure flow control in radio NVM, before activating
 #define UART_HW_FLOW_CONTROL_CTS UART0_CTS
 #define UART_HW_FLOW_CONTROL_RTS UART0_RTS
 
@@ -65,7 +67,7 @@ static void enter_config_state(void) {
 
 /**
  * @brief Exit the configuration state. Change from CONFIG to IDLE state.
- *
+ * fixme : maybe clear buffer after command
  */
 void exit_config_state(void) {
   McuLog_trace("Exit config state");
@@ -514,6 +516,7 @@ void rc232_memory_read_one_byte(uint8_t address) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
+  rc232_rx_read_buffer_full(); // fix : clear buffer, otherwise missing/wrong values
 
   enter_config_state();
 
