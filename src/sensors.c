@@ -1,6 +1,13 @@
-// todo : comment block
-// todo : refactor
-// todo : clen includes
+/**
+ * @file sensors.c
+ * @author Raphael Wirtz
+ * @brief Manages sensors in the system
+ * @date 2024-05-11
+ *
+ * @copyright Copyright (c) 2024
+ *
+ * todo : save sensor values format to reduce payload for transmission
+ */
 #include "sensors.h"
 #include "McuLib.h"
 #include "McuLog.h"
@@ -43,7 +50,6 @@ temperature_sensor_t temperatureSensor2 = {.i2c = I2Cx,
                                            .measurments =
                                                &temperatureSensor2_queue};
 
-// todo : change format to reduce payload for transmission
 temperature_measurement_t temperature_measurment_sensor1 = {
     .temperature = 0.0f, .id = 0, .timediff_to_start = 0};
 
