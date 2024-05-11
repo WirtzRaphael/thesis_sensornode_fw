@@ -36,6 +36,7 @@ static error_t add_temperature_to_queue(queue_t *temperature_sensor_queue,
 error_t sensors_get_latest_temperature(queue_t *temperature_sensor_queue,
                                float *temperature);
 uint16_t sensors_get_sampling_time(void);
-void sensor_print_latest_temperatures(queue_t *temperature_sensor_queue);
+void sensors_print_temperatures_queue_peak(void);
+static void print_temperature_queue_peak(queue_t *temperature_sensor_queue);
 
 #endif // SENSORS_H_

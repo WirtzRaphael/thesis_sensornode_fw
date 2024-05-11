@@ -24,7 +24,7 @@
 // note hw v1 : i2c0, i2c1 pins of plugs not the same
 // note hw v1 : i2c1 x14 floating
 #define I2Cx i2c0
-#define PRINTF_SENSORS (1)
+#define PRINTF_SENSORS (0)
 
 static error_t error;
 static uint16_t id;
@@ -38,13 +38,13 @@ static temperature_measurement_t temperature_measurment_sensor1 = {
 static temperature_measurement_t temperature_measurment_sensor2 = {
     .temperature = 0.0f, .id = 0, .timediff_to_start = 0};
 
-static temperature_sensor_t temperatureSensor1 = {.i2c = I2Cx,
+temperature_sensor_t temperatureSensor1 = {.i2c = I2Cx,
                                            .i2c_address = TMP117_1_ADDR,
                                            .sensor_nr = 1,
                                            .start_measurement_time = 0,
                                            .measurments_queue =
                                                &temperatureSensor1_queue};
-static temperature_sensor_t temperatureSensor2 = {.i2c = I2Cx,
+temperature_sensor_t temperatureSensor2 = {.i2c = I2Cx,
                                            .i2c_address = TMP117_2_ADDR,
                                            .sensor_nr = 2,
                                            .start_measurement_time = 0,
@@ -68,8 +68,7 @@ static void vSensorsTask(void *pvParameters) {
                              &temperature_measurment_sensor2);
 
     // check queue content
-    sensor_print_latest_temperatures(temperatureSensor1.measurments_queue);
-    sensor_print_latest_temperatures(temperatureSensor2.measurments_queue);
+    //sensors_print_temperatures_queue_peak();
 
     // periodic task
     vTaskDelayUntil(&xLastWakeTime,
@@ -166,6 +165,7 @@ static error_t
 add_temperature_to_queue(queue_t *temperature_sensor_queue,
                          temperature_measurement_t *temperature) {
   if (queue_try_add(temperature_sensor_queue, temperature)) {
+    McuLog_trace("Temperature sensor queue add success\n");
     return ERR_OK;
   } else {
     McuLog_error("Temperature sensor queue add failed\n");
@@ -192,11 +192,17 @@ error_t sensors_get_latest_temperature(queue_t *temperature_sensor_queue,
   }
 }
 
-void sensor_print_latest_temperatures(queue_t *temperature_sensor_queue) {
+void sensors_print_temperatures_queue_peak(void) {
+  print_temperature_queue_peak(temperatureSensor1.measurments_queue);
+  print_temperature_queue_peak(temperatureSensor2.measurments_queue);
+}
+
+static void print_temperature_queue_peak(queue_t *temperature_sensor_queue) {
   float temperature = 0.0;
   error =
       sensors_get_latest_temperature(temperature_sensor_queue, &temperature);
   if (error == ERR_OK) {
+    McuLog_trace("temperature: %f\n", temperature);
     printf("temperature: %f\n", temperature);
   } else {
   }
