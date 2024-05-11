@@ -6,6 +6,7 @@
 #if PL_CONFIG_USE_PICO_W
   #include "PicoWiFi.h"
 #endif
+// todo : cleanup includes
 #include "pico/stdlib.h"
 
 #include "hardware/gpio.h"
@@ -13,6 +14,7 @@
 #include "application.h"
 #include "menu.h"
 #include "radio.h"
+#include "sensors.h"
 #include "pico_config.h"
 
 #include "menu.h"
@@ -176,6 +178,7 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
 void APP_Run(void) {
   PL_Init();
   radio_init();
+  sensors_init();
 #if PICO_CONFIG_USE_RADIO
   rc232_init();
   radio_init();
