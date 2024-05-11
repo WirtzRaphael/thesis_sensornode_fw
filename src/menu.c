@@ -61,7 +61,7 @@ void menu_handler_radio(void) {
  *
  */
 void menu_handler_rc232(void) {
-  const char *rc232Options[] = {"[a]uthenticate", "[b]uffer read out / receive",
+  const char *rc232Options[] = {"[b]uffer read out / receive",
                                 "broad[c]ast",    "[r]eceive",
                                 "[s]end",         "[t]emperature",
                                 "[v]oltage",      "s[l]eep",
@@ -70,39 +70,22 @@ void menu_handler_rc232(void) {
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
-  case 'a':
-    // send broadcast, board id / UUID
-    // scan channels
-    // receive response
-    // - Free UID network (optional)
-    // - UID gateway -> DID
-    // - time sync (optional)
-    break;
   case 'b':
     rc232_rx_read_buffer_full();
     break;
   case 'c':
-    // todo : variable DID
     rc232_config_destination_address(RC232_BROADCAST_ADDRESS);
-    rc232_tx_test();
-    sleep_ms(200);                        // fixme : magic delay until sent
-    rc232_config_destination_address(20); // set back to default
+    radio_send_test();
+    rc232_config_destination_address(radio_get_rf_destination_address()); // set back to default
     break;
   case 'l':
     rc232_sleep();
     break;
   case 'r':
-    // todo radio protocol
     rc232_rx_read_buffer_full(); // same as buffer read out
     break;
   case 's':
-    /* test sending to not existing device
-    radio_config_destination_address(99); // set back to default
-    radio_send_test();
-    sleep_ms(200); // fixme : magic delay until sent
-    radio_config_destination_address(20); // set back to default
-    */
-    rc232_tx_test();
+    rc232_tx_string("RC232 Send String");
     break;
   case 't':
     rc232_read_temperature();

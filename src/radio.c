@@ -13,8 +13,10 @@
  */
 #include "radio.h"
 #include "McuLog.h"
+#include "McuRTOS.h"
 #include "McuUtility.h"
 #include "pico/stdlib.h"
+#include "pico/time.h"
 #include "rc232.h"
 
 #include "pico/unique_id.h"
@@ -43,18 +45,55 @@ pico_unique_board_id_t pico_uid = {0};
 char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
                      1]; // Each byte to two hex chars + null terminator
 
+static void vRadioTask( void * pvParameters )
+{
+    for( ;; )
+    {
+        /* Task code goes here. */
+        sleep_ms(5000);
+        //printf("radio killed the video star.");
+    }
+}
+
+
 /**
  * @brief Initialize radio.
  */
 void radio_init(void) {
   pico_get_unique_board_id_string(pico_uid_string, sizeof(pico_uid_string));
   McuLog_trace("pico unique id: %s \n", pico_uid_string);
+
+  //BaseType_t xReturned;
+  //TaskHandle_t xHandle = NULL;
+  if (xTaskCreate(
+      vRadioTask,  /* pointer to the task */
+      "radio", /* task name for kernel awareness debugging */
+      1000/sizeof(StackType_t), /* task stack size */
+      (void*)NULL, /* optional task startup argument */
+      tskIDLE_PRIORITY+2,  /* initial priority */
+      (TaskHandle_t*)NULL /* optional task handle to create */
+    ) != pdPASS)
+  {
+    for(;;){} /* error! probably out of memory */
+  }
+}
+
+char radio_get_rf_destination_address(void) {
+  return rf_destination_address;
 }
 
 /**
  * @brief Scan radio network and authenticate.
  *
- * todo : refactor when not direct radio buffer used
+ * - Scans channels (optional)
+ * - Send authentication request
+ * - Waiting for acknowledge
+ * - 
+ * todo : save or directly use response, like:
+ * - Free UID network (optional)
+ * - UID gateway -> DID
+ * - time sync (optional)
+ * todo : refactor when not direct radio buffer used i.e. radio task
  */
 void radio_authentication(void) {
   rc232_rx_read_buffer_full(); // empty buffer
