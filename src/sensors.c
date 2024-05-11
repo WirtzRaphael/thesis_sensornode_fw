@@ -16,6 +16,7 @@
 
 #define PRINTF_SENSORS (1)
 
+error_t error;
 queue_t temperatureSensor1_queue;
 queue_t temperatureSensor2_queue;
 
@@ -58,17 +59,39 @@ static void vSensorsTask(void *pvParameters) {
     // read temperature
     sensors_read_temperature(&temperatureSensor1,
                              &temperature_measurment_sensor1);
+    add_temperature_to_queue(&temperatureSensor1_queue,
+                             &temperature_measurment_sensor1);
     sensors_read_temperature(&temperatureSensor2,
                              &temperature_measurment_sensor2);
 
-    // wait
+    // check queue content
+    float temperature1 = 0.0;
+    error =
+        get_latest_temperature(&temperatureSensor1_queue, &temperature1);
+    if (error == ERR_OK) {
+      printf("temperature1: %f\n", temperature1);
+    } else {
+      printf("temperature1: %f\n", temperature1);
+    }
+    float temperature2 = 0.0;
+    error =
+        get_latest_temperature(&temperatureSensor2_queue, &temperature2);
+    if (error == ERR_OK) {
+      printf("temperature1: %f\n", temperature1);
+    } else {
+      printf("temperature1: %f\n", temperature1);
+    }
+
+    // periodic task
     vTaskDelayUntil(&xLastWakeTime,
                     pdMS_TO_TICKS(sampling_time_temparature_ms));
-
-    // float temperature1 = get_latest_temperature(temperatureSensor1_queue);
   }
 }
 
+/**
+ * @brief Initialize sensors
+ *
+ */
 void sensors_init(void) {
   /* I2C
    */
@@ -96,67 +119,87 @@ void sensors_init(void) {
   }
 }
 
+/**
+ * @brief Get sampling time of sensor
+ *
+ * @return uint16_t
+ */
 uint16_t sensor_get_sampling_time(void) { return sampling_time_temparature_ms; }
 
+/**
+ * @brief Read temperature from sensor
+ *
+ * @param temperature_sensor
+ * @param temperature_measurement
+ * @return error_t
+ */
 error_t
 sensors_read_temperature(temperature_sensor_t *temperature_sensor,
                          temperature_measurement_t *temperature_measurement) {
-  // id = tmp117_read_id(I2Cx, temperature_sensor->i2c_address);
+  // Check i2c connection
   id = tmp117_read_id(temperature_sensor->i2c, temperature_sensor->i2c_address);
   if (id == 0) {
-    McuLog_trace("TMP117: Could not communicate with sensor number %d\n",
+    McuLog_error("TMP117: Could not communicate with sensor number %d\n",
                  temperature_sensor->sensor_nr);
-#if PRINTF_SENSORS
-    printf("TMP117: Could not communicate with sensor number %d\n",
-           temperature_sensor->sensor_nr);
-#endif
     return ERR_FAILED;
   }
+  temperature_measurement_t temp_measurement;
+
+  // Read temperature
+  temp_measurement.temperature = tmp117_read_temperature_in_celsius(
+      temperature_sensor->i2c, temperature_sensor->i2c_address);
+  temp_measurement.id += 1;
+
+  // Write measurement in sensor struct
   temperature_measurement->temperature = tmp117_read_temperature_in_celsius(
       temperature_sensor->i2c, temperature_sensor->i2c_address);
   temperature_measurement->id += 1;
   // todo : time function
   temperature_measurement->timediff_to_start = 1;
 
-  McuLog_trace("Sensor TMP117: (number %d, Celsius %f\n",
+  // Output
+  McuLog_trace("Sensor TMP117: number %d, Celsius %f\n",
                temperature_sensor->sensor_nr,
                temperature_measurement->temperature);
 #if PRINTF_SENSORS
   printf("Sensor TMP117: (number %d, Celsius %f\n",
          temperature_sensor->sensor_nr, temperature_measurement->temperature);
 #endif
-
-  // todo : add measurements to queue
   return ERR_OK;
 }
 
-// todo : return error code, value as pointer
-// todo : static
-float get_latest_temperature(queue_t temperature_sensor_queue) {
-  //  sensor_temp_t temperature_entry;
-  //  if (queue_try_peek(&temperature_sensor_queue, &temperature_entry)) {
-  //    return temperature_entry.temperature;
-  //  } else {
-  //    return 0.0f;
-  //  }
-  return 0.0f;
+/**
+ * @brief Add temperature to queue
+ *
+ * @param temperature_sensor_queue
+ * @param temperature
+ * @return error_t
+ */
+error_t add_temperature_to_queue(queue_t *temperature_sensor_queue,
+                                 temperature_measurement_t *temperature) {
+  if (queue_try_add(temperature_sensor_queue, temperature)) {
+    return ERR_OK;
+  } else {
+    McuLog_error("Temperature sensor queue add failed\n");
+    return ERR_FAILED;
+  }
 }
 
-void print_sensor_temperatures(queue_t temperature_sensor_queue) {
-  //  sensor_temp_t temperature_entry;
-  //  if (queue_try_peek(&temperature_sensor_queue, &temperature_entry)) {
-  //    printf("QUEUE peek success\r\n");
-  //    printf("QUEUE peek temperature: %f\r\n", temperature_entry.temperature);
-  //    printf("QUEUE peek id: %d\r\n", temperature_entry.id);
-  //    printf("QUEUE peek time relative: %d\r\n",
-  //           temperature_entry.time_relative_to_reference);
-  //  }
-
-  /*
-  if (queue_try_remove(&temperatureSensor1_queue, &temperature_entry)) {
-      printf("QUEUE remove success\r\n");
-      printf("QUEUE remove temperature: %f\r\n", temperature_entry.temperature);
-      printf("QUEUE remove id: %d\r\n", temperature_entry.id);
+/**
+ * @brief Get latest temperature from queue
+ *
+ * @param temperature_sensor_queue
+ * @param temperature
+ * @return error_t
+ */
+error_t get_latest_temperature(queue_t *temperature_sensor_queue,
+                               float *temperature) {
+  temperature_measurement_t temperature_measurement;
+  if (queue_try_peek(temperature_sensor_queue, &temperature_measurement)) {
+    *temperature = temperature_measurement.temperature;
+    return ERR_OK;
+  } else {
+    McuLog_error("Temperature sensor queue peek failed\n");
+    return ERR_FAILED;
   }
-  */
 }
