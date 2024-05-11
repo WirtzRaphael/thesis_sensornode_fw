@@ -11,7 +11,7 @@ typedef struct {
   uint8_t i2c_address;
   uint8_t sensor_nr;
   uint64_t start_measurement_time;
-  queue_t *measurments;
+  queue_t *measurments_queue;
 } temperature_sensor_t;
 
 typedef struct {

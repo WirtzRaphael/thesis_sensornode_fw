@@ -21,40 +21,35 @@
 #include <errno.h>
 #include <stdint.h>
 
-#define PRINTF_SENSORS (1)
-
-error_t error;
-queue_t temperatureSensor1_queue;
-queue_t temperatureSensor2_queue;
-
-uint16_t sampling_time_temparature_ms = 2000;
-
-uint16_t id;
-uint16_t measurement_value;
-uint16_t measurement_value_celsius;
-
-#define I2Cx i2c0
-
 // note hw v1 : i2c0, i2c1 pins of plugs not the same
 // note hw v1 : i2c1 x14 floating
-temperature_sensor_t temperatureSensor1 = {.i2c = I2Cx,
+#define I2Cx i2c0
+#define PRINTF_SENSORS (1)
+
+static error_t error;
+static uint16_t id;
+static uint16_t sampling_time_temparature_ms = 2000;
+static queue_t temperatureSensor1_queue;
+static queue_t temperatureSensor2_queue;
+
+
+static temperature_measurement_t temperature_measurment_sensor1 = {
+    .temperature = 0.0f, .id = 0, .timediff_to_start = 0};
+static temperature_measurement_t temperature_measurment_sensor2 = {
+    .temperature = 0.0f, .id = 0, .timediff_to_start = 0};
+
+static temperature_sensor_t temperatureSensor1 = {.i2c = I2Cx,
                                            .i2c_address = TMP117_1_ADDR,
                                            .sensor_nr = 1,
                                            .start_measurement_time = 0,
-                                           .measurments =
+                                           .measurments_queue =
                                                &temperatureSensor1_queue};
-temperature_sensor_t temperatureSensor2 = {.i2c = I2Cx,
+static temperature_sensor_t temperatureSensor2 = {.i2c = I2Cx,
                                            .i2c_address = TMP117_2_ADDR,
                                            .sensor_nr = 2,
                                            .start_measurement_time = 0,
-                                           .measurments =
+                                           .measurments_queue =
                                                &temperatureSensor2_queue};
-
-temperature_measurement_t temperature_measurment_sensor1 = {
-    .temperature = 0.0f, .id = 0, .timediff_to_start = 0};
-
-temperature_measurement_t temperature_measurment_sensor2 = {
-    .temperature = 0.0f, .id = 0, .timediff_to_start = 0};
 
 static void vSensorsTask(void *pvParameters) {
   TickType_t xLastWakeTime;
@@ -65,16 +60,16 @@ static void vSensorsTask(void *pvParameters) {
     // read temperature
     sensors_read_temperature(&temperatureSensor1,
                              &temperature_measurment_sensor1);
-    add_temperature_to_queue(&temperatureSensor1_queue,
+    add_temperature_to_queue(temperatureSensor1.measurments_queue,
                              &temperature_measurment_sensor1);
     sensors_read_temperature(&temperatureSensor2,
                              &temperature_measurment_sensor2);
-    add_temperature_to_queue(&temperatureSensor2_queue,
+    add_temperature_to_queue(temperatureSensor2.measurments_queue,
                              &temperature_measurment_sensor2);
 
     // check queue content
-    sensor_print_latest_temperatures(&temperatureSensor1_queue);
-    sensor_print_latest_temperatures(&temperatureSensor2_queue);
+    sensor_print_latest_temperatures(temperatureSensor1.measurments_queue);
+    sensor_print_latest_temperatures(temperatureSensor2.measurments_queue);
 
     // periodic task
     vTaskDelayUntil(&xLastWakeTime,
@@ -90,15 +85,13 @@ void sensors_init(void) {
   /* I2C
    */
   i2c_operations_init(PICO_PINS_I2C0_SDA, PICO_PINS_I2C0_SCL);
-  // Initialize I2C0 port at 400 kHz
-  // i2c_inst_t *i2c_0 = i2c0;
-  i2c_init(I2Cx, 400 * 1000);
+  i2c_init(I2Cx, 400 * 1000); // 400 kHz
 
   // Queue of sensor values
   const int QUEUE_LENGTH = 128;
-  queue_init(&temperatureSensor1_queue, sizeof(temperature_measurement_t),
+  queue_init(temperatureSensor1.measurments_queue, sizeof(temperature_measurement_t),
              QUEUE_LENGTH);
-  queue_init(&temperatureSensor2_queue, sizeof(temperature_measurement_t),
+  queue_init(temperatureSensor2.measurments_queue, sizeof(temperature_measurement_t),
              QUEUE_LENGTH);
 
   if (xTaskCreate(vSensorsTask, /* pointer to the task */
