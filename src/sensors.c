@@ -89,8 +89,6 @@ void sensors_read_temperature(i2c_inst_t *i2c) {
   /* TMP117 1
    */
   // Read device ID to make sure that we can communicate with the ADXL343
-  uint16_t data1_16, data2_16;
-  uint16_t id1, id2;
   sleep_ms(100); // fixme : magic delay (no connection fix)
   // fixme : tmp117 no communication
   /* TMP117 1 */
