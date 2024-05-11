@@ -1,6 +1,7 @@
 // project files
 #include "tmp117.h"
 #include "i2c_operations.h"
+#include <stdint.h>
 
 /* 
  * Read the temperature from the TMP117 sensor
@@ -9,14 +10,24 @@
  * @param addr I2C address of the TMP117 sensor
  * @return temperature in bit with a resolution of 0.0078125 degrees Celsius
  */
-uint16_t tmp117_read_temperature(i2c_inst_t *i2c, const uint addr) {
+uint16_t tmp117_read_temperature_in_bits(i2c_inst_t *i2c, const uint addr) {
     static uint8_t buf[2];
     i2c_reg_read(i2c, addr, TMP117_TEMP_RESULT, buf, 2);
     return((buf[0] << 8) | buf[1]); 
 }
 
-
-// todo : function read celsisu
+/* 
+ * Read the temperature from the TMP117 sensor in Celsius
+ * 
+ * @param i2c I2C instance
+ * @param addr I2C address of the TMP117 sensor
+ * @return temperature in Celsius
+ */
+float tmp117_read_temperature_in_celsius(i2c_inst_t *i2c, const uint addr) {
+    float temperature = tmp117_read_temperature_in_bits(i2c, addr);
+    temperature = tmp117_temperature_to_celsius(temperature);
+    return temperature;
+}
 
 /* 
  * Read the device ID from the TMP117 sensor

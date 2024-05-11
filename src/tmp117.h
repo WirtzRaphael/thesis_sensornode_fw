@@ -1,8 +1,8 @@
 #ifndef TMP117_H_
 #define TMP117_H_
 
-// project files
-#include "i2c_operations.h"
+#include "hardware/i2c.h"
+#include <stdint.h>
 
 enum TMP117_Register {
   TMP117_TEMP_RESULT = 0X00,
@@ -30,7 +30,8 @@ static const uint8_t TMP117_4_ADDR = 0b1001011; // 1001011x, 0xA1
 #define TMP117_DeviceID3 0x4A << 1 //	SDA
 #define TMP117_DeviceID4 0x4B << 1 //	SCL
 
-uint16_t tmp117_read_temperature(i2c_inst_t *i2c, const uint addr);
+uint16_t tmp117_read_temperature_in_bits(i2c_inst_t *i2c, const uint addr);
+float tmp117_read_temperature_in_celsius(i2c_inst_t *i2c, const uint addr);
 uint16_t tmp117_read_id(i2c_inst_t *i2c, const uint addr);
 float tmp117_temperature_to_celsius(uint16_t data);
 

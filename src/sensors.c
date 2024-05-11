@@ -57,7 +57,6 @@ static void vSensorsTask(void *pvParameters) {
 
   for (;;) {
     /* Task code goes here. */
-    // todo : interval time sensor read
     // read temperature
     sensors_read_temperature(I2Cx, &temperatureSensor1,
                              &temperature_measurment_sensor1);
@@ -68,7 +67,8 @@ static void vSensorsTask(void *pvParameters) {
     printf("sensors task\n");
 
     // wait
-    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(sampling_time_temparature_ms));
+    vTaskDelayUntil(&xLastWakeTime,
+                    pdMS_TO_TICKS(sampling_time_temparature_ms));
 
     // float temperature1 = get_latest_temperature(temperatureSensor1_queue);
   }
@@ -103,7 +103,8 @@ void sensors_init(void) {
 
 uint16_t sensor_get_sampling_time(void) { return sampling_time_temparature_ms; }
 
-error_t sensors_read_temperature(i2c_inst_t *i2c,
+error_t
+sensors_read_temperature(i2c_inst_t *i2c,
                          temperature_sensor_t *temperature_sensor,
                          temperature_measurement_t *temperature_measurement) {
   // id = tmp117_read_id(I2Cx, temperature_sensor->i2c_address);
@@ -114,10 +115,8 @@ error_t sensors_read_temperature(i2c_inst_t *i2c,
     return ERR_FAILED;
   }
   printf("TMP117: Sensor number %d\n", temperature_sensor->sensor_nr);
-  measurement_value =
-      tmp117_read_temperature(I2Cx, temperature_sensor->i2c_address);
   temperature_measurement->temperature =
-      tmp117_temperature_to_celsius(measurement_value);
+      tmp117_read_temperature_in_celsius(I2Cx, temperature_sensor->i2c_address);
   temperature_measurement->id += 1;
   // todo : time function
   temperature_measurement->timediff_to_start = 1;
