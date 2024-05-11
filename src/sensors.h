@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 typedef struct {
+  i2c_inst_t *i2c;
   uint8_t i2c_address;
   uint8_t sensor_nr;
   uint64_t start_measurement_time;
@@ -26,9 +27,9 @@ typedef struct {
 } time_series_sensor_t;
 
 void sensors_init(void);
-error_t sensors_read_temperature(i2c_inst_t *i2c,
-                                 temperature_sensor_t *temperature_sensor,
-                                 temperature_measurement_t *temperature_measurement);
+error_t
+sensors_read_temperature(temperature_sensor_t *temperature_sensor,
+                         temperature_measurement_t *temperature_measurement);
 // todo : rename functions
 float get_latest_temperature(queue_t temperature_sensor_queue);
 uint16_t sensors_get_sampling_time(void);
