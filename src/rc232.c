@@ -90,14 +90,12 @@ void rc232_init() {
 
   /* UART configuration
    */
-  uart_init(UART_RADIO_ID, 19200);
-  /*
-  uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS,
-                   UART_HW_FLOW_CONTROL_RTS);
-                   */
   // todo : activate CTS and check (nvm already changed)
   // todo : activate RTS, configure nvm new and check
-  uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS,0 );
+  uart_init(UART_RADIO_ID, 19200);
+  uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS,
+                   UART_HW_FLOW_CONTROL_RTS);
+  //uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS, 0);
 
   uart_set_format(UART_RADIO_ID, DATA_BITS, STOP_BITS, PARITY);
 
@@ -680,7 +678,8 @@ void rc232_memory_write_configuration(void) {
   // 1 : CTS only
   // 3 : CTS/RTS only
   // 4 : RXTS (RS485)
-  unsigned char config_uart_flow[] = {NVM_ADDR_UART_FW_CTRL, 0x03};
+  // fixme : RTS blocking
+  unsigned char config_uart_flow[] = {NVM_ADDR_UART_FW_CTRL, 0x01};
   uart_write_blocking(UART_RADIO_ID, config_uart_flow, 2);
   uart_wait();
   McuLog_trace("Config NVM : UART HW flow control (Addr : %d, Value : %d)",
