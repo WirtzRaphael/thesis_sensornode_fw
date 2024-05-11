@@ -9,6 +9,11 @@
 #ifndef MCULIB_CONFIG_CONFIG_H_
 #define MCULIB_CONFIG_CONFIG_H_
 
+#define PL_CONFIG_HW_AEMBS_BOARD    (0)
+#define PL_CONFIG_HW_VERSION_1_0    (10)
+#define PL_CONFIG_HW_VERSION_2_0    (20)
+#define LIB_CONFIG_HW_VERSION  (PL_CONFIG_HW_VERSION_2_0)
+
 /* ---------------------------------------------------------------------------------------*/
 /* SDK */
 #define McuLib_CONFIG_CPU_IS_KINETIS                (0)
@@ -18,11 +23,11 @@
 #define McuLib_CONFIG_SDK_VERSION_USED              McuLib_CONFIG_SDK_RPI_PICO
 /* ---------------------------------------------------------------------- */
 /* FreeRTOS */
-#define McuLib_CONFIG_SDK_USE_FREERTOS              (0)
+#define McuLib_CONFIG_SDK_USE_FREERTOS              (1)
 #define configMINIMAL_STACK_SIZE                    (500/sizeof(StackType_t))
 #define configTIMER_TASK_STACK_DEPTH                (800/sizeof(StackType_t)) /* stack size for Timer Service task */
 #define configTOTAL_HEAP_SIZE                       (64*1024)
-#define configUSE_SEGGER_SYSTEM_VIEWER_HOOKS        (0)
+#define configUSE_SEGGER_SYSTEM_VIEWER_HOOKS        (1)
 /* -------------------------------------------------*/
 /* I2C */
 #define CONFIG_USE_HW_I2C                           (1) /* if using HW I2C, otherwise use software bit banging */
@@ -77,16 +82,30 @@
 #define McuFlash_CONFIG_IS_ENABLED                    (1) /* enable McuFlash module */
 #define McuFlash_CONFIG_NOF_BLOCKS                    (32) /* number of flash blocks */
 #define McuFlash_CONFIG_MEM_START                     (((0+244*1024)-((McuFlash_CONFIG_NOF_BLOCKS)*(McuFlash_CONFIG_FLASH_BLOCK_SIZE))))
-/* ------------------- McuLittleFS --------------------------*/
-#define LITTLEFS_CONFIG_ENABLED                       (0) /* enable the LittleFS file system */
-#if 0 /* using Winbond external flash */
-  #define McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE     McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE_WINBOND_W25Q128
-#else /* using internal flash with McuFlash */
-  #define McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE     McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE_MCU_FLASH
-  #define McuLittleFS_CONFIG_BLOCK_SIZE                 (McuFlash_CONFIG_FLASH_BLOCK_SIZE)
-  #define McuLittleFS_CONFIG_BLOCK_COUNT                (McuFlash_CONFIG_NOF_BLOCKS)
-  #define McuLittleFS_CONFIG_BLOCK_OFFSET               ((McuFlash_CONFIG_MEM_START)/(McuFlash_CONFIG_FLASH_BLOCK_SIZE))
-#endif
+/* ---------------------------------------------------------------------------------------*/
+/* McuSPI */
+#define MCUSPI_CONFIG_HW_TEMPLATE   MCUSPI_CONFIG_HW_TEMPLATE_RP2040_SPI1
+// overwrite template values
+#define MCUSPI_CONFIG_TRANSFER_BAUDRATE (24*1000*1000)
+#define MCUSPI_CONFIG_HW_SCLK_PIN (14)  /* SPI1_SCK */
+#define MCUSPI_CONFIG_HW_MOSI_PIN (15)  /* SPI1_TX  */
+#define MCUSPI_CONFIG_HW_MISO_PIN (12)  /* SPI1_RX  */
+#define MCUSPI_CONFIG_HW_CS_PIN   (13)  /* SPI1_CSn */
+/* ---------------------------------------------------------------------------------------*/
+/* McuLittleFS */
+#define LITTLEFS_CONFIG_ENABLED                       (1) /* enable the LittleFS file system */
+
+/* -------------------------------------------------*/
+/* McuW25Q128 */
+#define MCUW25Q128_CONFIG_ENABLED               (1)
+#define MCUW25Q128_CONFIG_SIZE_KBYTES           (16*1024) /* we have a 16 MByte device */
+/* -------------------------------------------------*/
+/* McuLittleFS */
+#define LITTLEFS_CONFIG_ENABLED                       (1)
+#define McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE     McuLittleFSBlockDevice_CONFIG_MEMORY_TYPE_WINBOND_W25Q128
+#define McuLittleFS_CONFIG_BLOCK_SIZE                 (4096) /* W25Q128 has blocks of 4 KByte */
+#define McuLittleFS_CONFIG_BLOCK_COUNT                ((MCUW25Q128_CONFIG_SIZE_KBYTES*1024)/McuLittleFS_CONFIG_BLOCK_SIZE) /* W25Q128 has 16 MByte */
+#define McuLittleFS_CONFIG_BLOCK_OFFSET               (0)
 /* ---------------------------------------------------------------------------------------*/
 
 #endif /* MCULIB_CONFIG_CONFIG_H_ */

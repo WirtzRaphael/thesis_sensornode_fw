@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "platform.h"
+#include "app_platform.h"
 #include "McuFatFS_CardPins.h"
 #include "McuGPIO.h"
 

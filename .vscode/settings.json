@@ -11,11 +11,27 @@
         "tmp117.h": "c",
         "display.h": "c",
         "i2c_operations.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "mcuflash.h": "c",
+        "freertos.h": "c",
+        "mcufatfs_cardpins.h": "c",
+        "mculed.h": "c",
+        "mculog.h": "c",
+        "mcugpio.h": "c",
+        "mcuspi.h": "c",
+        "mculittlefs.h": "c",
+        "mcuw25q128.h": "c",
+        "mcuutility.h": "c",
+        "segger_sysview_freertos.h": "c",
+        "trcrecorder.h": "c"
     },
     "cmake.configureSettings": {
-        "PICO_SDK_PATH": "/home/rw/repos/3_resources/pico_sdk",
+        "PICO_SDK_PATH": "/home/rw/repos/3_resources/pico-sdk",
         "PICO_SEGGER_PATH": "/home/rw/bin/jlink",
         "PICO_TOOLCHAIN_PATH": "/usr/bin/arm-none-eabi-gcc-12.2"
-    }
+    },
+    "clangd.arguments": [
+        "--query-driver=/usr/bin/arm-none-eabi-gcc"
+    ],
+    "cSpell.diagnosticLevel": "Hint"
 }

@@ -16,6 +16,16 @@
 ```
 env |  grep PICO
 ```
+*** clangd
+- https://clangd.llvm.org/installation.html
+
+*** Doxygen
+- Install Doxygen
+
+Genrate doxygen documentation
+#+begin_src sh
+  doxygen Doxyfile
+#+end_src
 
 *Fish shell*
 - edit config

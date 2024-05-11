@@ -1,0 +1,7 @@
+# reference : https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+IndentWidth: 2
+
+# preprocessor directives
+IndentPPDirectives: BeforeHash
+AlignConsecutiveMacros: true

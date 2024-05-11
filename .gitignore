@@ -1,3 +1,22 @@
-
+# project
 ARCHIVE
 build
+deploy
+
+pico-extras
+pico-sdk
+
+src_v1
+
+# doxygen
+doc
+reference
+
+# ide
+.idea
+
+# clangd
+.cache
+
+# general
+*copy*

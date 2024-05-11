@@ -8,7 +8,7 @@
 #define MCUW25Q128CONFIG_H_
 
 #ifndef MCUW25Q128_CONFIG_ENABLED
-  #define MCUW25Q128_CONFIG_ENABLED  (0)
+  #define MCUW25Q128_CONFIG_ENABLED  (1)
     /*!< By default, the module is disabled. Enable it with 1 */
 #endif
 

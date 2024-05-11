@@ -1,201 +1,281 @@
+/**
+ * @file radio.c
+ * @author raphael wirtz
+ * @brief Radio protocol
+ * @version 1
+ * @date 2024-05-09
+ *
+ * @copyright Copyright (c) 2024
+ *
+ * todo : sync time
+ * todo : buffer handling (?) -> rc232
+ * todo : temperature sensor values
+ */
+#include "radio.h"
+#include "McuLog.h"
+#include "McuRTOS.h"
+#include "McuUtility.h"
+#include "pico/stdlib.h"
+#include "pico/time.h"
+#include "rc232.h"
+
+#include "pico/unique_id.h"
+#include <stdint.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/_types.h>
 
-#include "McuWait.h"
+#define RF_CHANNEL_DEFAULT          (5)
+#define RF_CHANNEL_MIN              (1)
+#define RF_CHANNEL_MAX              (10)
+#define RF_DESTINATION_ADDR_DEFAULT (20)
+#define PROTOCOL_AUTH_SIZE_BYTES    (10)
 
-#include "hardware/uart.h"
-#include "pico_config.h"
-#include "pico/util/queue.h"
+// Use fix channel or scan channels
+#define SCAN_CHANNELS_FOR_CONNECTION (0)
+#define TRANSMISSION_IN_BYTES        (0)
+#define ACTIVATE_RF                  (0)
 
-#include "tmp117.h"
-#include "sensors.h"
+int rf_channel_start = 0;
+int rf_channel_end = 0;
+char rf_channel = RF_CHANNEL_DEFAULT;
+char rf_destination_address = RF_DESTINATION_ADDR_DEFAULT;
 
-#define UART_RADIO_ID UART1_ID
+pico_unique_board_id_t pico_uid = {0};
+char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
+                     1]; // Each byte to two hex chars + null terminator
 
-char payload_separator_char[1] = "-";
-char package_end_char[1] = ";";
-char rc232_packet_end_char[2] = "LF";
-
-typedef struct {
-    char temperature[8]; // min: 4 digits + 1 point + 2 null terminator (+ 1 negative sign)
-    char time_relative_to_reference[8]; // min: 5 digits (uint16)
-    char id[2];
-}package_sensor_temperature_t;
-
-static void uart_wait(void) {
-    sleep_ms(50); // todo : decrease
-}
-
-static void send_payload_separator(void) {
-    uart_puts(UART_RADIO_ID, payload_separator_char);
-    uart_wait();
-}
-
-static void send_package_end(void) {
-    uart_puts(UART_RADIO_ID, package_end_char);
-    uart_wait();
-}
-
-static void send_rc232_packet_end(void) {
-    uart_puts(UART_RADIO_ID, rc232_packet_end_char);
-    uart_wait();
-}
-
-static void create_payload_sensor_temperature(package_sensor_temperature_t *sensor_package, sensor_temp_t temperature_1_entry){
-    sprintf(sensor_package->temperature, "%.2f", temperature_1_entry.temperature);
-    sprintf(sensor_package->id, "%u", temperature_1_entry.id); // convert int to string
-    sprintf(sensor_package->time_relative_to_reference, "%u", temperature_1_entry.time_relative_to_reference); // convert int to string
-}
-
-static void send_payload_sensor_temperature(package_sensor_temperature_t sensor_package) {
-    //printf("send: %s \r\n", strTemperature);
-    uart_puts(UART_RADIO_ID, sensor_package.temperature);
-    uart_wait();
-    send_payload_separator();
-    //printf("send: %s \r\n", strId);
-    uart_puts(UART_RADIO_ID, sensor_package.id);
-    uart_wait();
-    send_payload_separator();
-    uart_wait();
-    uart_puts(UART_RADIO_ID, sensor_package.time_relative_to_reference);
-    uart_wait();
-}
-
-static void send_value_int(int value) {
-    char value_string[4];
-    sprintf(value_string, "%d", value);
-    //printf("send: %s \r\n", value_string);
-    uart_puts(UART_RADIO_ID, value_string);
-    uart_wait();
-}
-/*
-static void send_value_char(char value_string) {
-    uart_puts(UART_RADIO_ID, value_string);
-    uart_wait();
-}
-*/
-
-static void reset_package_sensor_temperature(package_sensor_temperature_t *sensor_package) {
-    sensor_package->temperature[0] = '\0';
-    sensor_package->id[0] = '\0';
-    sensor_package->time_relative_to_reference[0] = '\0';
-}
-
-static void send_time_stamp(uint64_t time_stamp) {
-    char time_stamp_string[20];
-    sprintf(time_stamp_string, "%lu", time_stamp);
-    //printf("send: %s \r\n", time_stamp_string);
-    uart_puts(UART_RADIO_ID, time_stamp_string);
-    uart_wait();
-}
-
-// todo : limit message size (queue loop)
-void radio_send_sensor_temperature_series(time_series_sensor_t time_series_sensor) {
-    printf("send temperature sensor series\n");
-    // Package start character
-    uart_puts(UART_RADIO_ID, "T");
-    uart_wait();
-    send_payload_separator();
-
-    send_time_stamp(time_series_sensor.time_reference);
-    send_payload_separator();
-    uart_puts(UART_RADIO_ID, time_series_sensor.sensor_nr);
-    uart_wait();
-    send_payload_separator();
-
-    sensor_temp_t temperature_entry = {0,0, 0};
-    package_sensor_temperature_t sensor_package = {0,0};
-    bool first_entry = true;
-    while (!queue_is_empty(time_series_sensor.queue)) {
-        if (first_entry) {
-            first_entry = false;
-        }
-        else {
-            send_payload_separator(); // none on last entry
-        }
-
-        reset_temperature_entry(&temperature_entry);
-        // create package
-        if (queue_try_remove(time_series_sensor.queue, &temperature_entry)) {
-            printf("send temperature sensor\n");
-            reset_package_sensor_temperature(&sensor_package);
-            create_payload_sensor_temperature(&sensor_package, temperature_entry);
-            send_payload_sensor_temperature(sensor_package);
-        }
-    }
-
-    send_package_end();
-    send_rc232_packet_end();
-
-    return; // remove ?
-}
-
-void radio_send_radio_module_status (void) {
-    // todo
-    // voltage (from rf module)
-    // temperature (from rf module)
-}
-
-// todo : error info in header or payload (eg queue remove failed)
-void radio_send_sensor_temperature(queue_t *temperatureSensor1_queue, queue_t *temperatureSensor2_queue) {
-
-    sensor_temp_t temperature_1_entry = {0,0, 0}; // fixme
-    if (queue_try_remove(temperatureSensor1_queue, &temperature_1_entry)) {
-        /* hint : don't put at the end of the function, values change (bug)
-        printf("QUEUE remove success\r\n");
-        printf("QUEUE remove temperature: %f\r\n", temperature_1_entry.temperature);
-        printf("QUEUE remove id: %d\r\n", temperature_1_entry.id);
-        */
-        printf("send temperature sensor 1\n");
-        package_sensor_temperature_t sensor_package = {0,0};
-        create_payload_sensor_temperature(&sensor_package, temperature_1_entry);
-        send_payload_sensor_temperature(sensor_package);
-        send_payload_separator();
-    }
-
-    sensor_temp_t temperature_2_entry = {0,0, 0}; // fixme
-    if (queue_try_remove(temperatureSensor2_queue, &temperature_2_entry)) {
-        printf("send temperature sensor 2\n");
-        package_sensor_temperature_t sensor_package = {0,0};
-        create_payload_sensor_temperature(&sensor_package, temperature_2_entry);
-        send_payload_sensor_temperature(sensor_package);
-    }
-    
-    send_package_end();
-
-    return;
-}
-
-void radio_send_test_messages(void)
+static void vRadioTask( void * pvParameters )
 {
-    char line1[10] = "message 1";
-    printf("send: %s \r\n", line1);
-    uart_puts(UART_RADIO_ID, line1);
-    sleep_ms(200);
-    char line2[10] = "message 2";
-    printf("send: %s \r\n", line2);
-    uart_puts(UART_RADIO_ID, line2);
-    sleep_ms(200);
-    char line3[10] = "message 3";
-    printf("send: %s \r\n", line3);
-    uart_puts(UART_RADIO_ID, line3);
+    for( ;; )
+    {
+        /* Task code goes here. */
+        sleep_ms(5000);
+        //printf("radio killed the video star.");
+    }
+}
+
+
+/**
+ * @brief Initialize radio.
+ */
+void radio_init(void) {
+  pico_get_unique_board_id_string(pico_uid_string, sizeof(pico_uid_string));
+  McuLog_trace("pico unique id: %s \n", pico_uid_string);
+
+  //BaseType_t xReturned;
+  //TaskHandle_t xHandle = NULL;
+  if (xTaskCreate(
+      vRadioTask,  /* pointer to the task */
+      "radio", /* task name for kernel awareness debugging */
+      1000/sizeof(StackType_t), /* task stack size */
+      (void*)NULL, /* optional task startup argument */
+      tskIDLE_PRIORITY+2,  /* initial priority */
+      (TaskHandle_t*)NULL /* optional task handle to create */
+    ) != pdPASS)
+  {
+    for(;;){} /* error! probably out of memory */
+  }
+}
+
+char radio_get_rf_destination_address(void) {
+  return rf_destination_address;
+}
+
+/**
+ * @brief Scan radio network and authenticate.
+ *
+ * - Scans channels (optional)
+ * - Send authentication request
+ * - Waiting for acknowledge
+ * - 
+ * todo : save or directly use response, like:
+ * - Free UID network (optional)
+ * - UID gateway -> DID
+ * - time sync (optional)
+ * todo : refactor when not direct radio buffer used i.e. radio task
+ */
+void radio_authentication(void) {
+  rc232_rx_read_buffer_full(); // empty buffer
+  McuLog_trace("radio : Scan network and authenticate\n");
+
+#if SCAN_CHANNELS_FOR_CONNECTION
+  channel_start = RC1701_RF_CHANNEL_MIN;
+  channel_end = RC1701_RF_CHANNEL_MAX;
+#else // only default channel
+  rf_channel_start = RF_CHANNEL_DEFAULT;
+  rf_channel_end = RF_CHANNEL_DEFAULT;
+#endif
+
+  // check channel range
+  if (!(rf_channel_start >= 1 && rf_channel_end <= 10)) {
+    McuLog_error("radio : invalid channel range\n");
     return;
+  }
+
+  // send request to broadcast address
+  rc232_config_destination_address(RC232_BROADCAST_ADDRESS);
+  for (int i = rf_channel_start; i <= rf_channel_end; i++) {
+    McuLog_trace("radio : scanning channel %d\n", i);
+
+    rc232_config_rf_channel_number(i);
+    radio_send_authentication_request();
+    /*
+     * Wait for response and read control character
+     * todo : refactor, don't read byte by byte
+     * todo : hscl lite protocol
+     */
+    // uint8_t buffer[PROTOCOL_AUTH_SIZE_BYTES] = {0};
+    uint8_t buffer1[1];
+    uint8_t buffer2[1];
+    error_t err = ERR_ARBITR;
+    for (int t = 0; t <= 500; t++) {
+      err = rc232_rx_read_byte(buffer1);
+
+      if (err == ERR_OK) {
+        // first char
+        McuLog_trace("radio : received %c\n", buffer1[0]);
+        printf("radio : received %c\n", buffer1[0]);
+        err = rc232_rx_read_byte(buffer2);
+        if (err == ERR_OK) {
+          // second char
+          printf("radio : received %c\n", buffer2[0]);
+          McuLog_trace("radio : received %c\n", buffer2[0]);
+          printf("radio: received %c %c\n", buffer1[0], buffer2[0]);
+          /*
+           * Action based on received control character
+           */
+          if (buffer1[0] == 'A' && buffer2[0] == 'C') {
+            McuLog_trace("radio : acknowledge received\n");
+            // todo : action after acknowledge (payload values, set uid,
+            // channel) receive response
+            // - Free UID network (optional)
+            // - UID gateway -> DID
+            // - time sync (optional)
+            break;
+          }
+        }
+      }
+      if (err == ERR_OK) {
+        sleep_ms(10); // fixme : delay until sent
+      }
+    }
+  }
+
+  // reset to default address
+  rc232_config_destination_address(rf_destination_address);
+  rc232_config_rf_channel_number(rf_channel);
 }
 
-
-// todo function serialize XY
-// use sprintf
-/*
-void serialize(struct MyData data, char* serializedData) {
-    sprintf(serializedData, "%d,%f,%s", data.intValue, data.floatValue, data.stringValue);
+/**
+ * @brief Send authentication request.
+ */
+static void radio_send_authentication_request(void) {
+  // todo : HDLC-Lite (FRAMING PROTOCOL, high-level data link control)
+  // todo : protocol authentication request
+  // todo : send -> tx (rc232)
+  // -- frame delimiter flag
+  // fixme : change buffer from char to int (binary)
+  char frame_flag[5] = "0x7E";
+  // -- payload
+  char payload[3];
+  // todo : combine arrays and send all together
+  // - address
+  // NONE (before authentication not assigned)
+  // - control field
+  // authentication request
+  strcpy(payload, "AR");
+  printf("payload (string): %s\n", payload);
+  strcat(payload, "-");
+  printf("payload (string): %s\n", payload);
+  // - board information
+  printf("pico uid string: %s\n", pico_uid_string);
+  strcat(payload, pico_uid_string);
+  printf("payload (string): %s\n", payload);
+// -- checksum
+#if TRANSMISSION_IN_BYTES
+  McuLog_trace("convert message to binary");
+// -- convert to binary
+// todo : convert to binary and send binary
+// todo : bit stuffing
+// todo : escape character
+// todo : crc (optional)
+// unsigned char* message_byte = (unsigned char*) message;
+// printf("payload (binary): %s\n", message_byte);
+#else
+  // -- send
+  // todo : string stuffing
+  // todo : escape character
+  // todo : crc (optional)
+  // frame delimiter flag
+  if (ACTIVATE_RF) {
+    rc232_tx_string(frame_flag);
+    // message
+    rc232_tx_string(payload);
+    // frame delimiter flag
+    rc232_tx_string(frame_flag);
+  }
+#endif
 }
-*/
 
-// todo function deserialize XY
-// use sscanf
-/*
-struct MyData deserialize(const char* serializedData) {
-    struct MyData result;
-    sscanf(serializedData, "%d,%f,%s", &result.intValue, &result.floatValue, result.stringValue);
-    return result;
+/**
+ * @brief Wait for authentication response.
+ *
+ * @return error_t
+ * todo : refactor, don't read byte by byte
+ * todo : hscl lite protocol
+ */
+static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
+  // uint8_t buffer[PROTOCOL_AUTH_SIZE_BYTES] = {0};
+  uint8_t buffer1[1];
+  uint8_t buffer2[1];
+  error_t err = ERR_ARBITR;
+
+  // wait until response or timeout
+  for (int t = 0; t <= timeout_ms; t++) {
+    // read buffer - one char
+    err = rc232_rx_read_byte(buffer1);
+
+    // check if received
+    if (err == ERR_OK) {
+      // first char
+      McuLog_trace("radio : received %c\n", buffer1[0]);
+      printf("radio : received %c\n", buffer1[0]);
+      // read buffer - one char
+      err = rc232_rx_read_byte(buffer2);
+      // check if received
+      if (err == ERR_OK) {
+        // second char
+        printf("radio : received %c\n", buffer2[0]);
+        McuLog_trace("radio : received %c\n", buffer2[0]);
+        printf("radio: received %c %c\n", buffer1[0], buffer2[0]);
+        /*
+         * Action based on received control character
+         */
+        if (buffer1[0] == 'A' && buffer2[0] == 'C') {
+          McuLog_trace("radio : acknowledge received\n");
+          // todo : action after acknowledge (payload values, set uid, etc.)
+          // channel) receive response
+          // - Free UID network (optional)
+          // - UID gateway -> DID
+          // - time sync (optional)
+          break;
+        }
+      }
+    }
+    sleep_ms(1);
+  }
+  return ERR_OK;
 }
-*/
+
+/**
+ * @brief Send temperature values.
+ *
+ * todo : protocol temperature / sensor values
+ */
+void radio_send_temperature(void) { rc232_tx_string("temperature values"); }
+
+/**
+ * @brief Send test message.
+ */
+void radio_send_test(void) { rc232_tx_string("hello world"); }

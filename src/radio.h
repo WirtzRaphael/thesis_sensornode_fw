@@ -1,12 +1,15 @@
 #ifndef RADIO_H_
 #define RADIO_H_
 
-#include "sensors.h"
+#include <errno.h>
+#include <stdint.h>
 
-#define STRING_LENGTH_UINT8 ((CHAR_BIT * sizeof(uint8_t) - 1) / 3 + 2)
-
-void radio_send_test_messages(void);
-void radio_send_sensor_temperature(queue_t *temperatureSensor1_queue, queue_t *temperatureSensor2_queue);
-void radio_send_sensor_temperature_series(time_series_sensor_t time_series_sensor);
+void radio_authentication(void);
+static void radio_send_authentication_request(void);
+static error_t radio_wait_for_authentication_response(uint32_t timeout_ms);
+void radio_init(void);
+void radio_send_temperature(void);
+void radio_send_test(void);
+char radio_get_rf_destination_address(void);
 
 #endif /* RADIO_H_ */
