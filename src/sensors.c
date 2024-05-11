@@ -7,6 +7,7 @@
 #include "McuRTOS.h"
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
+#include "pico/platform.h"
 #include "pico/time.h"
 #include "pico/util/queue.h"
 
@@ -19,9 +20,7 @@
 queue_t temperatureSensor1_queue;
 queue_t temperatureSensor2_queue;
 
-// todo : reduce
-uint16_t data1_16, data2_16;
-uint16_t id1, id2;
+uint16_t sampling_time_temparature_ms = 2000;
 
 uint16_t id;
 uint16_t measurement_value;
@@ -60,21 +59,18 @@ static void vSensorsTask(void *pvParameters) {
     /* Task code goes here. */
     // todo : interval time sensor read
     // read temperature
-    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
-
-    // todo : separate functions
     sensors_read_temperature(I2Cx, &temperatureSensor1,
                              &temperature_measurment_sensor1);
-    sleep_ms(50); // fixme : magic delay
     sensors_read_temperature(I2Cx, &temperatureSensor2,
                              &temperature_measurment_sensor2);
 
     // print temperature
-    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
-
     printf("sensors task\n");
+
+    // wait
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(sampling_time_temparature_ms));
+
     // float temperature1 = get_latest_temperature(temperatureSensor1_queue);
-    //  printf("radio killed the video star.");
   }
 }
 
@@ -105,8 +101,9 @@ void sensors_init(void) {
   }
 }
 
-error_t
-sensors_read_temperature(i2c_inst_t *i2c,
+uint16_t sensor_get_sampling_time(void) { return sampling_time_temparature_ms; }
+
+error_t sensors_read_temperature(i2c_inst_t *i2c,
                          temperature_sensor_t *temperature_sensor,
                          temperature_measurement_t *temperature_measurement) {
   // id = tmp117_read_id(I2Cx, temperature_sensor->i2c_address);

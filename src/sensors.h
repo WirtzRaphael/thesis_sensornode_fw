@@ -31,6 +31,7 @@ error_t sensors_read_temperature(i2c_inst_t *i2c,
                                  temperature_measurement_t *temperature_measurement);
 // todo : rename functions
 float get_latest_temperature(queue_t temperature_sensor_queue);
+uint16_t sensors_get_sampling_time(void);
 void print_sensor_temperatures(queue_t temperature_sensor_queue);
 
 #endif // SENSORS_H_
