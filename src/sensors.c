@@ -1,23 +1,29 @@
 // todo : comment block
+// todo : refactor
 #include "sensors.h"
 #include "McuLog.h"
 #include "McuRTOS.h"
+#include "hardware/gpio.h"
+#include "hardware/i2c.h"
 #include "pico/time.h"
 #include "pico/util/queue.h"
-#include "hardware/i2c.h"
 
 #include "i2c_operations.h"
 #include "pico_config.h"
 #include "tmp117.h"
 
 queue_t temperatureSensor1_queue;
+queue_t temperatureSensor2_queue;
 
 uint16_t data1_16, data2_16;
 uint16_t id1, id2;
 
-i2c_inst_t *i2c_0 = i2c0;
+// fix : i2c1 X14 floating
+// note hw v1 : pins tmp117 and plug i2c0, i2c1 not same
+i2c_inst_t *i2c_X = i2c0;
 
 sensor_temp_t temperatureSensor1 = {0, 0, 0};
+sensor_temp_t temperatureSensor2 = {0, 0, 0};
 // todo : de-, activate sensor
 // todo : sensor 2
 // sensor_temp_t temperatureSensor2 = {0,0, 0};
@@ -25,6 +31,9 @@ sensor_temp_t temperatureSensor1 = {0, 0, 0};
 // Time series of sensor values
 time_series_sensor_t temperatureSensor1_time_series = {
     .sensor_nr = '1', .time_reference = 0, .queue = &temperatureSensor1_queue};
+
+time_series_sensor_t temperatureSensor2_time_series = {
+    .sensor_nr = '2', .time_reference = 0, .queue = &temperatureSensor2_queue};
 
 static void vSensorsTask(void *pvParameters) {
   TickType_t xLastWakeTime;
@@ -36,7 +45,7 @@ static void vSensorsTask(void *pvParameters) {
     // read temperature
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
 
-    sensors_read_temperature(i2c_0);
+    sensors_read_temperature(i2c_X);
 
     // print temperature
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
@@ -53,12 +62,13 @@ void sensors_init(void) {
   i2c_operations_init(PICO_PINS_I2C0_SDA, PICO_PINS_I2C0_SCL);
   // Initialize I2C0 port at 400 kHz
   // i2c_inst_t *i2c_0 = i2c0;
-  i2c_init(i2c_0, 400 * 1000);
+  i2c_init(i2c_X, 400 * 1000);
 
   // Queue of sensor values
   const int QUEUE_LENGTH = 128;
   queue_init(&temperatureSensor1_queue, sizeof(sensor_temp_t), QUEUE_LENGTH);
   // temperatureSensor1_time_series.time_reference =
+  // todo : time function
   // time_operations_get_time_us();
   temperatureSensor1_time_series.time_reference = 10;
 
@@ -88,7 +98,7 @@ void sensors_read_temperature(i2c_inst_t *i2c) {
     data1_16 = tmp117_read_temperature(i2c, TMP117_1_ADDR);
     temperatureSensor1.temperature = tmp117_temperature_to_celsius(data1_16);
     temperatureSensor1.id += 1;
-    temperatureSensor1.time_relative_to_reference = 11;
+    temperatureSensor1.time_relative_to_reference = 1;
     /*
     temperatureSensor1.time_relative_to_reference =
         time_operations_get_time_diff_s(
@@ -102,6 +112,24 @@ void sensors_read_temperature(i2c_inst_t *i2c) {
     printf("TMP117 1, Data %d\r\n", data1_16);
   } else {
     printf("ERROR: Could not communicate with TMP117 1\r\n");
+  }
+
+  /* TMP117 2 */
+  id2 = tmp117_read_id(i2c, TMP117_2_ADDR);
+  printf("TMP117 2: Sensor ID %d\r\n", id2);
+  if (id2 != 0) {
+    data2_16 = tmp117_read_temperature(i2c, TMP117_2_ADDR);
+    temperatureSensor2.temperature = tmp117_temperature_to_celsius(data2_16);
+    temperatureSensor2.id += 1;
+    // todo : time function
+    temperatureSensor2.time_relative_to_reference = 1;
+    if (queue_try_add(&temperatureSensor2_queue, &temperatureSensor2)) {
+      printf("QUEUE add success\r\n");
+    }
+    printf("TMP117 2, Temp %f\r\n", temperatureSensor2.temperature);
+    printf("TMP117 2, Data %d\r\n", data2_16);
+  } else {
+    printf("ERROR: Could not communicate with TMP117 2\r\n");
   }
 }
 
