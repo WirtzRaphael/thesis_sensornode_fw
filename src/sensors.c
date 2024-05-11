@@ -84,27 +84,24 @@ void sensors_init(void) {
   }
 }
 
+// todo : one function
 void sensors_read_temperature(i2c_inst_t *i2c) {
   /* TMP117 1
    */
   // Read device ID to make sure that we can communicate with the ADXL343
   uint16_t data1_16, data2_16;
   uint16_t id1, id2;
-
-  id1 = tmp117_read_id(i2c, TMP117_1_ADDR);
-
+  sleep_ms(100); // fixme : magic delay (no connection fix)
+  // fixme : tmp117 no communication
+  /* TMP117 1 */
+  id1 = tmp117_read_id(i2c, TMP117_2_ADDR);
   printf("TMP117 1: Sensor ID %d\r\n", id1);
   if (id1 != 0) {
-    data1_16 = tmp117_read_temperature(i2c, TMP117_1_ADDR);
+    data1_16 = tmp117_read_temperature(i2c, TMP117_2_ADDR);
     temperatureSensor1.temperature = tmp117_temperature_to_celsius(data1_16);
     temperatureSensor1.id += 1;
+    // todo : time function
     temperatureSensor1.time_relative_to_reference = 1;
-    /*
-    temperatureSensor1.time_relative_to_reference =
-        time_operations_get_time_diff_s(
-            temperatureSensor1_time_series.time_reference,
-            time_operations_get_time_us());
-            */
     if (queue_try_add(&temperatureSensor1_queue, &temperatureSensor1)) {
       printf("QUEUE add success\r\n");
     }
