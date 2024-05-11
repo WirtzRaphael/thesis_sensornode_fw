@@ -20,7 +20,7 @@ uint16_t id1, id2;
 
 // fix : i2c1 X14 floating
 // note hw v1 : pins tmp117 and plug i2c0, i2c1 not same
-i2c_inst_t *i2c_X = i2c0;
+i2c_inst_t *I2Cx = i2c0;
 
 sensor_temp_t temperatureSensor1 = {0, 0, 0};
 sensor_temp_t temperatureSensor2 = {0, 0, 0};
@@ -29,6 +29,7 @@ sensor_temp_t temperatureSensor2 = {0, 0, 0};
 // sensor_temp_t temperatureSensor2 = {0,0, 0};
 
 // Time series of sensor values
+// todo : change format to reduce payload for transmission
 time_series_sensor_t temperatureSensor1_time_series = {
     .sensor_nr = '1', .time_reference = 0, .queue = &temperatureSensor1_queue};
 
@@ -45,7 +46,8 @@ static void vSensorsTask(void *pvParameters) {
     // read temperature
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
 
-    sensors_read_temperature(i2c_X);
+    // todo : separate functions
+    sensors_read_temperature(I2Cx);
 
     // print temperature
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(500));
@@ -62,7 +64,7 @@ void sensors_init(void) {
   i2c_operations_init(PICO_PINS_I2C0_SDA, PICO_PINS_I2C0_SCL);
   // Initialize I2C0 port at 400 kHz
   // i2c_inst_t *i2c_0 = i2c0;
-  i2c_init(i2c_X, 400 * 1000);
+  i2c_init(I2Cx, 400 * 1000);
 
   // Queue of sensor values
   const int QUEUE_LENGTH = 128;
@@ -128,7 +130,8 @@ void sensors_read_temperature(i2c_inst_t *i2c) {
   }
 }
 
-// todo : no return only queue?
+// todo : return error code, value as pointer
+// todo : static
 float get_latest_temperature(queue_t temperature_sensor_queue) {
   sensor_temp_t temperature_entry;
   if (queue_try_peek(&temperature_sensor_queue, &temperature_entry)) {
