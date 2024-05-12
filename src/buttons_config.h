@@ -8,16 +8,16 @@
 #define BUTTONS_CONFIG_H_
 
 #include "app_platform.h"
+#include "pico_config.h"
 
 #if PL_CONFIG_USE_BUTTONS
 
   /* GPIO pins for buttons */
-  // fixme : defines
-  //#if HW_PLATFORM == PL_CONFIG_HW_VERSION_1_0
-    #define BUTTONS_A_PIN 0u
-    #define BUTTONS_B_PIN 1u
-    #define BUTTONS_C_PIN 2u
-  //#endif
+  #if HW_PLATFORM == PL_CONFIG_HW_VERSION_1_0
+    #define BUTTONS_A_PIN (PICO_PINS_BUTTON_A)
+    #define BUTTONS_B_PIN (PICO_PINS_BUTTON_B)
+    #define BUTTONS_C_PIN (PICO_PINS_BUTTON_C)
+  #endif
 
   #define BUTTONS_ENABLE_CLOCK() /* enable clocking */
 
