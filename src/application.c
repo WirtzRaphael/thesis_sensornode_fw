@@ -85,8 +85,8 @@ static void AppTask(void *pv) {
     McuLog_info("Mounting failed please format device first");
   }
 #endif
-
-  // Test McuW25Q128 communication
+  /* Test McuW25Q128 communication
+  */
   uint8_t buffer_mcuw25[3];
   uint8_t errorCode = McuW25_ReadID(buffer_mcuw25, 3);
   if (errorCode != ERR_OK) {

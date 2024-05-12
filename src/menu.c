@@ -1,3 +1,13 @@
+/**
+ * @file menu.c
+ * @author Raphael Wirtz
+ * @brief Display a menu to execute commands of the system
+ * @date 2024-05-12
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ * todo : task for menu (?)
+ */
 #include "menu.h"
 #include "radio.h"
 #include "rc232.h"
@@ -191,13 +201,15 @@ void menu_handler_rc232_config(void) {
 }
 
 void menu_handler_sensors(void) {
-  const char *sensorsOptions[] = {"[r]ead temperature (queue peak)"};
+  const char *sensorsOptions[] = {"[r]ead temperature (queue latest)"};
   menu_display(sensorsOptions, 1);
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
   case 'r':
-    sensors_print_temperatures_queue_peak();
+    // fixme : not shared access to queue (i.e. different task)
+    //sensors_print_temperatures_queue_peak();
+    sensors_print_temperatures_xQueue_latest();
     break;
   default:
     printf("Invalid option\n");
