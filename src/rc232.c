@@ -11,6 +11,7 @@
  */
 #include "rc232.h"
 #include "pico/time.h"
+#include "pico/types.h"
 #include "stdio.h"
 
 #include "pico/stdlib.h"
@@ -150,17 +151,20 @@ void rc232_reset(void) {
 /**
  * @brief Send a message to transmit.
  */
-void rc232_tx_string(char *message) {
+void rc232_tx_string(const uint8_t *message, bool dryrun) {
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
     return;
   }
 
   // RXD
-  uart_puts(UART_RADIO_ID, message);
+  McuLog_trace("[RC232] Send message : %s", message);
+  if (!dryrun) {
+    uart_puts(UART_RADIO_ID, message);
+    // packet end character
+    uart_puts(UART_RADIO_ID, "LF");
+  }
 
-  // packet end character
-  uart_puts(UART_RADIO_ID, "LF");
   sleep_us(100);
   // sleep packet timeout?
 
@@ -514,7 +518,8 @@ void rc232_memory_read_one_byte(uint8_t address) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
-  rc232_rx_read_buffer_full(); // fix : clear buffer, otherwise missing/wrong values
+  rc232_rx_read_buffer_full(); // fix : clear buffer, otherwise missing/wrong
+                               // values
 
   enter_config_state();
 

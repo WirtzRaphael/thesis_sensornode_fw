@@ -207,13 +207,11 @@ static void radio_send_authentication_request(void) {
   // todo : escape character
   // todo : crc (optional)
   // frame delimiter flag
-  if (ACTIVATE_RF) {
-    rc232_tx_string(frame_flag);
-    // message
-    rc232_tx_string(payload);
-    // frame delimiter flag
-    rc232_tx_string(frame_flag);
-  }
+  rc232_tx_string(frame_flag, ACTIVATE_RF);
+  // message
+  rc232_tx_string(payload, ACTIVATE_RF);
+  // frame delimiter flag
+  rc232_tx_string(frame_flag, ACTIVATE_RF);
 #endif
 }
 
@@ -270,11 +268,20 @@ static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
 /**
  * @brief Send temperature values.
  *
- * todo : protocol temperature / sensor values
  */
-void radio_send_temperature(void) { rc232_tx_string("temperature values"); }
+void radio_send_temperature_as_string(
+    temperature_measurement_t *temperature_measurement) {
+  // todo : send temperature values
+  printf("send temperature: %f\n", (temperature_measurement->temperature));
+  uint8_t buffer[32];
+  McuUtility_NumFloatToStr(buffer, sizeof(buffer),
+                           temperature_measurement->temperature, 2);
+  printf("send temperature (buffer): %s\n", buffer);
+  rc232_tx_string(buffer, true);
+  // rc232_tx_string("temperature values");
+}
 
 /**
  * @brief Send test message.
  */
-void radio_send_test(void) { rc232_tx_string("hello world"); }
+void radio_send_test(void) { rc232_tx_string("hello world", false); }
