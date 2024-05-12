@@ -14,13 +14,12 @@
 #include "radio.h"
 #include "rc232.h"
 #include "sensors.h"
-
+// McuLib
 #include "McuButton.h"
 #include "McuRTOS.h"
 // #include "McuLED.h"
 #include "McuLog.h"
 #include "McuUtility.h"
-
 #if PL_CONFIG_USE_RTT
   #include "McuRTT.h"
 #endif
@@ -54,6 +53,7 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
     McuUtility_strcat(buf, sizeof(buf), "???");
     break;
   }
+  // todo : execute action / task communication / information
   switch (kind) {
   case MCUDBNC_EVENT_PRESSED:
     McuUtility_strcat(buf, sizeof(buf), " pressed");
@@ -91,6 +91,10 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
   #define LED_PIN (25) /* GPIO 25 */
 #endif
 
+/**
+ * \brief Application task.
+ * \param pv rtos parameter
+ */
 static void AppTask(void *pv) {
 /* -- TASK INIT -- */
 #define APP_HAS_ONBOARD_GREEN_LED (!PL_CONFIG_USE_PICO_W)
