@@ -64,22 +64,12 @@ static BTN_Buttons_e RotateButton(BTN_Buttons_e button) {
 static void OnDebounceEvent(McuDbnc_EventKinds event, uint32_t buttons) {
   BTN_Buttons_e button = BTN_NOF_BUTTONS;
 
-  if (buttons&BTN_BIT_NAV_LEFT) {
-    button = BTN_NAV_LEFT;
-  } else if (buttons&BTN_BIT_NAV_RIGHT) {
-    button = BTN_NAV_RIGHT;
-  } else if (buttons&BTN_BIT_NAV_UP) {
-    button = BTN_NAV_UP;
-  } else if (buttons&BTN_BIT_NAV_DOWN) {
-    button = BTN_NAV_DOWN;
-  } else if (buttons&BTN_BIT_NAV_CENTER) {
-    button = BTN_NAV_CENTER;
-#if PL_CONFIG_USE_BUTTON_NEXT_PREV
-  } else if (buttons&BTN_BIT_NAV_NEXT) {
-    button = BTN_NAV_NEXT;
-  } else if (buttons&BTN_BIT_NAV_PREV) {
-    button = BTN_NAV_PREV;
-#endif
+  if (buttons&BTN_BIT_A) {
+    button = BTN_A;
+  } else if (buttons&BTN_BIT_B) {
+    button = BTN_B;
+  } else if (buttons&BTN_BIT_C) {
+    button = BTN_C;
   }
 
   switch(event) {

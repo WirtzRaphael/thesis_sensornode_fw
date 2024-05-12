@@ -39,16 +39,11 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
   UnitTest_OnButtonEvent(button, kind);
 #endif
   buf[0] = '\0';
+  // fixme : param src
   switch(button) {
-    case BTN_NAV_UP:      McuUtility_strcat(buf, sizeof(buf), "up"); break;
-    case BTN_NAV_LEFT:    McuUtility_strcat(buf, sizeof(buf), "left"); break;
-    case BTN_NAV_RIGHT:   McuUtility_strcat(buf, sizeof(buf), "right"); break;
-    case BTN_NAV_DOWN:    McuUtility_strcat(buf, sizeof(buf), "down"); break;
-    case BTN_NAV_CENTER:  McuUtility_strcat(buf, sizeof(buf), "center"); break;
-#if PL_CONFIG_USE_BUTTON_NEXT_PREV
-    case BTN_NAV_NEXT:    McuUtility_strcat(buf, sizeof(buf), "next"); break;
-    case BTN_NAV_PREV:    McuUtility_strcat(buf, sizeof(buf), "prev"); break;
-#endif
+    case BTN_A:      McuUtility_strcat(buf, sizeof(buf), "up"); break;
+    case BTN_B:    McuUtility_strcat(buf, sizeof(buf), "left"); break;
+    case BTN_C:   McuUtility_strcat(buf, sizeof(buf), "right"); break;
     default:              McuUtility_strcat(buf, sizeof(buf), "???"); break;
   }
   switch (kind) {
