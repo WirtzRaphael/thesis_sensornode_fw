@@ -41,6 +41,11 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 /* PL : sensornode v1 - rp2040 pico w
  */
 #if MODEL_PICO_W && HW_PLATFORM == PL_CONFIG_HW_VERSION_1_0
+/* Define buttons in buttons config file
+  #define PICO_PINS_BUTTON_A 0u
+  #define PICO_PINS_BUTTON_B 1u
+  #define PICO_PINS_BUTTON_C 2u
+*/
   #define PICO_PINS_I2C0_SDA 8
   #define PICO_PINS_I2C0_SCL 9
   #define PICO_PINS_I2C1_SDA 6
