@@ -106,7 +106,6 @@ static void AppTask(void *pv) {
 #endif
     vTaskDelay(pdMS_TO_TICKS(5 * 100));
 
-    menu_handler_main();
   }
 }
 
@@ -160,6 +159,7 @@ void APP_Run(void) {
   rc232_init();
   radio_init();
 #endif
+  menu_init();
 
   McuLog_info("Create task 'App' ... ");
 

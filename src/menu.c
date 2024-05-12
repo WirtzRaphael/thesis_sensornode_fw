@@ -3,10 +3,9 @@
  * @author Raphael Wirtz
  * @brief Display a menu to execute commands of the system
  * @date 2024-05-12
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
- * todo : task for menu (?)
+ *
  */
 #include "menu.h"
 #include "radio.h"
@@ -16,6 +15,34 @@
 #include <stdint.h>
 
 #include "pico/stdlib.h"
+
+/**
+ * @brief Task for the menu
+ *
+ * @param pvParameters
+ */
+static void vMenuTask(void *pvParameters) {
+  for (;;) {
+    menu_handler_main();
+  }
+}
+
+/**
+ * @brief Initialize the menu task
+ *
+ */
+void menu_init(void) {
+  if (xTaskCreate(vMenuTask, /* pointer to the task */
+                  "menu",    /* task name for kernel awareness debugging */
+                  1000 / sizeof(StackType_t), /* task stack size */
+                  (void *)NULL,         /* optional task startup argument */
+                  tskIDLE_PRIORITY + 2, /* initial priority */
+                  (TaskHandle_t *)NULL  /* optional task handle to create */
+                  ) != pdPASS) {
+    for (;;) {
+    } /* error! probably out of memory */
+  }
+}
 
 /**
  * @brief Display the menu options
@@ -41,6 +68,10 @@ char menu_get_user_input() {
   return userCmd;
 }
 
+/**
+ * @brief menu for main features
+ *
+ */
 void menu_handler_main(void) {
   const char *mainMenuOptions[] = {"[r]adio", "rc[2]32",
                                    "rc232 [c]onfiguration", "[s]ensors"};
@@ -81,7 +112,7 @@ void menu_handler_radio(void) {
     radio_authentication();
     break;
   case 's':
-    //radio_send_temperature_as_string();
+    // radio_send_temperature_as_string();
     break;
   case 't':
     radio_send_test();
@@ -208,7 +239,7 @@ void menu_handler_sensors(void) {
   switch (userCmd) {
   case 'r':
     // fixme : not shared access to queue (i.e. different task)
-    //sensors_print_temperatures_queue_peak();
+    // sensors_print_temperatures_queue_peak();
     sensors_print_temperature_xQueue_latest_all();
     break;
   default:
