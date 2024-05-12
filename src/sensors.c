@@ -7,7 +7,6 @@
  * @copyright Copyright (c) 2024
  *
  * todo : save sensor values format to reduce payload for transmission
- * todo : use freertos queue and acces from other tasks (radio)
  */
 #include "sensors.h"
 #include "McuLib.h"
@@ -31,6 +30,7 @@ static error_t error;
 static uint16_t id;
 static uint16_t sampling_time_temparature_ms = 2000;
 
+// todo review : extern definition in header and here
 QueueHandle_t xQueue_temperature_sensor_1;
 QueueHandle_t xQueue_temperature_sensor_2;
 /* replaced by xQueue
@@ -86,7 +86,7 @@ static void vSensorsTask(void *pvParameters) {
 
     // check queue content
     /* sensors_print_temperatures_queue_peak(); */
-    sensors_print_temperatures_xQueue_latest();
+    //sensors_print_temperatures_xQueue_latest();
 
     // periodic task
     vTaskDelayUntil(&xLastWakeTime,
@@ -138,7 +138,7 @@ void sensors_init(void) {
 uint16_t sensor_get_sampling_time(void) { return sampling_time_temparature_ms; }
 
 /**
- * @brief Read temperature from sensor
+ * @brief Read temperature from sensor and write to sensor struct
  *
  * @param temperature_sensor
  * @param temperature_measurement
@@ -234,12 +234,12 @@ error_t sensors_get_latest_temperature(queue_t *temperature_sensor_queue,
 }
 
 void sensors_print_temperatures_xQueue_latest(void) {
-  print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
-  print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
+  sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
+  sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
 }
 
-static void
-print_temperature_xQueue_latest(QueueHandle_t xQueue_temperature) {
+void
+sensors_print_temperature_xQueue_latest(QueueHandle_t xQueue_temperature) {
   temperature_measurement_t temperature_measurement;
   if (xQueue_temperature == 0) {
     McuLog_error("Temperature sensor xQueue not existing\n");

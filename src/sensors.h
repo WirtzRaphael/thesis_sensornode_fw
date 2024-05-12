@@ -7,6 +7,9 @@
 #include <errno.h>
 #include <stdint.h>
 
+extern QueueHandle_t xQueue_temperature_sensor_1;
+extern QueueHandle_t xQueue_temperature_sensor_2;
+
 typedef struct {
   i2c_inst_t *i2c;
   uint8_t i2c_address;
@@ -35,13 +38,14 @@ sensors_read_temperature(temperature_sensor_t *temperature_sensor,
 static error_t add_temperature_to_queue(queue_t *temperature_sensor_queue,
                                  temperature_measurement_t *temperature);
 static error_t add_temperature_to_xQueue(QueueHandle_t xQueue_temperature, temperature_measurement_t *temperature);
-// todo : rename functions
 error_t sensors_get_latest_temperature(queue_t *temperature_sensor_queue,
                                float *temperature);
 uint16_t sensors_get_sampling_time(void);
 void sensors_print_temperatures_xQueue_latest(void);
-static void print_temperature_xQueue_latest(QueueHandle_t xQueue_temperature);
+void sensors_print_temperature_xQueue_latest(QueueHandle_t xQueue_temperature);
+/*
 void sensors_print_temperatures_queue_peak(void);
 static void print_temperature_queue_peak(queue_t *temperature_sensor_queue);
+*/
 
 #endif // SENSORS_H_
