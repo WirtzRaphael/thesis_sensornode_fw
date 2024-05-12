@@ -84,13 +84,6 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
 }
 #endif
 
-/*
- * Application
- */
-#if !PL_CONFIG_USE_PICO_W
-  #define LED_PIN (25) /* GPIO 25 */
-#endif
-
 /**
  * \brief Application task.
  * \param pv rtos parameter
@@ -153,8 +146,11 @@ static void AppTask(void *pv) {
 #endif
     vTaskDelay(pdMS_TO_TICKS(5 * 100));
   }
-}
+} /* AppTask */
 
+/**
+ * \brief Shell command to print status information.
+ */
 static uint8_t PrintStatus(McuShell_ConstStdIOType *io) {
   unsigned char buf[48];
 
@@ -174,6 +170,9 @@ static uint8_t PrintStatus(McuShell_ConstStdIOType *io) {
   return ERR_OK;
 }
 
+/**
+ * \brief Shell command to parse application specific commands.
+ */
 uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
                          const McuShell_StdIOType *io) {
   uint32_t value;
@@ -198,6 +197,9 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
   return ERR_OK;
 }
 
+/**
+ * \brief Appplication main function.
+ */
 void APP_Run(void) {
   PL_Init();
   McuBtn_Init();

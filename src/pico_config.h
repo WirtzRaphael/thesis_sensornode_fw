@@ -70,6 +70,7 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PL_AEMBS_SWITCH_LEFT        17
   #define PL_AEMBS_SWITCH_DOWN        19
   #define PL_AEMBS_SWITCH_UP          20
+  #define LED_PIN (25) /* GPIO 25 */
 
   #define PL_AEMBS_LED_BLUE  18
   #define PL_AEMBS_LED_GREEN 19
