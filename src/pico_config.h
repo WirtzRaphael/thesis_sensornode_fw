@@ -5,9 +5,9 @@
 #include "stdint.h"
 extern uint32_t SystemCoreClock;
 
-// todo add rp2040 only, rename file or move content
 #define MODEL_PICO   (0)
 #define MODEL_PICO_W (1)
+#define MODEL_RP2040 (0)
 
 #define HW_PLATFORM (PL_CONFIG_HW_VERSION_1_0)
 
