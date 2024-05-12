@@ -41,15 +41,22 @@ int rf_channel_end = 0;
 char rf_channel = RF_CHANNEL_DEFAULT;
 char rf_destination_address = RF_DESTINATION_ADDR_DEFAULT;
 
+static uint16_t radio_time_intervals_ms = 5000;
+
 pico_unique_board_id_t pico_uid = {0};
 char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
                      1]; // Each byte to two hex chars + null terminator
 
 static void vRadioTask(void *pvParameters) {
+  TickType_t xLastWakeTime;
+  xLastWakeTime = xTaskGetTickCount();
+
   for (;;) {
-    /* Task code goes here. */
-    sleep_ms(2000);
-    // fixme : output order console different
+    // periodic task
+    vTaskDelayUntil(&xLastWakeTime,
+                    pdMS_TO_TICKS(radio_time_intervals_ms));
+
+    // todo : different operations (send, buffer management, authentication, fw download/update)
     printf("===== radio task\n");
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
@@ -57,6 +64,8 @@ static void vRadioTask(void *pvParameters) {
     sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
                                        &temperature_measurement_sensor1);
     radio_send_temperature_as_string(&temperature_measurement_sensor1);
+    // todo : sensor 2
+
     printf("radio task end =====\n");
     // printf("radio killed the video star.");
   }
