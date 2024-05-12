@@ -2,7 +2,6 @@
  * @file radio.c
  * @author raphael wirtz
  * @brief Radio protocol
- * @version 1
  * @date 2024-05-09
  *
  * @copyright Copyright (c) 2024
@@ -17,13 +16,14 @@
 #include "McuUtility.h"
 #include "pico/stdlib.h"
 #include "pico/time.h"
-#include "rc232.h"
-
 #include "pico/unique_id.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/_types.h>
+//
+#include "rc232.h"
+#include "sensors.h"
 
 #define RF_CHANNEL_DEFAULT          (5)
 #define RF_CHANNEL_MIN              (1)
@@ -35,26 +35,42 @@
 #define SCAN_CHANNELS_FOR_CONNECTION (0)
 #define TRANSMISSION_IN_BYTES        (0)
 #define ACTIVATE_RF                  (0)
+#define PRINTF_RF                    (0)
 
 int rf_channel_start = 0;
 int rf_channel_end = 0;
 char rf_channel = RF_CHANNEL_DEFAULT;
 char rf_destination_address = RF_DESTINATION_ADDR_DEFAULT;
 
+static uint16_t radio_time_intervals_ms = 5000;
+
 pico_unique_board_id_t pico_uid = {0};
 char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
                      1]; // Each byte to two hex chars + null terminator
 
-static void vRadioTask( void * pvParameters )
-{
-    for( ;; )
-    {
-        /* Task code goes here. */
-        sleep_ms(5000);
-        //printf("radio killed the video star.");
-    }
-}
+static void vRadioTask(void *pvParameters) {
+  TickType_t xLastWakeTime;
+  xLastWakeTime = xTaskGetTickCount();
 
+  for (;;) {
+    // periodic task
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(radio_time_intervals_ms));
+
+    // todo : different operations (send, buffer management, authentication, fw
+    // download/update)
+    // printf("===== radio task\n");
+    // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
+    // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
+    temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
+    sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
+                                       &temperature_measurement_sensor1);
+    radio_send_temperature_as_string(&temperature_measurement_sensor1);
+    // todo : sensor 2
+
+    // printf("radio task end =====\n");
+    //  printf("radio killed the video star.");
+  }
+}
 
 /**
  * @brief Initialize radio.
@@ -63,24 +79,21 @@ void radio_init(void) {
   pico_get_unique_board_id_string(pico_uid_string, sizeof(pico_uid_string));
   McuLog_trace("pico unique id: %s \n", pico_uid_string);
 
-  //BaseType_t xReturned;
-  //TaskHandle_t xHandle = NULL;
-  if (xTaskCreate(
-      vRadioTask,  /* pointer to the task */
-      "radio", /* task name for kernel awareness debugging */
-      1000/sizeof(StackType_t), /* task stack size */
-      (void*)NULL, /* optional task startup argument */
-      tskIDLE_PRIORITY+2,  /* initial priority */
-      (TaskHandle_t*)NULL /* optional task handle to create */
-    ) != pdPASS)
-  {
-    for(;;){} /* error! probably out of memory */
+  // BaseType_t xReturned;
+  // TaskHandle_t xHandle = NULL;
+  if (xTaskCreate(vRadioTask, /* pointer to the task */
+                  "radio",    /* task name for kernel awareness debugging */
+                  1000 / sizeof(StackType_t), /* task stack size */
+                  (void *)NULL,         /* optional task startup argument */
+                  tskIDLE_PRIORITY + 2, /* initial priority */
+                  (TaskHandle_t *)NULL  /* optional task handle to create */
+                  ) != pdPASS) {
+    for (;;) {
+    } /* error! probably out of memory */
   }
 }
 
-char radio_get_rf_destination_address(void) {
-  return rf_destination_address;
-}
+char radio_get_rf_destination_address(void) { return rf_destination_address; }
 
 /**
  * @brief Scan radio network and authenticate.
@@ -88,7 +101,7 @@ char radio_get_rf_destination_address(void) {
  * - Scans channels (optional)
  * - Send authentication request
  * - Waiting for acknowledge
- * - 
+ * -
  * todo : save or directly use response, like:
  * - Free UID network (optional)
  * - UID gateway -> DID
@@ -208,13 +221,11 @@ static void radio_send_authentication_request(void) {
   // todo : escape character
   // todo : crc (optional)
   // frame delimiter flag
-  if (ACTIVATE_RF) {
-    rc232_tx_string(frame_flag);
-    // message
-    rc232_tx_string(payload);
-    // frame delimiter flag
-    rc232_tx_string(frame_flag);
-  }
+  rc232_tx_string(frame_flag, ACTIVATE_RF);
+  // message
+  rc232_tx_string(payload, ACTIVATE_RF);
+  // frame delimiter flag
+  rc232_tx_string(frame_flag, ACTIVATE_RF);
 #endif
 }
 
@@ -271,11 +282,23 @@ static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
 /**
  * @brief Send temperature values.
  *
- * todo : protocol temperature / sensor values
  */
-void radio_send_temperature(void) { rc232_tx_string("temperature values"); }
+void radio_send_temperature_as_string(
+    temperature_measurement_t *temperature_measurement) {
+  // todo : send temperature values
+  uint8_t buffer[32];
+  McuUtility_NumFloatToStr(buffer, sizeof(buffer),
+                           temperature_measurement->temperature, 2);
+
+#if PRINTF_RF
+  printf("send temperature: %f\n", (temperature_measurement->temperature));
+  printf("send temperature (buffer): %s\n", buffer);
+#endif
+  rc232_tx_string(buffer, true);
+  // rc232_tx_string("temperature values");
+}
 
 /**
  * @brief Send test message.
  */
-void radio_send_test(void) { rc232_tx_string("hello world"); }
+void radio_send_test(void) { rc232_tx_string("hello world", false); }

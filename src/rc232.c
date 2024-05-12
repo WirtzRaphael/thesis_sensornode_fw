@@ -11,6 +11,7 @@
  */
 #include "rc232.h"
 #include "pico/time.h"
+#include "pico/types.h"
 #include "stdio.h"
 
 #include "pico/stdlib.h"
@@ -31,8 +32,8 @@
 #define RADIO_PIN_CONFIG                 (20)
 #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
 
-#define UART_RADIO_ID             UART0_ID
-#define UART_RADIO_BAUD_RATE      UART0_BAUD_RATE
+#define UART_RADIO_ID        UART0_ID
+#define UART_RADIO_BAUD_RATE UART0_BAUD_RATE
 // note : maybe configure flow control in radio NVM, before activating
 #define UART_HW_FLOW_CONTROL_CTS UART0_CTS
 #define UART_HW_FLOW_CONTROL_RTS UART0_RTS
@@ -90,14 +91,11 @@ void rc232_init() {
 
   /* UART configuration
    */
+  // todo : activate RTS, configure nvm new and check
   uart_init(UART_RADIO_ID, 19200);
-  /*
   uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS,
                    UART_HW_FLOW_CONTROL_RTS);
-                   */
-  // todo : activate CTS and check (nvm already changed)
-  // todo : activate RTS, configure nvm new and check
-  uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS,0 );
+  // uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS, 0);
 
   uart_set_format(UART_RADIO_ID, DATA_BITS, STOP_BITS, PARITY);
 
@@ -152,17 +150,20 @@ void rc232_reset(void) {
 /**
  * @brief Send a message to transmit.
  */
-void rc232_tx_string(char *message) {
+void rc232_tx_string(const uint8_t *message, bool dryrun) {
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
     return;
   }
 
   // RXD
-  uart_puts(UART_RADIO_ID, message);
+  McuLog_trace("[RC232] Send message : %s", message);
+  if (!dryrun) {
+    uart_puts(UART_RADIO_ID, message);
+    // packet end character
+    uart_puts(UART_RADIO_ID, "LF");
+  }
 
-  // packet end character
-  uart_puts(UART_RADIO_ID, "LF");
   sleep_us(100);
   // sleep packet timeout?
 
@@ -516,7 +517,8 @@ void rc232_memory_read_one_byte(uint8_t address) {
 #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
 #endif
-  rc232_rx_read_buffer_full(); // fix : clear buffer, otherwise missing/wrong values
+  rc232_rx_read_buffer_full(); // fix : clear buffer, otherwise missing/wrong
+                               // values
 
   enter_config_state();
 
@@ -680,7 +682,8 @@ void rc232_memory_write_configuration(void) {
   // 1 : CTS only
   // 3 : CTS/RTS only
   // 4 : RXTS (RS485)
-  unsigned char config_uart_flow[] = {NVM_ADDR_UART_FW_CTRL, 0x03};
+  // fixme : RTS blocking
+  unsigned char config_uart_flow[] = {NVM_ADDR_UART_FW_CTRL, 0x01};
   uart_write_blocking(UART_RADIO_ID, config_uart_flow, 2);
   uart_wait();
   McuLog_trace("Config NVM : UART HW flow control (Addr : %d, Value : %d)",

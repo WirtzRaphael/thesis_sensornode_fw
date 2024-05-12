@@ -1,10 +1,48 @@
+/**
+ * @file menu.c
+ * @author Raphael Wirtz
+ * @brief Display a menu to execute commands of the system
+ * @date 2024-05-12
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
 #include "menu.h"
-#include "rc232.h"
 #include "radio.h"
+#include "rc232.h"
+#include "sensors.h"
 #include "stdio.h"
 #include <stdint.h>
 
 #include "pico/stdlib.h"
+
+/**
+ * @brief Task for the menu
+ *
+ * @param pvParameters
+ */
+static void vMenuTask(void *pvParameters) {
+  for (;;) {
+    menu_handler_main();
+  }
+}
+
+/**
+ * @brief Initialize the menu task
+ *
+ */
+void menu_init(void) {
+  if (xTaskCreate(vMenuTask, /* pointer to the task */
+                  "menu",    /* task name for kernel awareness debugging */
+                  1000 / sizeof(StackType_t), /* task stack size */
+                  (void *)NULL,         /* optional task startup argument */
+                  tskIDLE_PRIORITY + 2, /* initial priority */
+                  (TaskHandle_t *)NULL  /* optional task handle to create */
+                  ) != pdPASS) {
+    for (;;) {
+    } /* error! probably out of memory */
+  }
+}
 
 /**
  * @brief Display the menu options
@@ -31,6 +69,35 @@ char menu_get_user_input() {
 }
 
 /**
+ * @brief menu for main features
+ *
+ */
+void menu_handler_main(void) {
+  const char *mainMenuOptions[] = {"[r]adio", "rc[2]32",
+                                   "rc232 [c]onfiguration", "[s]ensors"};
+  menu_display(mainMenuOptions, 4);
+
+  char userCmd = menu_get_user_input();
+  switch (userCmd) {
+  case 'r':
+    menu_handler_radio();
+    break;
+  case '2':
+    menu_handler_rc232();
+    break;
+  case 'c':
+    menu_handler_rc232_config();
+    break;
+  case 's':
+    menu_handler_sensors();
+    break;
+  default:
+    printf("Invalid option\n");
+    break;
+  }
+}
+
+/**
  * @brief menu for radio features
  *
  */
@@ -45,7 +112,7 @@ void menu_handler_radio(void) {
     radio_authentication();
     break;
   case 's':
-    radio_send_temperature();
+    // radio_send_temperature_as_string();
     break;
   case 't':
     radio_send_test();
@@ -62,9 +129,12 @@ void menu_handler_radio(void) {
  */
 void menu_handler_rc232(void) {
   const char *rc232Options[] = {"[b]uffer read out / receive",
-                                "broad[c]ast",    "[r]eceive",
-                                "[s]end",         "[t]emperature",
-                                "[v]oltage",      "s[l]eep",
+                                "broad[c]ast",
+                                "[r]eceive",
+                                "[s]end",
+                                "[t]emperature",
+                                "[v]oltage",
+                                "s[l]eep",
                                 "[w]ake up"};
   menu_display(rc232Options, 8);
 
@@ -76,7 +146,8 @@ void menu_handler_rc232(void) {
   case 'c':
     rc232_config_destination_address(RC232_BROADCAST_ADDRESS);
     radio_send_test();
-    rc232_config_destination_address(radio_get_rf_destination_address()); // set back to default
+    rc232_config_destination_address(
+        radio_get_rf_destination_address()); // set back to default
     break;
   case 'l':
     rc232_sleep();
@@ -85,7 +156,7 @@ void menu_handler_rc232(void) {
     rc232_rx_read_buffer_full(); // same as buffer read out
     break;
   case 's':
-    rc232_tx_string("RC232 Send String");
+    rc232_tx_string("RC232 Send String", false);
     break;
   case 't':
     rc232_read_temperature();
@@ -153,6 +224,23 @@ void menu_handler_rc232_config(void) {
     break;
   case '0':
     rc232_get_configuration_memory();
+    break;
+  default:
+    printf("Invalid option\n");
+    break;
+  }
+}
+
+void menu_handler_sensors(void) {
+  const char *sensorsOptions[] = {"[r]ead temperature (queue latest)"};
+  menu_display(sensorsOptions, 1);
+
+  char userCmd = menu_get_user_input();
+  switch (userCmd) {
+  case 'r':
+    // fixme : not shared access to queue (i.e. different task)
+    // sensors_print_temperatures_queue_peak();
+    sensors_print_temperature_xQueue_latest_all();
     break;
   default:
     printf("Invalid option\n");

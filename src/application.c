@@ -6,24 +6,20 @@
 #if PL_CONFIG_USE_PICO_W
   #include "PicoWiFi.h"
 #endif
-#include "pico/stdlib.h"
 
-#include "hardware/gpio.h"
-
+#include "pico_config.h"
+// tasks and dependencies
 #include "application.h"
 #include "menu.h"
-#include "radio.h"
-#include "pico_config.h"
-
-#include "menu.h"
-#include "radio.h"
 #include "rc232.h"
-
-#include "pico/stdlib.h"
-#include "stdio.h"
+#include "radio.h"
+#include "sensors.h"
 
 #include "McuRTOS.h"
-#include "application.h"
+//#include "McuLED.h"
+#include "McuLog.h"
+#include "McuUtility.h"
+
 #if PL_CONFIG_USE_RTT
   #include "McuRTT.h"
 #endif
@@ -33,11 +29,6 @@
 #if MCUW25Q128_CONFIG_ENABLED
   #include "McuW25Q128.h"
 #endif
-
-#include "McuLED.h"
-#include "McuLog.h"
-#include "McuUtility.h"
-#include "hardware/gpio.h"
 
 /*
  * Application
@@ -83,8 +74,8 @@ static void AppTask(void *pv) {
     McuLog_info("Mounting failed please format device first");
   }
 #endif
-
-  // Test McuW25Q128 communication
+  /* Test McuW25Q128 communication
+  */
   uint8_t buffer_mcuw25[3];
   uint8_t errorCode = McuW25_ReadID(buffer_mcuw25, 3);
   if (errorCode != ERR_OK) {
@@ -104,29 +95,6 @@ static void AppTask(void *pv) {
 #endif
     vTaskDelay(pdMS_TO_TICKS(5 * 100));
 
-    // todo : move to menu file
-    const char *mainMenuOptions[] = {
-        "[r]adio",
-        "rc[2]32",
-        "rc232 [c]onfiguration"
-    };
-    menu_display(mainMenuOptions, 3);
-
-    char userCmd = menu_get_user_input();
-    switch (userCmd) {
-    case 'r':
-      menu_handler_radio();
-      break;
-    case '2':
-      menu_handler_rc232();
-      break;
-    case 'c':
-      menu_handler_rc232_config();
-      break;
-    default:
-      printf("Invalid option\n");
-      break;
-    }
   }
 }
 
@@ -175,11 +143,12 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
 
 void APP_Run(void) {
   PL_Init();
-  radio_init();
+  sensors_init();
 #if PICO_CONFIG_USE_RADIO
   rc232_init();
   radio_init();
 #endif
+  menu_init();
 
   McuLog_info("Create task 'App' ... ");
 
