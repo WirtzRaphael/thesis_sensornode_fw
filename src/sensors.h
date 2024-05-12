@@ -3,6 +3,7 @@
 
 #include "hardware/i2c.h"
 #include "pico/util/queue.h"
+#include "McuRTOS.h"
 #include <errno.h>
 #include <stdint.h>
 
@@ -11,7 +12,8 @@ typedef struct {
   uint8_t i2c_address;
   uint8_t sensor_nr;
   uint64_t start_measurement_time;
-  queue_t *measurments_queue;
+  QueueHandle_t *measurments_xQueue;
+  //queue_t *measurments_queue;
 } temperature_sensor_t;
 
 typedef struct {
@@ -32,10 +34,13 @@ sensors_read_temperature(temperature_sensor_t *temperature_sensor,
                          temperature_measurement_t *temperature_measurement);
 static error_t add_temperature_to_queue(queue_t *temperature_sensor_queue,
                                  temperature_measurement_t *temperature);
+static error_t add_temperature_to_xQueue(QueueHandle_t xQueue_temperature, temperature_measurement_t *temperature);
 // todo : rename functions
 error_t sensors_get_latest_temperature(queue_t *temperature_sensor_queue,
                                float *temperature);
 uint16_t sensors_get_sampling_time(void);
+void sensors_print_temperatures_xQueue_latest(void);
+static void print_temperature_xQueue_latest(QueueHandle_t xQueue_temperature);
 void sensors_print_temperatures_queue_peak(void);
 static void print_temperature_queue_peak(queue_t *temperature_sensor_queue);
 
