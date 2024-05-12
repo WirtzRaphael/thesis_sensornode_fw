@@ -35,6 +35,7 @@
 #define SCAN_CHANNELS_FOR_CONNECTION (0)
 #define TRANSMISSION_IN_BYTES        (0)
 #define ACTIVATE_RF                  (0)
+#define PRINTF_RF                    (0)
 
 int rf_channel_start = 0;
 int rf_channel_end = 0;
@@ -53,11 +54,11 @@ static void vRadioTask(void *pvParameters) {
 
   for (;;) {
     // periodic task
-    vTaskDelayUntil(&xLastWakeTime,
-                    pdMS_TO_TICKS(radio_time_intervals_ms));
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(radio_time_intervals_ms));
 
-    // todo : different operations (send, buffer management, authentication, fw download/update)
-    printf("===== radio task\n");
+    // todo : different operations (send, buffer management, authentication, fw
+    // download/update)
+    // printf("===== radio task\n");
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
     temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
@@ -66,8 +67,8 @@ static void vRadioTask(void *pvParameters) {
     radio_send_temperature_as_string(&temperature_measurement_sensor1);
     // todo : sensor 2
 
-    printf("radio task end =====\n");
-    // printf("radio killed the video star.");
+    // printf("radio task end =====\n");
+    //  printf("radio killed the video star.");
   }
 }
 
@@ -285,11 +286,14 @@ static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
 void radio_send_temperature_as_string(
     temperature_measurement_t *temperature_measurement) {
   // todo : send temperature values
-  printf("send temperature: %f\n", (temperature_measurement->temperature));
   uint8_t buffer[32];
   McuUtility_NumFloatToStr(buffer, sizeof(buffer),
                            temperature_measurement->temperature, 2);
+
+#if PRINTF_RF
+  printf("send temperature: %f\n", (temperature_measurement->temperature));
   printf("send temperature (buffer): %s\n", buffer);
+#endif
   rc232_tx_string(buffer, true);
   // rc232_tx_string("temperature values");
 }
