@@ -49,15 +49,19 @@ temperature_sensor_t temperatureSensor1 = {.i2c = I2Cx,
                                            .start_measurement_time = 0,
                                            .measurments_xQueue =
                                                &xQueue_temperature_sensor_1};
-                                               //&temperatureSensor1_queue};
+//&temperatureSensor1_queue};
 temperature_sensor_t temperatureSensor2 = {.i2c = I2Cx,
                                            .i2c_address = TMP117_2_ADDR,
                                            .sensor_nr = 2,
                                            .start_measurement_time = 0,
                                            .measurments_xQueue =
-                                             &xQueue_temperature_sensor_2};
-                                               //&temperatureSensor2_queue};
-
+                                               &xQueue_temperature_sensor_2};
+//&temperatureSensor2_queue};
+/**
+ * @brief Sensors task
+ *
+ * @param pvParameters
+ */
 static void vSensorsTask(void *pvParameters) {
   TickType_t xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
@@ -83,10 +87,9 @@ static void vSensorsTask(void *pvParameters) {
     add_temperature_to_xQueue(xQueue_temperature_sensor_2,
                               &temperature_measurment_sensor2);
 
-
     // check queue content
     /* sensors_print_temperatures_queue_peak(); */
-    //sensors_print_temperatures_xQueue_latest();
+    // sensors_print_temperatures_xQueue_latest();
 
     // periodic task
     vTaskDelayUntil(&xLastWakeTime,
@@ -95,7 +98,7 @@ static void vSensorsTask(void *pvParameters) {
 }
 
 /**
- * @brief Initialize sensors
+ * @brief Initialize the sensors task
  *
  */
 void sensors_init(void) {
@@ -242,8 +245,9 @@ error_t sensors_get_latest_temperature(queue_t *temperature_sensor_queue,
  * @param temperature
  * @return error_t
  */
-error_t sensors_temperature_xQueue_receive(QueueHandle_t xQueue_temperature,
-                                           temperature_measurement_t *temperature) {
+error_t
+sensors_temperature_xQueue_receive(QueueHandle_t xQueue_temperature,
+                                   temperature_measurement_t *temperature) {
   if (xQueue_temperature == 0) {
     McuLog_error("Temperature sensor xQueue not existing\n");
     return ERR_FAILED;
@@ -271,15 +275,13 @@ void sensors_print_temperature_xQueue_latest_all(void) {
  *
  * @param xQueue_temperature
  */
-void
-sensors_print_temperature_xQueue_latest(QueueHandle_t xQueue_temperature) {
+void sensors_print_temperature_xQueue_latest(QueueHandle_t xQueue_temperature) {
   temperature_measurement_t temperature_measurement;
   if (xQueue_temperature == 0) {
     McuLog_error("Temperature sensor xQueue not existing\n");
     return;
   }
-  if (xQueuePeek(xQueue_temperature, &temperature_measurement, 0) ==
-      pdPASS) {
+  if (xQueuePeek(xQueue_temperature, &temperature_measurement, 0) == pdPASS) {
     McuLog_trace("temperature: %f\n", temperature_measurement.temperature);
     printf("temperature: %f\n", temperature_measurement.temperature);
   } else {
