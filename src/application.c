@@ -34,10 +34,6 @@
 #if PL_CONFIG_USE_BUTTONS
 void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
   unsigned char buf[32];
-
-#if PL_CONFIG_USE_UNIT_TESTS
-  UnitTest_OnButtonEvent(button, kind);
-#endif
   buf[0] = '\0';
   switch(button) {
     case BTN_A:    McuUtility_strcat(buf, sizeof(buf), "A"); break;
@@ -57,41 +53,6 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
   McuUtility_strcat(buf, sizeof(buf), "\n");
 #if 0 && PL_CONFIG_USE_RTT /* debugging only */
   McuRTT_printf(0, buf);
-#endif
-#if PL_CONFIG_USE_ROAD && !PL_CONFIG_USE_GUI
-  if (kind==MCUDBNC_EVENT_RELEASED) {
-    Road_SetIsOn(!Road_GetIsOn()); /* use button to start/stop running the car */
-  }
-#endif
-#if PL_CONFIG_IS_APP_LED_COUNTER
-  NeoCounter_OnButtonEvent(button, kind);
-#endif
-#if PL_CONFIG_USE_GUI_KEY_NAV
-  uint8_t btn;
-  uint16_t eventMask;
-
-  switch(button) {
-    case BTN_NAV_UP:      btn = LV_BTN_MASK_UP;  break;
-    case BTN_NAV_LEFT:    btn = LV_BTN_MASK_LEFT; break;
-    case BTN_NAV_RIGHT:   btn = LV_BTN_MASK_RIGHT; break;
-    case BTN_NAV_DOWN:    btn = LV_BTN_MASK_DOWN; break;
-    case BTN_NAV_CENTER:  btn = LV_BTN_MASK_CENTER; break;
-#if PL_CONFIG_USE_BUTTON_NEXT_PREV
-    case BTN_NAV_NEXT:    btn = LV_BTN_MASK_NEXT; break;
-    case BTN_NAV_PREV:    btn = LV_BTN_MASK_PREV; break;
-#endif
-    default:              btn = 0; break;
-  }
-  switch (kind) {
-    case MCUDBNC_EVENT_PRESSED:             eventMask = LV_MASK_PRESSED; break;
-    case MCUDBNC_EVENT_PRESSED_REPEAT:      eventMask = LV_MASK_PRESSED;  break;
-    case MCUDBNC_EVENT_LONG_PRESSED:        eventMask = LV_MASK_PRESSED;  break;
-    case MCUDBNC_EVENT_LONG_PRESSED_REPEAT: eventMask = LV_MASK_PRESSED;  break;
-    case MCUDBNC_EVENT_RELEASED:            eventMask = LV_MASK_RELEASED;  break;
-    case MCUDBNC_EVENT_LONG_RELEASED:       eventMask = LV_MASK_RELEASED_LONG;  break;
-    default:                                eventMask = 0; break;
-  }
-  LV_ButtonEvent(btn, eventMask);
 #endif
 }
 #endif
