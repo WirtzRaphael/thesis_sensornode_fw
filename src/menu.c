@@ -81,7 +81,7 @@ void menu_handler_radio(void) {
     radio_authentication();
     break;
   case 's':
-    radio_send_temperature();
+    //radio_send_temperature_as_string();
     break;
   case 't':
     radio_send_test();
@@ -125,7 +125,7 @@ void menu_handler_rc232(void) {
     rc232_rx_read_buffer_full(); // same as buffer read out
     break;
   case 's':
-    rc232_tx_string("RC232 Send String");
+    rc232_tx_string("RC232 Send String", false);
     break;
   case 't':
     rc232_read_temperature();
@@ -209,7 +209,7 @@ void menu_handler_sensors(void) {
   case 'r':
     // fixme : not shared access to queue (i.e. different task)
     //sensors_print_temperatures_queue_peak();
-    sensors_print_temperatures_xQueue_latest();
+    sensors_print_temperature_xQueue_latest_all();
     break;
   default:
     printf("Invalid option\n");

@@ -41,7 +41,10 @@ static error_t add_temperature_to_xQueue(QueueHandle_t xQueue_temperature, tempe
 error_t sensors_get_latest_temperature(queue_t *temperature_sensor_queue,
                                float *temperature);
 uint16_t sensors_get_sampling_time(void);
-void sensors_print_temperatures_xQueue_latest(void);
+
+error_t sensors_temperature_xQueue_receive(QueueHandle_t xQueue_temperature,
+                                           temperature_measurement_t *temperature);
+void sensors_print_temperature_xQueue_latest_all(void);
 void sensors_print_temperature_xQueue_latest(QueueHandle_t xQueue_temperature);
 /*
 void sensors_print_temperatures_queue_peak(void);

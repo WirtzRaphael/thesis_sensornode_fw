@@ -48,12 +48,16 @@ char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
 static void vRadioTask(void *pvParameters) {
   for (;;) {
     /* Task code goes here. */
-    sleep_ms(1000);
+    sleep_ms(2000);
     // fixme : output order console different
-    printf("radio task\n");
-    sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
-    sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
-    printf("radio task end\n");
+    printf("===== radio task\n");
+    // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
+    // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
+    temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
+    sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
+                                       &temperature_measurement_sensor1);
+    radio_send_temperature_as_string(&temperature_measurement_sensor1);
+    printf("radio task end =====\n");
     // printf("radio killed the video star.");
   }
 }

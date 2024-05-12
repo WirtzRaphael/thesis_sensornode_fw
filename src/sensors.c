@@ -28,7 +28,7 @@
 
 static error_t error;
 static uint16_t id;
-static uint16_t sampling_time_temparature_ms = 2000;
+static uint16_t sampling_time_temparature_ms = 5000;
 
 // todo review : extern definition in header and here
 QueueHandle_t xQueue_temperature_sensor_1;
@@ -198,6 +198,13 @@ add_temperature_to_queue(queue_t *temperature_sensor_queue,
   }
 }
 
+/**
+ * @brief Add temperature to xQueue
+ *
+ * @param xQueue_temperature
+ * @param temperature
+ * @return error_t
+ */
 static error_t
 add_temperature_to_xQueue(QueueHandle_t xQueue_temperature,
                           temperature_measurement_t *temperature) {
@@ -214,13 +221,7 @@ add_temperature_to_xQueue(QueueHandle_t xQueue_temperature,
   }
 }
 
-/**
- * @brief Get latest temperature from queue
- *
- * @param temperature_sensor_queue
- * @param temperature
- * @return error_t
- */
+/*
 error_t sensors_get_latest_temperature(queue_t *temperature_sensor_queue,
                                        float *temperature) {
   temperature_measurement_t temperature_measurement;
@@ -232,12 +233,44 @@ error_t sensors_get_latest_temperature(queue_t *temperature_sensor_queue,
     return ERR_FAILED;
   }
 }
+*/
 
-void sensors_print_temperatures_xQueue_latest(void) {
+/**
+ * @brief Get latest temperature from xQueue
+ *
+ * @param xQueue_temperature
+ * @param temperature
+ * @return error_t
+ */
+error_t sensors_temperature_xQueue_receive(QueueHandle_t xQueue_temperature,
+                                           temperature_measurement_t *temperature) {
+  if (xQueue_temperature == 0) {
+    McuLog_error("Temperature sensor xQueue not existing\n");
+    return ERR_FAILED;
+  }
+  if (xQueueReceive(xQueue_temperature, temperature, 0) == pdPASS) {
+    McuLog_trace("Temperature sensor xQueue receive success\n");
+    return ERR_OK;
+  } else {
+    McuLog_error("Temperature sensor xQueue receive failed\n");
+    return ERR_FAILED;
+  }
+}
+
+/**
+ * @brief Print all latest temperature measurments
+ *
+ */
+void sensors_print_temperature_xQueue_latest_all(void) {
   sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
   sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
 }
 
+/**
+ * @brief Print latest temperature measurment from xQueue
+ *
+ * @param xQueue_temperature
+ */
 void
 sensors_print_temperature_xQueue_latest(QueueHandle_t xQueue_temperature) {
   temperature_measurement_t temperature_measurement;
@@ -245,7 +278,7 @@ sensors_print_temperature_xQueue_latest(QueueHandle_t xQueue_temperature) {
     McuLog_error("Temperature sensor xQueue not existing\n");
     return;
   }
-  if (xQueueReceive(xQueue_temperature, &temperature_measurement, 0) ==
+  if (xQueuePeek(xQueue_temperature, &temperature_measurement, 0) ==
       pdPASS) {
     McuLog_trace("temperature: %f\n", temperature_measurement.temperature);
     printf("temperature: %f\n", temperature_measurement.temperature);
