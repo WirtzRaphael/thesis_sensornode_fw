@@ -16,14 +16,14 @@
 #include "McuUtility.h"
 #include "pico/stdlib.h"
 #include "pico/time.h"
-#include "rc232.h"
-#include "sensors.h"
-
 #include "pico/unique_id.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/_types.h>
+//
+#include "rc232.h"
+#include "sensors.h"
 
 #define RF_CHANNEL_DEFAULT          (5)
 #define RF_CHANNEL_MIN              (1)

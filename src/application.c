@@ -6,26 +6,20 @@
 #if PL_CONFIG_USE_PICO_W
   #include "PicoWiFi.h"
 #endif
-// todo : cleanup includes
-#include "pico/stdlib.h"
 
-#include "hardware/gpio.h"
-
+#include "pico_config.h"
+// tasks and dependencies
 #include "application.h"
 #include "menu.h"
-#include "pico_config.h"
+#include "rc232.h"
 #include "radio.h"
 #include "sensors.h"
 
-#include "menu.h"
-#include "radio.h"
-#include "rc232.h"
-
-#include "pico/stdlib.h"
-#include "stdio.h"
-
 #include "McuRTOS.h"
-#include "application.h"
+//#include "McuLED.h"
+#include "McuLog.h"
+#include "McuUtility.h"
+
 #if PL_CONFIG_USE_RTT
   #include "McuRTT.h"
 #endif
@@ -35,11 +29,6 @@
 #if MCUW25Q128_CONFIG_ENABLED
   #include "McuW25Q128.h"
 #endif
-
-#include "McuLED.h"
-#include "McuLog.h"
-#include "McuUtility.h"
-#include "hardware/gpio.h"
 
 /*
  * Application
