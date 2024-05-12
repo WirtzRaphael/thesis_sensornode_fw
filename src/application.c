@@ -11,13 +11,13 @@
 // tasks and dependencies
 #include "application.h"
 #include "menu.h"
-#include "rc232.h"
 #include "radio.h"
+#include "rc232.h"
 #include "sensors.h"
 
 #include "McuButton.h"
 #include "McuRTOS.h"
-//#include "McuLED.h"
+// #include "McuLED.h"
 #include "McuLog.h"
 #include "McuUtility.h"
 
@@ -32,28 +32,55 @@
 #endif
 
 #if PL_CONFIG_USE_BUTTONS
+/**
+ * \brief Called by the button driver if a button event is detected.
+ * \param button Button for which the event is detected.
+ * \param kind Event kind.
+ */
 void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
   unsigned char buf[32];
   buf[0] = '\0';
-  switch(button) {
-    case BTN_A:    McuUtility_strcat(buf, sizeof(buf), "A"); break;
-    case BTN_B:    McuUtility_strcat(buf, sizeof(buf), "B"); break;
-    case BTN_C:    McuUtility_strcat(buf, sizeof(buf), "C"); break;
-    default:       McuUtility_strcat(buf, sizeof(buf), "???"); break;
+  switch (button) {
+  case BTN_A:
+    McuUtility_strcat(buf, sizeof(buf), "A");
+    break;
+  case BTN_B:
+    McuUtility_strcat(buf, sizeof(buf), "B");
+    break;
+  case BTN_C:
+    McuUtility_strcat(buf, sizeof(buf), "C");
+    break;
+  default:
+    McuUtility_strcat(buf, sizeof(buf), "???");
+    break;
   }
   switch (kind) {
-    case MCUDBNC_EVENT_PRESSED:             McuUtility_strcat(buf, sizeof(buf), " pressed"); break;
-    case MCUDBNC_EVENT_PRESSED_REPEAT:      McuUtility_strcat(buf, sizeof(buf), " pressed-repeat"); break;
-    case MCUDBNC_EVENT_LONG_PRESSED:        McuUtility_strcat(buf, sizeof(buf), " pressed-long"); break;
-    case MCUDBNC_EVENT_LONG_PRESSED_REPEAT: McuUtility_strcat(buf, sizeof(buf), " pressed-long-repeat"); break;
-    case MCUDBNC_EVENT_RELEASED:            McuUtility_strcat(buf, sizeof(buf), " released"); break;
-    case MCUDBNC_EVENT_LONG_RELEASED:       McuUtility_strcat(buf, sizeof(buf), " long released"); break;
-    default:                                McuUtility_strcat(buf, sizeof(buf), "???"); break;
+  case MCUDBNC_EVENT_PRESSED:
+    McuUtility_strcat(buf, sizeof(buf), " pressed");
+    break;
+  case MCUDBNC_EVENT_PRESSED_REPEAT:
+    McuUtility_strcat(buf, sizeof(buf), " pressed-repeat");
+    break;
+  case MCUDBNC_EVENT_LONG_PRESSED:
+    McuUtility_strcat(buf, sizeof(buf), " pressed-long");
+    break;
+  case MCUDBNC_EVENT_LONG_PRESSED_REPEAT:
+    McuUtility_strcat(buf, sizeof(buf), " pressed-long-repeat");
+    break;
+  case MCUDBNC_EVENT_RELEASED:
+    McuUtility_strcat(buf, sizeof(buf), " released");
+    break;
+  case MCUDBNC_EVENT_LONG_RELEASED:
+    McuUtility_strcat(buf, sizeof(buf), " long released");
+    break;
+  default:
+    McuUtility_strcat(buf, sizeof(buf), "???");
+    break;
   }
   McuUtility_strcat(buf, sizeof(buf), "\n");
-#if 0 && PL_CONFIG_USE_RTT /* debugging only */
+  #if 0 && PL_CONFIG_USE_RTT /* debugging only */
   McuRTT_printf(0, buf);
-#endif
+  #endif
 }
 #endif
 
@@ -102,7 +129,7 @@ static void AppTask(void *pv) {
   }
 #endif
   /* Test McuW25Q128 communication
-  */
+   */
   uint8_t buffer_mcuw25[3];
   uint8_t errorCode = McuW25_ReadID(buffer_mcuw25, 3);
   if (errorCode != ERR_OK) {
@@ -121,7 +148,6 @@ static void AppTask(void *pv) {
     ledIsOn = !ledIsOn;
 #endif
     vTaskDelay(pdMS_TO_TICKS(5 * 100));
-
   }
 }
 
