@@ -39,12 +39,11 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
   UnitTest_OnButtonEvent(button, kind);
 #endif
   buf[0] = '\0';
-  // fixme : param src
   switch(button) {
-    case BTN_A:      McuUtility_strcat(buf, sizeof(buf), "up"); break;
-    case BTN_B:    McuUtility_strcat(buf, sizeof(buf), "left"); break;
-    case BTN_C:   McuUtility_strcat(buf, sizeof(buf), "right"); break;
-    default:              McuUtility_strcat(buf, sizeof(buf), "???"); break;
+    case BTN_A:    McuUtility_strcat(buf, sizeof(buf), "A"); break;
+    case BTN_B:    McuUtility_strcat(buf, sizeof(buf), "B"); break;
+    case BTN_C:    McuUtility_strcat(buf, sizeof(buf), "C"); break;
+    default:       McuUtility_strcat(buf, sizeof(buf), "???"); break;
   }
   switch (kind) {
     case MCUDBNC_EVENT_PRESSED:             McuUtility_strcat(buf, sizeof(buf), " pressed"); break;
