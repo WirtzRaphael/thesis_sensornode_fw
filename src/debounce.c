@@ -31,35 +31,6 @@ static McuDbnc_Desc_t data =
   .onDebounceEvent = OnDebounceEvent, /* debounce event handler */
 };
 
-static BTN_Buttons_e RotateButton(BTN_Buttons_e button) {
-#if BTN_CONFIG_ROTATION==0
-  return button;
-#elif BTN_CONFIG_ROTATION==180
-  if (button == BTN_NAV_LEFT) {
-    return BTN_NAV_RIGHT;
-  } else if (button == BTN_NAV_RIGHT) {
-    return BTN_NAV_LEFT;
-  } else if (button == BTN_NAV_UP) {
-    return BTN_NAV_DOWN;
-  } else if (button == BTN_NAV_DOWN) {
-    return BTN_NAV_UP;
-#if PL_CONFIG_USE_BUTTON_NEXT_PREV
-#if PL_CONFIG_HW_ACTIVE_HW_VERSION ==PL_CONFIG_HW_VERSION_0_1
-  } else if (button == BTN_NAV_NEXT) {
-    return BTN_NAV_NEXT;
-  } else if (button == BTN_NAV_PREV) {
-    return BTN_NAV_PREV;
-#else
-  } else if (button == BTN_NAV_NEXT) {
-    return BTN_NAV_PREV;
-  } else if (button == BTN_NAV_PREV) {
-    return BTN_NAV_NEXT;
-#endif
-#endif
-  }
-  return button;
-#endif
-}
 
 static void OnDebounceEvent(McuDbnc_EventKinds event, uint32_t buttons) {
   BTN_Buttons_e button = BTN_NOF_BUTTONS;
@@ -79,7 +50,6 @@ static void OnDebounceEvent(McuDbnc_EventKinds event, uint32_t buttons) {
     case MCUDBNC_EVENT_LONG_PRESSED_REPEAT:
     case MCUDBNC_EVENT_RELEASED:
     case MCUDBNC_EVENT_LONG_RELEASED:
-      button = RotateButton(button);
       APP_OnButtonEvent(button, event);
       break;
 
