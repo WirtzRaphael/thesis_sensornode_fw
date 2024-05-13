@@ -181,8 +181,44 @@ void rc232_tx_packet_string(const uint8_t *message, bool dryrun) {
 }
 
 /**
+ * @brief Send a message as byte to transmit.
+ * todo : multiple bytes
+ * todo : hdlc lite protocol
+ */
+void rc232_tx_packet_bytes(uint8_t byte, bool dryrun) {
+  if (!uart_is_writable(UART_RADIO_ID)) {
+    McuLog_error("Radio UART not writable");
+    return;
+  }
+
+  // RXDprint_binary
+  McuLog_trace("[RC232] Send message : %d", byte);
+  if (!dryrun) {
+    uart_write_blocking(UART_RADIO_ID, &byte, 1);
+    // No explicit packet end character
+  }
+
+  sleep_us(100);
+  // sleep packet timeout?
+
+  if (UART_HW_FLOW_CONTROL_CTS) {
+    sleep_us(t_RXD_CTS_US);
+  } else {
+    sleep_us(t_RXD_TX_US);
+  }
+
+  // time T_TX : depends on packet size and data rate, see formula datasheet
+  sleep_ms(100);
+
+  // sleep_us(t_TX_IDLE_US);
+
+  sleep_us(100);
+}
+
+/**
  * @brief Readout all data from the radio buffer
  *
+ * todo : hdlc lite protocol
  */
 void rc232_rx_read_buffer_full(void) {
   uint8_t rec_buffer[1];
