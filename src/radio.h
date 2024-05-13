@@ -13,6 +13,6 @@ void radio_send_temperature_as_string(temperature_measurement_t *temperature_mea
 void radio_send_temperature_as_bytes(temperature_measurement_t *temperature_measurement, bool dryrun);
 void radio_send_test(void);
 char radio_get_rf_destination_address(void);
-static void print_binary(uint8_t byte);
+static void print_bits_of_byte(uint8_t byte, bool print);
 
 #endif /* RADIO_H_ */

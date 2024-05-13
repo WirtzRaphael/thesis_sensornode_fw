@@ -13,6 +13,7 @@
 #include "McuLog.h"
 #include "McuRTOS.h"
 #include "McuUtility.h"
+#include "cobs.h"
 #include "pico/stdlib.h"
 #include "pico/time.h"
 #include "pico/unique_id.h"
@@ -38,12 +39,61 @@
 #define ACTIVATE_RF                  (0)
 #define PRINTF_RF                    (0)
 
+#ifndef dimof
+  #define dimof(X) (sizeof(X) / sizeof((X)[0]))
+#endif
+
 int rf_channel_start = 0;
 int rf_channel_end = 0;
 char rf_channel = RF_CHANNEL_DEFAULT;
 char rf_destination_address = RF_DESTINATION_ADDR_DEFAULT;
 
 static uint16_t radio_time_intervals_ms = 500;
+
+typedef struct {
+  const uint8_t *data_ptr;
+  size_t data_len;
+  const uint8_t *encoded_ptr;
+  size_t encoded_len;
+  const char *description_ptr;
+} data_info;
+
+static const data_info cobs_tests[] = {
+    {"", 0, "\x01", 1, "Empty"},
+    {"1", 1,
+     "\x02"
+     "1",
+     2, "1 non-zero byte"},
+    {"12345", 5,
+     "\x06"
+     "12345",
+     6, "5 non-zero bytes"},
+    {"12345\x00"
+     "6789",
+     10,
+     "\x06"
+     "12345\x05"
+     "6789",
+     11, "Zero in middle"},
+    {"\x00"
+     "12345\x00"
+     "6789",
+     11,
+     "\x01\x06"
+     "12345\x05"
+     "6789",
+     12, "Zero at start and middle"},
+    {"12345\x00"
+     "6789\x00",
+     11,
+     "\x06"
+     "12345\x05"
+     "6789\x01",
+     12, "Zero at start and end"},
+    {"\x00", 1, "\x01\x01", 2, "1 zero byte"},
+    {"\x00\x00", 2, "\x01\x01\x01", 3, "2 zero bytes"},
+    {"\x00\x00\x00", 3, "\x01\x01\x01\x01", 4, "3 zero bytes"},
+};
 
 pico_unique_board_id_t pico_uid = {0};
 char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
@@ -322,29 +372,43 @@ void radio_send_temperature_as_string(
  * @brief Send temperature values as bytes.
  *
  * todo : refactor
- * todo : compress format / algorithm to reduce number of temperatures (eg only diffs)
- * todo : error code return
+ * todo : time information
+ * todo : compress format / algorithm to reduce number of temperatures (eg only
+ * todo : hdlc-lite / cobs
+ * diffs) todo : error code return
  */
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
-  // todo : hdlc-lite
-  uint8_t payload_byte[4] = {0};
-
-  // -- temperature as byte
-  uint8_t data_16LE_byte[2] = {0};
-  // todo : mcuutility constrain function
-  if (temperature_measurement->temperature <= -20 ||
-      temperature_measurement->temperature >= 150) {
-    McuLog_error("Temperature out of range\n");
-    return;
+  // uint8_t hdlc_frame_flag = 0x7E;
+  uint8_t payload_byte[530] = {0};
+  // -- content descirption field
+  // -- encode
+  uint8_t encode_out[COBS_ENCODE_DST_BUF_LEN_MAX(530)];
+  cobs_encode_result encoded;
+  size_t i;
+  for (i = 0; i < dimof(cobs_tests); i++) {
+    memset(encode_out, 'A', sizeof(encode_out));
+    encoded = cobs_encode(encode_out, sizeof(encode_out),
+                          cobs_tests[i].data_ptr, cobs_tests[i].data_len);
   }
-  // convert float to byte. 1% resolution for tmp117 with +/- 0.1°C accuracy
+  printf("encoded length: %d\n", encoded.out_len);
+  // fixme : program crash
+  //printf("encoded data: %s\n", encode_out);
+
+  // -- id : convert uint8 to byte
+  // fixme : id maximum too low
+  McuUtility_constrain(temperature_measurement->id, 0, 255);
+
+  // -- temperature : convert float to byte
+  // - 1% resolution for tmp117 with +/- 0.1°C accuracy
   // fixme : data loss conversion (eg. 26.03 -> 2600)
+  uint8_t data_16LE_byte[2] = {0};
+  McuUtility_constrain((int32_t)temperature_measurement->temperature, -20, 150);
   uint16_t temperature = (uint16_t)(temperature_measurement->temperature * 100);
-  printf("temperature as uint16: %u\n", temperature);
+  // printf("temperature as uint16: %u\n", temperature);
   McuUtility_SetValue16LE(temperature, data_16LE_byte);
-  print_binary(data_16LE_byte[1]);
-  print_binary(data_16LE_byte[0]);
+  print_bits_of_byte(data_16LE_byte[1], false);
+  print_bits_of_byte(data_16LE_byte[0], false);
   printf("\n");
   printf("send temperature as bytes\n");
 
@@ -357,9 +421,11 @@ void radio_send_temperature_as_bytes(
  */
 void radio_send_test(void) { rc232_tx_packet_string("hello world", false); }
 
-
-static void print_binary(uint8_t byte) {
-    for (int i = 7; i >= 0; i--) {
-        printf("%c", (byte & (1 << i)) ? '1' : '0');
+static void print_bits_of_byte(uint8_t byte, bool print) {
+  for (int i = 7; i >= 0; i--) {
+    if (print) {
+      printf("%c", (byte & (1 << i)) ? '1' : '0');
     }
+    McuLog_trace("%c", (byte & (1 << i)) ? '1' : '0');
+  }
 }
