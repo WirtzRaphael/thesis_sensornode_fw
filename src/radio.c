@@ -354,6 +354,40 @@ void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
   uint8_t payload_byte[100] = {0};
 
+  // snprintf(payload_byte, sizeof(payload_byte), "%s", encode_out);
+}
+
+/**
+ * @brief Send test message.
+ */
+void radio_send_test(void) { rc232_tx_packet_string("hello world", false); }
+
+static void print_bits_of_byte(uint8_t byte, bool print) {
+  for (int i = 7; i >= 0; i--) {
+    if (print) {
+      printf("%c", (byte & (1 << i)) ? '1' : '0');
+    }
+    McuLog_trace("%c", (byte & (1 << i)) ? '1' : '0');
+  }
+}
+
+/**
+ * @brief Example to en-, decode some test data.
+ * 
+ */
+void radio_encoding_cobs_example(void) {
+  cobs_data cobs_data_tests[] = {
+      {"", 0},
+      {"1", 1},
+      {"26.44", 5},
+      {"\x00"
+       "12345\x00"
+       "6789",
+       11},
+      {"\x00", 1},
+      {"\x00\x00", 2},
+      {"\x00\x00\x00", 3},
+  };
   uint8_t encode_out[COBS_ENCODE_DST_BUF_LEN_MAX(100)];
   cobs_encode_result encode_result;
   uint8_t decode_out[100];
@@ -378,19 +412,4 @@ void radio_send_temperature_as_bytes(
     printf("decoded\n");
   }
   printf("end de-, encoding\n");
-  // snprintf(payload_byte, sizeof(payload_byte), "%s", encode_out);
-}
-
-/**
- * @brief Send test message.
- */
-void radio_send_test(void) { rc232_tx_packet_string("hello world", false); }
-
-static void print_bits_of_byte(uint8_t byte, bool print) {
-  for (int i = 7; i >= 0; i--) {
-    if (print) {
-      printf("%c", (byte & (1 << i)) ? '1' : '0');
-    }
-    McuLog_trace("%c", (byte & (1 << i)) ? '1' : '0');
-  }
 }
