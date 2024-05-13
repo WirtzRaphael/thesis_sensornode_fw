@@ -160,9 +160,9 @@ void rc232_tx_packet_string(const uint8_t *message, bool dryrun) {
   // RXD
   McuLog_trace("[RC232] Send message : %s", message);
   if (!dryrun) {
+    // todo : check implicit CR/LF conversion in uart_puts i.e. uart_putc
     uart_puts(UART_RADIO_ID, message);
-    // packet end character
-    uart_puts(UART_RADIO_ID, "LF");
+    // No explicit packet end character
   }
 
   sleep_us(100);
