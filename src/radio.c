@@ -51,23 +51,21 @@ char rf_destination_address = RF_DESTINATION_ADDR_DEFAULT;
 static uint16_t radio_time_intervals_ms = 500;
 
 typedef struct {
-  const uint8_t *data_ptr;
+  uint8_t *data_ptr;
   size_t data_len;
-  const uint8_t *encoded_ptr;
-  size_t encoded_len;
-  const char *description_ptr;
-} data_info;
+} cobs_data;
 
-static const data_info cobs_tests[] = {
-    { "", 0, "\x01", 1, "Empty" },
-    { "1", 1, "\x02""1", 2, "1 non-zero byte" },
-    { "12345", 5, "\x06""12345", 6, "5 non-zero bytes" },
-    { "12345\x00""6789", 10, "\x06""12345\x05""6789", 11, "Zero in middle" },
-    { "\x00""12345\x00""6789", 11,"x01\x06""12345\x05""6789", 12, "Zero at start and middle" },
-    { "12345\x00""6789\x00", 11,"\x06""12345\x05""6789\x01", 12, "Zero at start and end" },
-    { "\x00", 1,"\x01\x01", 2, "1 zero byte" },
-    { "\x00\x00", 2,"\x01\x01\x01", 3, "2 zero bytes" },
-    { "\x00\x00\x00", 3,"\x01\x01\x01\x01", 4, "3 zero bytes" },
+static cobs_data cobs_data_tests[] = {
+    {"", 0},
+    {"1", 1},
+    {"26.44", 5},
+    {"\x00"
+     "12345\x00"
+     "6789",
+     11},
+    {"\x00", 1},
+    {"\x00\x00", 2},
+    {"\x00\x00\x00", 3},
 };
 
 pico_unique_board_id_t pico_uid = {0};
@@ -354,40 +352,33 @@ void radio_send_temperature_as_string(
  */
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
-  // uint8_t hdlc_frame_flag = 0x7E;
-  uint8_t payload_byte[530] = {0};
-  // -- content descirption field
-  // -- encode
-  uint8_t encode_out[COBS_ENCODE_DST_BUF_LEN_MAX(530)];
-  cobs_encode_result encoded;
+  uint8_t payload_byte[100] = {0};
+
+  uint8_t encode_out[COBS_ENCODE_DST_BUF_LEN_MAX(100)];
+  cobs_encode_result encode_result;
+  uint8_t decode_out[100];
+  cobs_decode_result decode_result;
   size_t i;
-  for (i = 0; i < dimof(cobs_tests); i++) {
-    memset(encode_out, 'A', sizeof(encode_out));
-    encoded = cobs_encode(encode_out, sizeof(encode_out),
-                          cobs_tests[i].data_ptr, cobs_tests[i].data_len);
+
+  for (i = 0; i < dimof(cobs_data_tests); i++) {
+    // memset(encode_out, 'A', sizeof(encode_out));
+    // -- encode
+    encode_result =
+        cobs_encode(encode_out, sizeof(encode_out), cobs_data_tests[i].data_ptr,
+                    cobs_data_tests[i].data_len);
+    printf("encode data: %s\n", cobs_data_tests[i].data_ptr);
+    printf("encode data len: %d\n", cobs_data_tests[i].data_len);
+    printf("encoded\n");
+
+    // -- decode
+    decode_result = cobs_decode(decode_out, sizeof(decode_out), encode_out,
+                                encode_result.out_len);
+    printf("decode data: %s\n", decode_out);
+    printf("decode data len: %d\n", decode_result.out_len);
+    printf("decoded\n");
   }
-  printf("encoded length: %d\n", encoded.out_len);
-  printf("encoded data: %s\n", encode_out);
-
-  // -- id : convert uint8 to byte
-  // fixme : id maximum too low
-  McuUtility_constrain(temperature_measurement->id, 0, 255);
-
-  // -- temperature : convert float to byte
-  // - 1% resolution for tmp117 with +/- 0.1°C accuracy
-  // fixme : data loss conversion (eg. 26.03 -> 2600)
-  uint8_t data_16LE_byte[2] = {0};
-  McuUtility_constrain((int32_t)temperature_measurement->temperature, -20, 150);
-  uint16_t temperature = (uint16_t)(temperature_measurement->temperature * 100);
-  // printf("temperature as uint16: %u\n", temperature);
-  McuUtility_SetValue16LE(temperature, data_16LE_byte);
-  print_bits_of_byte(data_16LE_byte[1], false);
-  print_bits_of_byte(data_16LE_byte[0], false);
-  printf("\n");
-  printf("send temperature as bytes\n");
-
-  rc232_tx_packet_bytes(data_16LE_byte[0], dryrun);
-  rc232_tx_packet_bytes(data_16LE_byte[1], dryrun);
+  printf("end de-, encoding\n");
+  // snprintf(payload_byte, sizeof(payload_byte), "%s", encode_out);
 }
 
 /**
