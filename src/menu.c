@@ -156,7 +156,7 @@ void menu_handler_rc232(void) {
     rc232_rx_read_buffer_full(); // same as buffer read out
     break;
   case 's':
-    rc232_tx_string("RC232 Send String", false);
+    rc232_tx_packet_string("RC232 Send String", false);
     break;
   case 't':
     rc232_read_temperature();

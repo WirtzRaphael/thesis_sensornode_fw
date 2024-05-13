@@ -32,15 +32,15 @@
 #define RADIO_PIN_CONFIG                 (20)
 #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
 
-#define UART_RADIO_ID        UART0_ID
-#define UART_RADIO_BAUD_RATE UART0_BAUD_RATE
 // note : maybe configure flow control in radio NVM, before activating
+#define UART_RADIO_ID            UART0_ID
+#define UART_RADIO_BAUD_RATE     UART0_BAUD_RATE
 #define UART_HW_FLOW_CONTROL_CTS UART0_CTS
 #define UART_HW_FLOW_CONTROL_RTS UART0_RTS
 
-#define DATA_BITS 8
-#define STOP_BITS 1
-#define PARITY    UART_PARITY_NONE
+#define UART_RADIO_DATA_BITS 8
+#define UART_RADIO_STOP_BITS 1
+#define UART_RADIO_PARITY    UART_PARITY_NONE
 
 #define LOG_LEVEL_DEBUG (0)
 #define PRINTF          (true)
@@ -97,7 +97,8 @@ void rc232_init() {
                    UART_HW_FLOW_CONTROL_RTS);
   // uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS, 0);
 
-  uart_set_format(UART_RADIO_ID, DATA_BITS, STOP_BITS, PARITY);
+  uart_set_format(UART_RADIO_ID, UART_RADIO_DATA_BITS, UART_RADIO_STOP_BITS,
+                  UART_RADIO_PARITY);
 
   gpio_set_function(RADIO_PIN_TX, GPIO_FUNC_UART);
   gpio_set_function(RADIO_PIN_RX, GPIO_FUNC_UART);
@@ -148,9 +149,9 @@ void rc232_reset(void) {
 }
 
 /**
- * @brief Send a message to transmit.
+ * @brief Send a message as string to transmit.
  */
-void rc232_tx_string(const uint8_t *message, bool dryrun) {
+void rc232_tx_packet_string(const uint8_t *message, bool dryrun) {
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
     return;
