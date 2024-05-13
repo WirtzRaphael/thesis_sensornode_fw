@@ -55,19 +55,6 @@ typedef struct {
   size_t data_len;
 } cobs_data;
 
-static cobs_data cobs_data_tests[] = {
-    {"", 0},
-    {"1", 1},
-    {"26.44", 5},
-    {"\x00"
-     "12345\x00"
-     "6789",
-     11},
-    {"\x00", 1},
-    {"\x00\x00", 2},
-    {"\x00\x00\x00", 3},
-};
-
 pico_unique_board_id_t pico_uid = {0};
 char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
                      1]; // Each byte to two hex chars + null terminator
@@ -354,7 +341,44 @@ void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
   uint8_t payload_byte[100] = {0};
 
+  // -- temperature : convert float to byte
+  // - 1% resolution for tmp117 with +/- 0.1°C accuracy
+  // fixme : data loss conversion (eg. 26.03 -> 2600)
+  uint8_t data_16LE_byte[2] = {0};
+  McuUtility_constrain((int32_t)temperature_measurement->temperature, -20, 150);
+  uint16_t temperature = (uint16_t)(temperature_measurement->temperature * 100);
+  McuUtility_SetValue16LE(temperature, data_16LE_byte);
+  printf("Temperature converted to byte: \n");
+  print_bits_of_byte(data_16LE_byte[1], true);
+  print_bits_of_byte(data_16LE_byte[0], true);
   // snprintf(payload_byte, sizeof(payload_byte), "%s", encode_out);
+
+  // cobs_data cobs_payload[] = {data_16LE_byte, sizeof(data_16LE_byte)};
+  cobs_data cobs_payload[] = {{&data_16LE_byte[0], 1}, {&data_16LE_byte[1], 1}};
+
+  uint8_t encode_out[COBS_ENCODE_DST_BUF_LEN_MAX(100)];
+  cobs_encode_result encode_result;
+  uint8_t decode_out[100];
+  cobs_decode_result decode_result;
+  size_t i;
+
+  for (i = 0; i < dimof(cobs_payload); i++) {
+    // memset(encode_out, 'A', sizeof(encode_out));
+    // -- encode
+    encode_result =
+        cobs_encode(encode_out, sizeof(encode_out), cobs_payload[i].data_ptr,
+                    cobs_payload[i].data_len);
+    printf("encode data: %s\n", cobs_payload[i].data_ptr);
+    print_bits_of_byte(cobs_payload[i].data_ptr[0], true);
+    printf("encode data len: %d\n", cobs_payload[i].data_len);
+
+    // -- decode
+    decode_result = cobs_decode(decode_out, sizeof(decode_out), encode_out,
+                                encode_result.out_len);
+    printf("decode data: %s\n", decode_out);
+    print_bits_of_byte(decode_out[i] ,true);
+    printf("decode data len: %d\n", decode_result.out_len);
+  }
 }
 
 /**
@@ -369,11 +393,14 @@ static void print_bits_of_byte(uint8_t byte, bool print) {
     }
     McuLog_trace("%c", (byte & (1 << i)) ? '1' : '0');
   }
+  if (print) {
+    printf("\n");
+  }
 }
 
 /**
  * @brief Example to en-, decode some test data.
- * 
+ *
  */
 void radio_encoding_cobs_example(void) {
   cobs_data cobs_data_tests[] = {
