@@ -58,15 +58,15 @@ static void vRadioTask(void *pvParameters) {
   for (;;) {
     // periodic task
     vTaskDelayUntil(&xLastWakeTime, xDelay_radio_task);
-
-    // todo : different operations (send, buffer management, authentication, fw
-    // download/update)
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
+    // todo : readout buffer and decompose
+    // todo : receive fw file (block resource, write to flash, signal for update)
 
     if (xSemaphoreTake(xButtonASemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button A\n");
-      printf("[radio] Synchronize");
+      printf("[radio] Synchronize / Authentication");
+      // todo : authentication, connection gateway (sync time)
     }
     if (xSemaphoreTake(xButtonBSemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button B\n");
@@ -75,7 +75,7 @@ static void vRadioTask(void *pvParameters) {
       sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
                                          &temperature_measurement_sensor1);
       radio_send_temperature_as_string(&temperature_measurement_sensor1, true);
-      // todo : sensor 2
+      // todo : send sensor 2
     }
 
     //  printf("radio killed the video star.");
