@@ -127,7 +127,7 @@ static void vRadioTask(void *pvParameters) {
       sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
                                          &temperature_measurement_sensor1);
       radio_send_temperature_as_string(&temperature_measurement_sensor1, true);
-      radio_send_temperature_as_bytes(&temperature_measurement_sensor1, false);
+      radio_send_temperature_as_bytes(&temperature_measurement_sensor1, true);
       // todo : send sensor 2
     }
 
@@ -379,41 +379,25 @@ void radio_send_temperature_as_string(
  */
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
-  // uint8_t hdlc_frame_flag = 0x7E;
-  uint8_t payload_byte[530] = {0};
-  // -- content descirption field
   // -- encode
-  uint8_t encode_out[COBS_ENCODE_DST_BUF_LEN_MAX(530)];
-  cobs_encode_result encoded;
+  uint8_t encode_out[COBS_ENCODE_DST_BUF_LEN_MAX(1000)];
+  cobs_encode_result encode_result;
   size_t i;
   for (i = 0; i < dimof(cobs_tests); i++) {
     memset(encode_out, 'A', sizeof(encode_out));
-    encoded = cobs_encode(encode_out, sizeof(encode_out),
-                          cobs_tests[i].data_ptr, cobs_tests[i].data_len);
+    encode_result = cobs_encode(encode_out, sizeof(encode_out),
+                                cobs_tests[i].data_ptr, cobs_tests[i].data_len);
   }
-  printf("encoded length: %d\n", encoded.out_len);
-  // fixme : program crash
-  //printf("encoded data: %s\n", encode_out);
+  printf("encoded length: %d\n", encode_result.out_len);
+  // printf("encoded data: %s\n", encode_out); // program crash
 
-  // -- id : convert uint8 to byte
-  // fixme : id maximum too low
-  McuUtility_constrain(temperature_measurement->id, 0, 255);
-
-  // -- temperature : convert float to byte
-  // - 1% resolution for tmp117 with +/- 0.1°C accuracy
-  // fixme : data loss conversion (eg. 26.03 -> 2600)
-  uint8_t data_16LE_byte[2] = {0};
-  McuUtility_constrain((int32_t)temperature_measurement->temperature, -20, 150);
-  uint16_t temperature = (uint16_t)(temperature_measurement->temperature * 100);
-  // printf("temperature as uint16: %u\n", temperature);
-  McuUtility_SetValue16LE(temperature, data_16LE_byte);
-  print_bits_of_byte(data_16LE_byte[1], false);
-  print_bits_of_byte(data_16LE_byte[0], false);
-  printf("\n");
-  printf("send temperature as bytes\n");
-
-  rc232_tx_packet_bytes(data_16LE_byte[0], dryrun);
-  rc232_tx_packet_bytes(data_16LE_byte[1], dryrun);
+  cobs_decode_result decode_result;
+  uint8_t decode_out[1000];
+  for (i = 0; i < dimof(cobs_tests); i++) {
+    decode_result = cobs_decode(decode_out, sizeof(decode_out), encode_out,
+                                encode_result.out_len);
+  }
+  printf("decoded length: %d\n", decode_result.out_len);
 }
 
 /**
