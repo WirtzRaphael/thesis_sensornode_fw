@@ -31,6 +31,11 @@
 #endif
 
 #if PL_CONFIG_USE_BUTTONS
+#include "semphr.h"
+// todo review : extern definition in header and here
+SemaphoreHandle_t xButtonASemaphore;
+SemaphoreHandle_t xButtonBSemaphore;
+SemaphoreHandle_t xButtonCSemaphore;
 /**
  * \brief Called by the button driver if a button event is detected.
  * \param button Button for which the event is detected.
@@ -81,6 +86,21 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
   #if 0 && PL_CONFIG_USE_RTT /* debugging only */
   McuRTT_printf(0, buf);
   #endif
+
+  // todo : refactor
+  if (button == BTN_A && kind == MCUDBNC_EVENT_PRESSED) {
+    printf("[app] Semaphore give A\n");
+    McuLog_info("[app] Semaphore give Button A");
+    xSemaphoreGive(xButtonASemaphore);
+  } else if (button == BTN_B == MCUDBNC_EVENT_PRESSED) {
+    printf("[app] Semaphore give B\n");
+    McuLog_info("[app] Semaphore give Button B");
+    xSemaphoreGive(xButtonBSemaphore);
+  } else if (button == BTN_C == MCUDBNC_EVENT_PRESSED) {
+    printf("[app] Semaphore give C\n");
+    McuLog_info("[app] Semaphore give Button C");
+    xSemaphoreGive(xButtonCSemaphore);
+  }
 }
 #endif
 
@@ -209,6 +229,21 @@ void APP_Run(void) {
   radio_init();
 #endif
   menu_init();
+
+#if PL_CONFIG_USE_BUTTONS
+xButtonASemaphore = xSemaphoreCreateBinary();
+if (xButtonASemaphore == NULL) {
+  McuLog_fatal("failed creating semaphore");
+}
+xButtonBSemaphore = xSemaphoreCreateBinary();
+if (xButtonBSemaphore == NULL) {
+  McuLog_fatal("failed creating semaphore");
+}
+xButtonCSemaphore = xSemaphoreCreateBinary();
+if (xButtonCSemaphore == NULL) {
+  McuLog_fatal("failed creating semaphore");
+}
+#endif
 
   McuLog_info("Create task 'App' ... ");
 

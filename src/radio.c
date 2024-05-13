@@ -64,7 +64,11 @@ static void vRadioTask(void *pvParameters) {
     temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
     sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
                                        &temperature_measurement_sensor1);
-    radio_send_temperature_as_string(&temperature_measurement_sensor1);
+    radio_send_temperature_as_string(&temperature_measurement_sensor1, true);
+    if (xSemaphoreTake(xButtonASemaphore, portMAX_DELAY) == pdTRUE) {
+      // Button was pressed, perform action
+      printf("[radio] Semaphore take A\n");
+    }
     // todo : sensor 2
 
     // printf("radio task end =====\n");
