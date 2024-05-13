@@ -60,20 +60,26 @@ static void vRadioTask(void *pvParameters) {
 
     // todo : different operations (send, buffer management, authentication, fw
     // download/update)
-    // printf("===== radio task\n");
+    printf("===== radio task\n");
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
-    temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
-    sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
-                                       &temperature_measurement_sensor1);
-    radio_send_temperature_as_string(&temperature_measurement_sensor1, true);
+
+    // todo : block time fix
     if (xSemaphoreTake(xButtonASemaphore, portMAX_DELAY) == pdTRUE) {
-      // Button was pressed, perform action
-      printf("[radio] Semaphore take A\n");
+      printf("[radio] Semaphore take Button A\n");
+      printf("[radio] Synchronize");
+    }
+    if (xSemaphoreTake(xButtonBSemaphore, portMAX_DELAY) == pdTRUE) {
+      printf("[radio] Semaphore take Button B\n");
+      printf("[radio] Send sensors values");
+      temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
+      sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
+                                         &temperature_measurement_sensor1);
+      radio_send_temperature_as_string(&temperature_measurement_sensor1, true);
     }
     // todo : sensor 2
 
-    // printf("radio task end =====\n");
+    printf("radio task end =====\n");
     //  printf("radio killed the video star.");
   }
 }

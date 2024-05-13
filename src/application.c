@@ -88,15 +88,15 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
   #endif
 
   // todo : refactor
-  if (button == BTN_A && kind == MCUDBNC_EVENT_PRESSED) {
+  if (button == BTN_A && kind == MCUDBNC_EVENT_RELEASED) {
     printf("[app] Semaphore give A\n");
     McuLog_info("[app] Semaphore give Button A");
     xSemaphoreGive(xButtonASemaphore);
-  } else if (button == BTN_B == MCUDBNC_EVENT_PRESSED) {
+  } else if (button == BTN_B && kind == MCUDBNC_EVENT_PRESSED) {
     printf("[app] Semaphore give B\n");
     McuLog_info("[app] Semaphore give Button B");
     xSemaphoreGive(xButtonBSemaphore);
-  } else if (button == BTN_C == MCUDBNC_EVENT_PRESSED) {
+  } else if (button == BTN_C && kind == MCUDBNC_EVENT_PRESSED) {
     printf("[app] Semaphore give C\n");
     McuLog_info("[app] Semaphore give Button C");
     xSemaphoreGive(xButtonCSemaphore);
