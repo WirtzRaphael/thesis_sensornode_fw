@@ -60,8 +60,8 @@ static void vRadioTask(void *pvParameters) {
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
     // todo : readout buffer and decompose
-    // todo : receive fw file (block resource, write to flash, signal for
-    // update)
+    // todo : receive fw file (download) (block resource, write to flash, signal
+    // for update)
 
     if (xSemaphoreTake(xButtonASemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button A\n");
@@ -77,6 +77,7 @@ static void vRadioTask(void *pvParameters) {
       sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
                                          &temperature_measurement_sensor1);
       radio_send_temperature_as_string(&temperature_measurement_sensor1, true);
+      radio_send_temperature_as_bytes(&temperature_measurement_sensor1, false);
       // todo : send sensor 2
     }
 
@@ -148,7 +149,6 @@ void radio_authentication(void) {
     /*
      * Wait for response and read control character
      * todo : refactor, don't read byte by byte
-     * todo : hscl lite protocol
      */
     // uint8_t buffer[PROTOCOL_AUTH_SIZE_BYTES] = {0};
     uint8_t buffer1[1];
@@ -234,11 +234,11 @@ static void radio_send_authentication_request(void) {
   // todo : escape character
   // todo : crc (optional)
   // frame delimiter flag
-  rc232_tx_string(frame_flag, ACTIVATE_RF);
+  rc232_tx_packet_string(frame_flag, ACTIVATE_RF);
   // message
-  rc232_tx_string(payload, ACTIVATE_RF);
+  rc232_tx_packet_string(payload, ACTIVATE_RF);
   // frame delimiter flag
-  rc232_tx_string(frame_flag, ACTIVATE_RF);
+  rc232_tx_packet_string(frame_flag, ACTIVATE_RF);
 #endif
 }
 
@@ -298,7 +298,7 @@ static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
  */
 void radio_send_temperature_as_string(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
-  // todo : send temperature values
+  // Payload content
   uint8_t buffer[32];
   char *separator = "-";
   McuUtility_NumFloatToStr(buffer, sizeof(buffer),
@@ -307,17 +307,59 @@ void radio_send_temperature_as_string(
   McuUtility_strcatNum8u(buffer, sizeof(buffer), temperature_measurement->id);
   McuUtility_strcat(buffer, sizeof(buffer), separator);
   McuUtility_strcatNum16u(buffer, sizeof(buffer),
-                         temperature_measurement->timediff_to_start);
+                          temperature_measurement->timediff_to_start);
 #if PRINTF_RF
   printf("send temperature: %f\n", (temperature_measurement->temperature));
   printf("send temperature (buffer): %s\n", buffer);
 #endif
   printf("send temperature (buffer): %s\n", buffer);
 
-  rc232_tx_string(buffer, dryrun);
+  // Send
+  rc232_tx_packet_string(buffer, dryrun);
+}
+
+/**
+ * @brief Send temperature values as bytes.
+ *
+ * todo : refactor
+ * todo : compress format / algorithm to reduce number of temperatures (eg only diffs)
+ * todo : error code return
+ */
+void radio_send_temperature_as_bytes(
+    temperature_measurement_t *temperature_measurement, bool dryrun) {
+  // todo : hdlc-lite
+  uint8_t payload_byte[4] = {0};
+
+  // -- temperature as byte
+  uint8_t data_16LE_byte[2] = {0};
+  // todo : mcuutility constrain function
+  if (temperature_measurement->temperature <= -20 ||
+      temperature_measurement->temperature >= 150) {
+    McuLog_error("Temperature out of range\n");
+    return;
+  }
+  // convert float to byte. 1% resolution for tmp117 with +/- 0.1°C accuracy
+  // fixme : data loss conversion (eg. 26.03 -> 2600)
+  uint16_t temperature = (uint16_t)(temperature_measurement->temperature * 100);
+  printf("temperature as uint16: %u\n", temperature);
+  McuUtility_SetValue16LE(temperature, data_16LE_byte);
+  print_binary(data_16LE_byte[1]);
+  print_binary(data_16LE_byte[0]);
+  printf("\n");
+  printf("send temperature as bytes\n");
+
+  rc232_tx_packet_bytes(data_16LE_byte[0], dryrun);
+  rc232_tx_packet_bytes(data_16LE_byte[1], dryrun);
 }
 
 /**
  * @brief Send test message.
  */
-void radio_send_test(void) { rc232_tx_string("hello world", false); }
+void radio_send_test(void) { rc232_tx_packet_string("hello world", false); }
+
+
+static void print_binary(uint8_t byte) {
+    for (int i = 7; i >= 0; i--) {
+        printf("%c", (byte & (1 << i)) ? '1' : '0');
+    }
+}
