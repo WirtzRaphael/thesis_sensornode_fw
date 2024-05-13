@@ -8,7 +8,6 @@
  *
  * todo : sync time
  * todo : buffer handling (?) -> rc232
- * todo : temperature sensor values
  */
 #include "radio.h"
 #include "McuLog.h"
@@ -61,7 +60,8 @@ static void vRadioTask(void *pvParameters) {
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
     // todo : readout buffer and decompose
-    // todo : receive fw file (block resource, write to flash, signal for update)
+    // todo : receive fw file (block resource, write to flash, signal for
+    // update)
 
     if (xSemaphoreTake(xButtonASemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button A\n");
@@ -70,7 +70,9 @@ static void vRadioTask(void *pvParameters) {
     }
     if (xSemaphoreTake(xButtonBSemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button B\n");
-      printf("[radio] Send sensors values");
+      printf("[radio] Send sensors values \n");
+      // todo : readout all values queue
+      // todo : case empty queue / no new value / nothing to send
       temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
       sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
                                          &temperature_measurement_sensor1);
@@ -207,6 +209,7 @@ static void radio_send_authentication_request(void) {
   // NONE (before authentication not assigned)
   // - control field
   // authentication request
+  // todo : binary command instruction
   strcpy(payload, "AR");
   printf("payload (string): %s\n", payload);
   strcat(payload, "-");
@@ -297,14 +300,21 @@ void radio_send_temperature_as_string(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
   // todo : send temperature values
   uint8_t buffer[32];
+  char *separator = "-";
   McuUtility_NumFloatToStr(buffer, sizeof(buffer),
                            temperature_measurement->temperature, 2);
-
+  McuUtility_strcat(buffer, sizeof(buffer), separator);
+  McuUtility_strcatNum8u(buffer, sizeof(buffer), temperature_measurement->id);
+  McuUtility_strcat(buffer, sizeof(buffer), separator);
+  McuUtility_strcatNum16u(buffer, sizeof(buffer),
+                         temperature_measurement->timediff_to_start);
 #if PRINTF_RF
   printf("send temperature: %f\n", (temperature_measurement->temperature));
   printf("send temperature (buffer): %s\n", buffer);
 #endif
-  rc232_tx_string("temperature values", dryrun);
+  printf("send temperature (buffer): %s\n", buffer);
+
+  rc232_tx_string(buffer, dryrun);
 }
 
 /**
