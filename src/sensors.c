@@ -28,7 +28,7 @@
 
 static error_t error;
 static uint16_t id;
-static uint16_t sampling_time_temparature_ms = 5000;
+static uint16_t sampling_time_temparature_ms = 1000;
 
 // todo review : extern definition in header and here
 QueueHandle_t xQueue_temperature_sensor_1;
@@ -63,8 +63,8 @@ temperature_sensor_t temperatureSensor2 = {.i2c = I2Cx,
  * @param pvParameters
  */
 static void vSensorsTask(void *pvParameters) {
-  TickType_t xLastWakeTime;
-  xLastWakeTime = xTaskGetTickCount();
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xDelay_sensor_sampling = pdMS_TO_TICKS(sampling_time_temparature_ms);
 
   for (;;) {
     /* Task code goes here. */
@@ -92,8 +92,7 @@ static void vSensorsTask(void *pvParameters) {
     // sensors_print_temperatures_xQueue_latest();
 
     // periodic task
-    vTaskDelayUntil(&xLastWakeTime,
-                    pdMS_TO_TICKS(sampling_time_temparature_ms));
+    vTaskDelayUntil(&xLastWakeTime, xDelay_sensor_sampling);
   }
 }
 
@@ -108,6 +107,7 @@ void sensors_init(void) {
   i2c_init(I2Cx, 400 * 1000); // 400 kHz
 
   // Queue of sensor values
+  // fixme : queue length / memory usage
   const int QUEUE_LENGTH = 128;
   /*
   queue_init(temperatureSensor1.measurments_queue,

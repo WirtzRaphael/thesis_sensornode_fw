@@ -17,11 +17,13 @@
 #include "pico/stdlib.h"
 #include "pico/time.h"
 #include "pico/unique_id.h"
+#include "semphr.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/_types.h>
 //
+#include "application.h"
 #include "rc232.h"
 #include "sensors.h"
 
@@ -49,12 +51,12 @@ char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
                      1]; // Each byte to two hex chars + null terminator
 
 static void vRadioTask(void *pvParameters) {
-  TickType_t xLastWakeTime;
-  xLastWakeTime = xTaskGetTickCount();
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xDelay_radio = pdMS_TO_TICKS(radio_time_intervals_ms);
 
   for (;;) {
     // periodic task
-    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(radio_time_intervals_ms));
+    vTaskDelayUntil(&xLastWakeTime, xDelay_radio);
 
     // todo : different operations (send, buffer management, authentication, fw
     // download/update)
@@ -288,7 +290,7 @@ static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
  *
  */
 void radio_send_temperature_as_string(
-    temperature_measurement_t *temperature_measurement) {
+    temperature_measurement_t *temperature_measurement, bool dryrun) {
   // todo : send temperature values
   uint8_t buffer[32];
   McuUtility_NumFloatToStr(buffer, sizeof(buffer),
@@ -298,8 +300,7 @@ void radio_send_temperature_as_string(
   printf("send temperature: %f\n", (temperature_measurement->temperature));
   printf("send temperature (buffer): %s\n", buffer);
 #endif
-  rc232_tx_string(buffer, true);
-  // rc232_tx_string("temperature values");
+  rc232_tx_string("temperature values", dryrun);
 }
 
 /**
