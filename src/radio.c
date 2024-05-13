@@ -44,7 +44,7 @@ int rf_channel_end = 0;
 char rf_channel = RF_CHANNEL_DEFAULT;
 char rf_destination_address = RF_DESTINATION_ADDR_DEFAULT;
 
-static uint16_t radio_time_intervals_ms = 5000;
+static uint16_t radio_time_intervals_ms = 500;
 
 pico_unique_board_id_t pico_uid = {0};
 char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
@@ -52,34 +52,32 @@ char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
 
 static void vRadioTask(void *pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xDelay_radio = pdMS_TO_TICKS(radio_time_intervals_ms);
+  const TickType_t xDelay_radio_task = pdMS_TO_TICKS(radio_time_intervals_ms);
+  const TickType_t xButtonSemaphore = portTICK_PERIOD_MS * 50;
 
   for (;;) {
     // periodic task
-    vTaskDelayUntil(&xLastWakeTime, xDelay_radio);
+    vTaskDelayUntil(&xLastWakeTime, xDelay_radio_task);
 
     // todo : different operations (send, buffer management, authentication, fw
     // download/update)
-    printf("===== radio task\n");
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
 
-    // todo : block time fix
-    if (xSemaphoreTake(xButtonASemaphore, portMAX_DELAY) == pdTRUE) {
+    if (xSemaphoreTake(xButtonASemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button A\n");
       printf("[radio] Synchronize");
     }
-    if (xSemaphoreTake(xButtonBSemaphore, portMAX_DELAY) == pdTRUE) {
+    if (xSemaphoreTake(xButtonBSemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button B\n");
       printf("[radio] Send sensors values");
       temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
       sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
                                          &temperature_measurement_sensor1);
       radio_send_temperature_as_string(&temperature_measurement_sensor1, true);
+      // todo : sensor 2
     }
-    // todo : sensor 2
 
-    printf("radio task end =====\n");
     //  printf("radio killed the video star.");
   }
 }
