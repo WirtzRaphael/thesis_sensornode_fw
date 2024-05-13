@@ -28,7 +28,7 @@
 
 static error_t error;
 static uint16_t id;
-static uint16_t sampling_time_temparature_ms = 1000;
+static uint16_t sampling_time_temparature_ms = 5000;
 
 // todo review : extern definition in header and here
 QueueHandle_t xQueue_temperature_sensor_1;

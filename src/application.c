@@ -58,7 +58,6 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
     McuUtility_strcat(buf, sizeof(buf), "???");
     break;
   }
-  // todo : execute action / task communication / information
   switch (kind) {
   case MCUDBNC_EVENT_PRESSED:
     McuUtility_strcat(buf, sizeof(buf), " pressed");
@@ -87,7 +86,7 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
   McuRTT_printf(0, buf);
   #endif
 
-  // todo : refactor
+  // todo : refactor, remove printf
   if (button == BTN_A && kind == MCUDBNC_EVENT_RELEASED) {
     printf("[app] Semaphore give A\n");
     McuLog_info("[app] Semaphore give Button A");
