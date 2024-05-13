@@ -206,7 +206,7 @@ void radio_authentication(void) {
  * @brief Send authentication request.
  */
 static void radio_send_authentication_request(void) {
-  // todo : HDLC-Lite (FRAMING PROTOCOL, high-level data link control)
+  // todo : cobs instead of HDLC-Lite (FRAMING PROTOCOL, high-level data link control)
   // todo : protocol authentication request
   // todo : send -> tx (rc232)
   // -- frame delimiter flag
@@ -257,7 +257,7 @@ static void radio_send_authentication_request(void) {
  *
  * @return error_t
  * todo : refactor, don't read byte by byte
- * todo : hscl lite protocol
+ * todo : cobs protocol
  */
 static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
   // uint8_t buffer[PROTOCOL_AUTH_SIZE_BYTES] = {0};
@@ -331,15 +331,18 @@ void radio_send_temperature_as_string(
 /**
  * @brief Send temperature values as bytes.
  *
+ * - use cobs for encoding
  * todo : refactor
  * todo : time information
- * todo : compress format / algorithm to reduce number of temperatures (eg only
- * todo : hdlc-lite / cobs
+ * todo : change, compress format / algorithm to reduce number of temperatures (eg only diffs)
  * diffs) todo : error code return
  */
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
   uint8_t payload_byte[100] = {0};
+ // -- id : convert uint8 to byte
+  // fixme : id maximum too low
+  McuUtility_constrain(temperature_measurement->id, 0, 255);
 
   // -- temperature : convert float to byte
   // - 1% resolution for tmp117 with +/- 0.1°C accuracy
@@ -353,9 +356,11 @@ void radio_send_temperature_as_bytes(
   print_bits_of_byte(data_16LE_byte[0], true);
   // snprintf(payload_byte, sizeof(payload_byte), "%s", encode_out);
 
+  // -- payload
   // cobs_data cobs_payload[] = {data_16LE_byte, sizeof(data_16LE_byte)};
   cobs_data cobs_payload[] = {{&data_16LE_byte[0], 1}, {&data_16LE_byte[1], 1}};
 
+  // -- encode
   uint8_t encode_out[COBS_ENCODE_DST_BUF_LEN_MAX(100)];
   cobs_encode_result encode_result;
   uint8_t decode_out[100];
