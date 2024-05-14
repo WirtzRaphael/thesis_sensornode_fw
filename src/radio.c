@@ -101,7 +101,7 @@ void radio_init(void) {
   // TaskHandle_t xHandle = NULL;
   if (xTaskCreate(vRadioTask, /* pointer to the task */
                   "radio",    /* task name for kernel awareness debugging */
-                  1000 / sizeof(StackType_t), /* task stack size */
+                  2000 / sizeof(StackType_t), /* task stack size */
                   (void *)NULL,         /* optional task startup argument */
                   tskIDLE_PRIORITY + 2, /* initial priority */
                   (TaskHandle_t *)NULL  /* optional task handle to create */
