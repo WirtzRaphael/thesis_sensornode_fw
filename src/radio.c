@@ -113,31 +113,35 @@ void radio_init(void) {
 
 char radio_get_rf_destination_address(void) { return rf_destination_address; }
 
-cobs_encode_result radio_encode(void *encoded_payload_ptr,
-                                size_t encoded_payload_len,
-                                cobs_data *payload_bytes,
-                                size_t payload_bytes_len) {
+void radio_encode(void *encoded_payload_ptr, size_t encoded_payload_len,
+                  cobs_data *payload_bytes, size_t payload_bytes_len,
+                  cobs_encode_result *encoded_result_payload) {
   //                                const void *payload_bytes_ptr,
   //                                size_t payload_bytes_len) {
-  cobs_encode_result encoded_result_payload;
+  // cobs_encode_result encoded_result_payload;
   size_t i;
   for (i = 0; i < payload_bytes_len; i++) {
-    cobs_encode_result encoded_result_payload;
-    uint8_t *encoded_payload_byte_ptr = (uint8_t *)encoded_payload_ptr;
+    // cobs_encode_result encoded_result_payload;
 
-    encoded_result_payload =
+    uint8_t *encoded_payload_byte_ptr = (uint8_t *)encoded_payload_ptr;
+    encoded_result_payload[i] =
         cobs_encode(encoded_payload_ptr, encoded_payload_len,
                     payload_bytes[i].data_ptr, payload_bytes[i].data_len);
+    printf("[encode] encoding results status %d\n",
+           encoded_result_payload[i].status);
+    printf("[encode] encoding results length %d\n",
+           encoded_result_payload[i].out_len);
+
     // input
     printf("[encode] payload: %d | ", *(payload_bytes[i].data_ptr));
     print_bits_of_byte(*(payload_bytes[i].data_ptr), true);
     printf("[encode] payload length: %d\n", payload_bytes[i].data_len);
     // output
     printf("[encode] encoded data: %d\n", encoded_payload_byte_ptr[i]);
-    printf("[encode] encoded data len: %d\n", encoded_result_payload.out_len);
+    printf("[encode] encoded data len: %d\n",
+           encoded_result_payload[i].out_len);
+    printf("[encode] \n");
   }
-
-  return encoded_result_payload;
 }
 
 // todo : add error handling ? logs.
