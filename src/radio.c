@@ -138,8 +138,8 @@ void radio_encode(void *encoded_payload_ptr, size_t encoded_payload_len,
         cobs_encode(encoded_payload_ptr, encoded_payload_len,
                     payload_bytes[i].data_ptr, payload_bytes[i].data_len);
 
-    log_payload(payload_bytes[i].data_ptr, payload_bytes[i].data_len );
-    log_encoded(encoded_payload_byte_ptr, encoded_result_payload[i].out_len);
+    // log_payload(payload_bytes[i].data_ptr, payload_bytes[i].data_len );
+    // log_encoded(encoded_payload_byte_ptr, encoded_result_payload[i].out_len);
   }
 }
 
@@ -430,37 +430,22 @@ void radio_send_temperature_as_bytes(
   cobs_decode_result decode_result_payload[10];
   size_t i;
 
-  printf("===== encode\n");
   for (i = 0; i < dimof(payload_bytes); i++) {
     encoded_result_payload[i] =
         cobs_encode(encoded_payload, sizeof(encoded_payload),
                     payload_bytes[i].data_ptr, payload_bytes[i].data_len);
-
-    log_payload(payload_bytes[i].data_ptr, payload_bytes[i].data_len );
-    log_encoded(encoded_payload, encoded_result_payload[i].out_len);
+    log_cobs_payload(payload_bytes, i);
+    log_cobs_encoded(encoded_payload, &encoded_result_payload[i], i);
   }
-  // todo sub-function logs
 
-  /*
-    radio_encode(encoded_payload, sizeof(encoded_payload), payload_bytes,
-                 dimof(payload_bytes), encoded_result_payload);
-                 */
-
-  printf("===== decode\n");
   for (i = 0; i < dimof(payload_bytes); i++) {
     decode_result_payload[i] =
         cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
                     encoded_result_payload[i].out_len);
-    printf("decode data: %u\n", *decoded_payload);
-    printf("decode data: %u\n", decoded_payload[i]);
-    printf("decode data len: %d\n", decode_result_payload[i].out_len);
+    log_cobs_decoded(decoded_payload, &decode_result_payload[i], i);
   }
-  /*
-  radio_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
-               sizeof(encoded_payload), encoded_result_payload,
-               decode_result_payload, dimof(payload_bytes));
-               */
 
+  // -- send
   rc232_tx_packet_bytes(encoded_payload[0], dryrun);
   rc232_tx_packet_bytes(encoded_payload[1], dryrun);
   rc232_tx_packet_bytes(encoded_payload[2], dryrun);
@@ -484,20 +469,28 @@ static void print_bits_of_byte(uint8_t byte, bool print) {
   }
 }
 
-static void log_encoded(uint8_t *encoded_payload_byte_ptr,
-                        size_t encoded_payload_len) {
+// todo : change to mcu log
+static void log_cobs_payload(cobs_data *payload_cobs, size_t index) {
+  printf("[encode] ==> payload \n");
+  printf("[encode]  -> payload : %d | ", payload_cobs[index].data_ptr[0]);
+  print_bits_of_byte(payload_cobs->data_ptr[0], true);
+  printf("[encode]  -> payload length: %d\n", payload_cobs[index].data_len);
+}
+
+static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
+                             cobs_encode_result *encoded_result, size_t index) {
   printf("[encode] ==> encoding \n");
-  printf("[encode]  -> encoded : %d\n", encoded_payload_byte_ptr);
-  printf("[encode]  -> encoded length: %d\n", encoded_payload_len);
+  printf("[encode]  -> encoded : %u \n", encoded_payload_byte_ptr[index]);
+  printf("[encode]  -> encoded length: %d\n", encoded_result[index].out_len);
   printf("[encode]\n");
 }
 
-static void log_payload(uint8_t *payload_byte, size_t payload_len) {
-  printf("[encode] ==> payload \n");
-  printf("[encode]  -> payload : %d\n", payload_byte);
-  printf("[encode]  -> payload length: %d\n", payload_len);
-  print_bits_of_byte(*payload_byte, true);
-  printf("[encode] payload length: %d\n", payload_len);
+static void log_cobs_decoded(uint8_t *decoded_payload_byte_ptr,
+                             cobs_decode_result *decoded_result, size_t index) {
+  printf("[decode] ==> decoding \n");
+  printf("[decode]  -> decoded : %u \n", decoded_payload_byte_ptr[index]);
+  printf("[decode]  -> decoded length: %d\n", decoded_result[index].out_len);
+  printf("[decode]\n");
 }
 
 /**
