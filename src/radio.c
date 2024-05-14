@@ -145,29 +145,32 @@ void radio_encode(void *encoded_payload_ptr, size_t encoded_payload_len,
 }
 
 // todo : add error handling ? logs.
-cobs_decode_result radio_decode(void *decoded_payload_ptr,
-                                size_t decoded_payload_len,
-                                cobs_data *encoded_payload,
-                                //const void *encoded_payload,
-                                size_t payload_bytes_len) {
-  cobs_decode_result decode_result_payload;
+void radio_decode(
+    // cobs_data *decoded_payload_ptr,
+    void *decoded_payload_ptr, size_t decoded_payload_len,
+    uint8_t *encoded_payload_ptr, size_t encoded_payload_len,
+    cobs_encode_result *encoded_result_payload,
+    // const void *encoded_payload,
+    size_t payload_bytes_len) {
+  cobs_decode_result decoded_result_payload;
   uint8_t *decoded_payload_byte_ptr = (uint8_t *)decoded_payload_ptr;
+  uint8_t *encoded_payload_byte_ptr = (uint8_t *)encoded_payload_ptr;
 
   size_t i;
-  for (i = 0; i < payload_bytes_len; i++) {
-    decode_result_payload =
-        cobs_decode(decoded_payload_ptr, decoded_payload_len,
-                    encoded_payload[i].data_ptr, encoded_payload[i].data_len);
-    // input
-    printf("[decode] encoded data: %d\n", *(encoded_payload[i].data_ptr));
-    printf("[decode] encoded data len: %d\n", encoded_payload[i].data_len);
-    // output
-    printf("[decode] decode data: %d\n", decoded_payload_byte_ptr[i]);
-    // print_bits_of_byte(decoded_payload_ptr[i], true);
-    printf("[decode] decode data len: %d\n", decode_result_payload.out_len);
-  }
 
-  return decode_result_payload;
+  decoded_result_payload = cobs_decode(decoded_payload_ptr, decoded_payload_len,
+                                      encoded_payload_ptr, encoded_payload_len);
+  // input data
+  for (i = 0; i < payload_bytes_len; i++) {
+    printf("[decode] data %d ", encoded_payload_ptr[i]);
+    printf("\n[decode] encoded data len: %d\n", encoded_payload_len);
+  }
+  // decoded data
+  for (i = 0; i < decoded_result_payload.out_len; i++) {
+    printf("[decode] decoded data: %d\n", decoded_payload_byte_ptr[i]);
+    print_bits_of_byte(decoded_payload_byte_ptr[i], true);
+  }
+  printf("[decode] decoded data len: %d\n", decoded_result_payload.out_len);
 }
 
 /**
