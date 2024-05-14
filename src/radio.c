@@ -113,6 +113,16 @@ void radio_init(void) {
 
 char radio_get_rf_destination_address(void) { return rf_destination_address; }
 
+// todo : error log encoding result
+/**
+ * @brief Encode data as cobs protocol.
+ *
+ * @param encoded_payload_ptr
+ * @param encoded_payload_len
+ * @param payload_bytes
+ * @param payload_bytes_len
+ * @param encoded_result_payload
+ */
 void radio_encode(void *encoded_payload_ptr, size_t encoded_payload_len,
                   cobs_data *payload_bytes, size_t payload_bytes_len,
                   cobs_encode_result *encoded_result_payload) {
@@ -127,24 +137,22 @@ void radio_encode(void *encoded_payload_ptr, size_t encoded_payload_len,
     encoded_result_payload[i] =
         cobs_encode(encoded_payload_ptr, encoded_payload_len,
                     payload_bytes[i].data_ptr, payload_bytes[i].data_len);
-    printf("[encode] encoding results status %d\n",
-           encoded_result_payload[i].status);
-    printf("[encode] encoding results length %d\n",
-           encoded_result_payload[i].out_len);
 
     // input
     printf("[encode] payload: %d | ", *(payload_bytes[i].data_ptr));
     print_bits_of_byte(*(payload_bytes[i].data_ptr), true);
     printf("[encode] payload length: %d\n", payload_bytes[i].data_len);
     // output
-    printf("[encode] encoded data: %d\n", encoded_payload_byte_ptr[i]);
-    printf("[encode] encoded data len: %d\n",
+    printf("[encode] ==> encoding \n");
+    printf("[encode]  -> encoded : %d\n", encoded_payload_byte_ptr[i]);
+    printf("[encode]  -> encoded length: %d\n",
            encoded_result_payload[i].out_len);
-    printf("[encode] \n");
+    printf("[encode]\n");
   }
 }
 
 // todo : add error handling ? logs.
+// fixme : only decoding one value
 void radio_decode(
     // cobs_data *decoded_payload_ptr,
     void *decoded_payload_ptr, size_t decoded_payload_len,
@@ -158,19 +166,24 @@ void radio_decode(
 
   size_t i;
 
-  decoded_result_payload = cobs_decode(decoded_payload_ptr, decoded_payload_len,
-                                      encoded_payload_ptr, encoded_payload_len);
+  decoded_result_payload =
+      cobs_decode(decoded_payload_ptr, decoded_payload_len, encoded_payload_ptr,
+                  encoded_payload_len);
+
   // input data
   for (i = 0; i < payload_bytes_len; i++) {
-    printf("[decode] data %d ", encoded_payload_ptr[i]);
-    printf("\n[decode] encoded data len: %d\n", encoded_payload_len);
+    printf("[decode] encoded : %d \n", encoded_payload_ptr[i]);
   }
+  printf("[decode] encoded length: %d\n", encoded_payload_len);
+
+  printf("[decode] ==> decoding \n");
   // decoded data
   for (i = 0; i < decoded_result_payload.out_len; i++) {
-    printf("[decode] decoded data: %d\n", decoded_payload_byte_ptr[i]);
+    printf("[decode]  -> decoded [%d] : %d | ", i, decoded_payload_byte_ptr[i]);
     print_bits_of_byte(decoded_payload_byte_ptr[i], true);
   }
-  printf("[decode] decoded data len: %d\n", decoded_result_payload.out_len);
+  printf("[decode]  -> decoded length: %d\n", decoded_result_payload.out_len);
+  printf("[decode]\n");
 }
 
 /**
