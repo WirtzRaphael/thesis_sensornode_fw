@@ -102,14 +102,17 @@ void menu_handler_main(void) {
  *
  */
 void menu_handler_radio(void) {
-  const char *radioOptions[] = {"[a]uthenticate", "[s]end",
+  const char *radioOptions[] = {"[a]uthenticate", "encoding [c]obs", "[s]end",
                                 "send [t]est message"};
-  menu_display(radioOptions, 3);
+  menu_display(radioOptions, 4);
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
   case 'a':
     radio_authentication();
+    break;
+  case 'c':
+    radio_encoding_cobs_example();
     break;
   case 's':
     // radio_send_temperature_as_string();
