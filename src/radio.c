@@ -138,16 +138,8 @@ void radio_encode(void *encoded_payload_ptr, size_t encoded_payload_len,
         cobs_encode(encoded_payload_ptr, encoded_payload_len,
                     payload_bytes[i].data_ptr, payload_bytes[i].data_len);
 
-    // input
-    printf("[encode] payload: %d | ", *(payload_bytes[i].data_ptr));
-    print_bits_of_byte(*(payload_bytes[i].data_ptr), true);
-    printf("[encode] payload length: %d\n", payload_bytes[i].data_len);
-    // output
-    printf("[encode] ==> encoding \n");
-    printf("[encode]  -> encoded : %d\n", encoded_payload_byte_ptr[i]);
-    printf("[encode]  -> encoded length: %d\n",
-           encoded_result_payload[i].out_len);
-    printf("[encode]\n");
+    log_payload(payload_bytes[i].data_ptr, payload_bytes[i].data_len );
+    log_encoded(encoded_payload_byte_ptr, encoded_result_payload[i].out_len);
   }
 }
 
@@ -433,29 +425,19 @@ void radio_send_temperature_as_bytes(
   // -- encode
   // fixme : stackoverflow when (multiple) executions
   uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(50)];
-  cobs_encode_result encoded_result_payload_arr[10];
-  cobs_encode_result encoded_result_payload;
+  cobs_encode_result encoded_result_payload[10];
   uint8_t decoded_payload[50];
-  cobs_decode_result decode_result_payload_arr[10];
-  cobs_decode_result decode_result_payload;
+  cobs_decode_result decode_result_payload[10];
   size_t i;
 
-  //printf("===== encode\n");
+  printf("===== encode\n");
   for (i = 0; i < dimof(payload_bytes); i++) {
-    printf("payload: %d | ", *(payload_bytes[i].data_ptr));
-    printf("payload length: %d\n", payload_bytes[i].data_len);
-    encoded_result_payload =
+    encoded_result_payload[i] =
         cobs_encode(encoded_payload, sizeof(encoded_payload),
                     payload_bytes[i].data_ptr, payload_bytes[i].data_len);
-    encoded_result_payload_arr[i] = encoded_result_payload;
-    printf("encode data: %u\n", encoded_payload[i]);
-    printf("encode data lengtht: %d\n", payload_bytes[i].data_len);
-    decode_result_payload =
-        cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
-                    encoded_result_payload.out_len);
-    decode_result_payload_arr[i] = decode_result_payload;
-    printf("decode data: %u\n", decoded_payload[i]);
-    printf("decoded lentgh: %d\n", decode_result_payload.out_len);
+
+    log_payload(payload_bytes[i].data_ptr, payload_bytes[i].data_len );
+    log_encoded(encoded_payload, encoded_result_payload[i].out_len);
   }
   // todo sub-function logs
 
@@ -464,7 +446,6 @@ void radio_send_temperature_as_bytes(
                  dimof(payload_bytes), encoded_result_payload);
                  */
 
-/*
   printf("===== decode\n");
   for (i = 0; i < dimof(payload_bytes); i++) {
     decode_result_payload[i] =
@@ -474,7 +455,6 @@ void radio_send_temperature_as_bytes(
     printf("decode data: %u\n", decoded_payload[i]);
     printf("decode data len: %d\n", decode_result_payload[i].out_len);
   }
-  */
   /*
   radio_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
                sizeof(encoded_payload), encoded_result_payload,
@@ -502,6 +482,22 @@ static void print_bits_of_byte(uint8_t byte, bool print) {
   if (print) {
     printf("\n");
   }
+}
+
+static void log_encoded(uint8_t *encoded_payload_byte_ptr,
+                        size_t encoded_payload_len) {
+  printf("[encode] ==> encoding \n");
+  printf("[encode]  -> encoded : %d\n", encoded_payload_byte_ptr);
+  printf("[encode]  -> encoded length: %d\n", encoded_payload_len);
+  printf("[encode]\n");
+}
+
+static void log_payload(uint8_t *payload_byte, size_t payload_len) {
+  printf("[encode] ==> payload \n");
+  printf("[encode]  -> payload : %d\n", payload_byte);
+  printf("[encode]  -> payload length: %d\n", payload_len);
+  print_bits_of_byte(*payload_byte, true);
+  printf("[encode] payload length: %d\n", payload_len);
 }
 
 /**
