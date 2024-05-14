@@ -69,7 +69,7 @@ static void vRadioTask(void *pvParameters) {
     vTaskDelayUntil(&xLastWakeTime, xDelay_radio_task);
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_1);
     // sensors_print_temperature_xQueue_latest(xQueue_temperature_sensor_2);
-    // todo : readout buffer and decompose
+    // todo : readout buffer and decode, decompose
     // todo : receive fw file (download) (block resource, write to flash, signal
     // for update)
 
@@ -206,9 +206,8 @@ void radio_authentication(void) {
  * @brief Send authentication request.
  */
 static void radio_send_authentication_request(void) {
-  // todo : cobs instead of HDLC-Lite (FRAMING PROTOCOL, high-level data link control)
-  // todo : protocol authentication request
-  // todo : send -> tx (rc232)
+  // todo : cobs instead of HDLC-Lite (FRAMING PROTOCOL, high-level data link
+  // control) todo : protocol authentication request todo : send -> tx (rc232)
   // -- frame delimiter flag
   // fixme : change buffer from char to int (binary)
   char frame_flag[5] = "0x7E";
@@ -334,13 +333,12 @@ void radio_send_temperature_as_string(
  * - use cobs for encoding
  * todo : refactor
  * todo : time information
- * todo : change, compress format / algorithm to reduce number of temperatures (eg only diffs)
- * diffs) todo : error code return
+ * todo : change, compress format / algorithm to reduce number of temperatures
+ * (eg only diffs) diffs) todo : error code return
  */
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
-  uint8_t payload_byte[100] = {0};
- // -- id : convert uint8 to byte
+  // -- id : convert uint8 to byte
   // fixme : id maximum too low
   McuUtility_constrain(temperature_measurement->id, 0, 255);
 

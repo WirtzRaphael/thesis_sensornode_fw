@@ -192,7 +192,7 @@ void rc232_tx_packet_bytes(uint8_t byte, bool dryrun) {
   }
 
   // RXDprint_binary
-  McuLog_trace("[RC232] Send message : %d", byte);
+  McuLog_trace("[RC232] Send message : %d\n", byte);
   if (!dryrun) {
     uart_write_blocking(UART_RADIO_ID, &byte, 1);
     // No explicit packet end character
@@ -218,7 +218,8 @@ void rc232_tx_packet_bytes(uint8_t byte, bool dryrun) {
 /**
  * @brief Readout all data from the radio buffer
  *
- * todo : hdlc lite protocol
+ * todo : function to only flush/clear buffer (?)
+ * todo : cobs protocol
  */
 void rc232_rx_read_buffer_full(void) {
   uint8_t rec_buffer[1];
@@ -234,6 +235,8 @@ void rc232_rx_read_buffer_full(void) {
  *
  * @param buffer Buffer to store the received byte
  * @return error_t Error code
+ *
+ * todo : cobs protocol
  */
 error_t rc232_rx_read_byte(uint8_t *buffer) {
   if (!uart_is_readable(UART_RADIO_ID)) {
