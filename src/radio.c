@@ -433,15 +433,38 @@ void radio_send_temperature_as_bytes(
   // -- encode
   // fixme : stackoverflow when (multiple) executions
   uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(50)];
-  cobs_encode_result encoded_result_payload[10];
+  cobs_encode_result encoded_result_payload_arr[10];
+  cobs_encode_result encoded_result_payload;
   uint8_t decoded_payload[50];
-  cobs_decode_result decode_result_payload[10];
+  cobs_decode_result decode_result_payload_arr[10];
+  cobs_decode_result decode_result_payload;
   size_t i;
 
-  printf("===== encode\n");
-  radio_encode(encoded_payload, sizeof(encoded_payload), payload_bytes,
-               dimof(payload_bytes), encoded_result_payload);
+  //printf("===== encode\n");
+  for (i = 0; i < dimof(payload_bytes); i++) {
+    printf("payload: %d | ", *(payload_bytes[i].data_ptr));
+    printf("payload length: %d\n", payload_bytes[i].data_len);
+    encoded_result_payload =
+        cobs_encode(encoded_payload, sizeof(encoded_payload),
+                    payload_bytes[i].data_ptr, payload_bytes[i].data_len);
+    encoded_result_payload_arr[i] = encoded_result_payload;
+    printf("encode data: %u\n", encoded_payload[i]);
+    printf("encode data lengtht: %d\n", payload_bytes[i].data_len);
+    decode_result_payload =
+        cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
+                    encoded_result_payload.out_len);
+    decode_result_payload_arr[i] = decode_result_payload;
+    printf("decode data: %u\n", decoded_payload[i]);
+    printf("decoded lentgh: %d\n", decode_result_payload.out_len);
+  }
+  // todo sub-function logs
 
+  /*
+    radio_encode(encoded_payload, sizeof(encoded_payload), payload_bytes,
+                 dimof(payload_bytes), encoded_result_payload);
+                 */
+
+/*
   printf("===== decode\n");
   for (i = 0; i < dimof(payload_bytes); i++) {
     decode_result_payload[i] =
@@ -451,6 +474,7 @@ void radio_send_temperature_as_bytes(
     printf("decode data: %u\n", decoded_payload[i]);
     printf("decode data len: %d\n", decode_result_payload[i].out_len);
   }
+  */
   /*
   radio_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
                sizeof(encoded_payload), encoded_result_payload,
