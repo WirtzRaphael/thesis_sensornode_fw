@@ -50,11 +50,6 @@ char rf_destination_address = RF_DESTINATION_ADDR_DEFAULT;
 
 static uint16_t radio_time_intervals_ms = 500;
 
-typedef struct {
-  uint8_t *data_ptr;
-  size_t data_len;
-} cobs_data;
-
 pico_unique_board_id_t pico_uid = {0};
 char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
                      1]; // Each byte to two hex chars + null terminator
@@ -117,6 +112,59 @@ void radio_init(void) {
 }
 
 char radio_get_rf_destination_address(void) { return rf_destination_address; }
+
+cobs_encode_result radio_encode(void *encoded_payload_ptr,
+                                size_t encoded_payload_len,
+                                cobs_data *payload_bytes,
+                                size_t payload_bytes_len) {
+  //                                const void *payload_bytes_ptr,
+  //                                size_t payload_bytes_len) {
+  cobs_encode_result encoded_result_payload;
+  size_t i;
+  for (i = 0; i < payload_bytes_len; i++) {
+    cobs_encode_result encoded_result_payload;
+    uint8_t *encoded_payload_byte_ptr = (uint8_t *)encoded_payload_ptr;
+
+    encoded_result_payload =
+        cobs_encode(encoded_payload_ptr, encoded_payload_len,
+                    payload_bytes[i].data_ptr, payload_bytes[i].data_len);
+    // input
+    printf("[encode] payload: %d | ", *(payload_bytes[i].data_ptr));
+    print_bits_of_byte(*(payload_bytes[i].data_ptr), true);
+    printf("[encode] payload length: %d\n", payload_bytes[i].data_len);
+    // output
+    printf("[encode] encoded data: %d\n", encoded_payload_byte_ptr[i]);
+    printf("[encode] encoded data len: %d\n", encoded_result_payload.out_len);
+  }
+
+  return encoded_result_payload;
+}
+
+// todo : add error handling ? logs.
+cobs_decode_result radio_decode(void *decoded_payload_ptr,
+                                size_t decoded_payload_len,
+                                cobs_data *encoded_payload,
+                                //const void *encoded_payload,
+                                size_t payload_bytes_len) {
+  cobs_decode_result decode_result_payload;
+  uint8_t *decoded_payload_byte_ptr = (uint8_t *)decoded_payload_ptr;
+
+  size_t i;
+  for (i = 0; i < payload_bytes_len; i++) {
+    decode_result_payload =
+        cobs_decode(decoded_payload_ptr, decoded_payload_len,
+                    encoded_payload[i].data_ptr, encoded_payload[i].data_len);
+    // input
+    printf("[decode] encoded data: %d\n", *(encoded_payload[i].data_ptr));
+    printf("[decode] encoded data len: %d\n", encoded_payload[i].data_len);
+    // output
+    printf("[decode] decode data: %d\n", decoded_payload_byte_ptr[i]);
+    // print_bits_of_byte(decoded_payload_ptr[i], true);
+    printf("[decode] decode data len: %d\n", decode_result_payload.out_len);
+  }
+
+  return decode_result_payload;
+}
 
 /**
  * @brief Scan radio network and authenticate.
@@ -360,36 +408,24 @@ void radio_send_temperature_as_bytes(
                                {&data_16LE_byte[1], 1}};
 
   // -- encode
-  uint8_t encode_payload[COBS_ENCODE_DST_BUF_LEN_MAX(100)];
+  uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(100)];
   cobs_encode_result encoded_result_payload;
-  uint8_t decode_payload[100];
+  uint8_t decoded_payload[100];
   cobs_decode_result decode_result_payload;
   size_t i;
 
-  for (i = 0; i < dimof(payload_bytes); i++) {
-    // memset(encode_out, 'A', sizeof(encode_out));
-    // -- encode
-    encoded_result_payload =
-        cobs_encode(encode_payload, sizeof(encode_payload),
-                    payload_bytes[i].data_ptr, payload_bytes[i].data_len);
-    printf("encode data: %d\n", *(payload_bytes[i].data_ptr));
-    print_bits_of_byte(*(payload_bytes[i].data_ptr), true);
-    printf("encode data len: %d\n", payload_bytes[i].data_len);
-    // todo : mulitple bytes one send
+  printf("encode\n");
+  radio_encode(&encoded_payload, sizeof(encoded_payload), payload_bytes,
+               dimof(payload_bytes));
 
-    // -- decode
-    decode_result_payload =
-        cobs_decode(decode_payload, sizeof(decode_payload), encode_payload,
-                    encoded_result_payload.out_len);
-    printf("decode data: %u\n", *decode_payload);
-    print_bits_of_byte(decode_payload[i], true);
-    printf("decode data len: %d\n", decode_result_payload.out_len);
-  }
+  printf("decode\n");
+  radio_decode(&decoded_payload, sizeof(decoded_payload), (cobs_data) encoded_payload,
+               dimof(payload_bytes));
 
-  rc232_tx_packet_bytes(encode_payload[0], dryrun);
-  rc232_tx_packet_bytes(encode_payload[1], dryrun);
-  rc232_tx_packet_bytes(encode_payload[2], dryrun);
-  rc232_tx_packet_bytes(encode_payload[3], dryrun);
+  rc232_tx_packet_bytes(encoded_payload[0], dryrun);
+  rc232_tx_packet_bytes(encoded_payload[1], dryrun);
+  rc232_tx_packet_bytes(encoded_payload[2], dryrun);
+  rc232_tx_packet_bytes(encoded_payload[3], dryrun);
 }
 
 /**
