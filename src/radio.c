@@ -37,7 +37,10 @@
 #define SCAN_CHANNELS_FOR_CONNECTION (0)
 #define TRANSMISSION_IN_BYTES        (0)
 #define ACTIVATE_RF                  (0)
-#define PRINTF_RF                    (0)
+
+#define RADIO_LOG_OUTPUT printf
+//#define RADIO_LOG_OUTPUT McuLog_trace
+
 
 #ifndef dimof
   #define dimof(X) (sizeof(X) / sizeof((X)[0]))
@@ -380,11 +383,8 @@ void radio_send_temperature_as_string(
   McuUtility_strcat(buffer, sizeof(buffer), separator);
   McuUtility_strcatNum16u(buffer, sizeof(buffer),
                           temperature_measurement->timediff_to_start);
-#if PRINTF_RF
-  printf("send temperature: %f\n", (temperature_measurement->temperature));
-  printf("send temperature (buffer): %s\n", buffer);
-#endif
-  printf("send temperature (buffer): %s\n", buffer);
+  RADIO_LOG_OUTPUT("send temperature: %f\n", (temperature_measurement->temperature));
+  RADIO_LOG_OUTPUT("send temperature (buffer): %s\n", buffer);
 
   // Send
   rc232_tx_packet_string(buffer, dryrun);
@@ -434,7 +434,9 @@ void radio_send_temperature_as_bytes(
     encoded_result_payload[i] =
         cobs_encode(encoded_payload, sizeof(encoded_payload),
                     payload_bytes[i].data_ptr, payload_bytes[i].data_len);
+    RADIO_LOG_OUTPUT("[send] ==> payload \n");
     log_cobs_payload(payload_bytes, i);
+    RADIO_LOG_OUTPUT("[send] ==> encoding payload \n");
     log_cobs_encoded(encoded_payload, &encoded_result_payload[i], i);
   }
 
@@ -442,6 +444,9 @@ void radio_send_temperature_as_bytes(
     decode_result_payload[i] =
         cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
                     encoded_result_payload[i].out_len);
+    RADIO_LOG_OUTPUT("[send] ==> encoded data \n");
+    log_cobs_encoded(encoded_payload, &encoded_result_payload[i], i);
+    RADIO_LOG_OUTPUT("[send] ==> decoding data\n");
     log_cobs_decoded(decoded_payload, &decode_result_payload[i], i);
   }
 
@@ -460,37 +465,40 @@ void radio_send_test(void) { rc232_tx_packet_string("hello world", false); }
 static void print_bits_of_byte(uint8_t byte, bool print) {
   for (int i = 7; i >= 0; i--) {
     if (print) {
-      printf("%c", (byte & (1 << i)) ? '1' : '0');
+      RADIO_LOG_OUTPUT("%c", (byte & (1 << i)) ? '1' : '0');
     }
-    McuLog_trace("%c", (byte & (1 << i)) ? '1' : '0');
+    RADIO_LOG_OUTPUT("%c", (byte & (1 << i)) ? '1' : '0');
   }
   if (print) {
-    printf("\n");
+    RADIO_LOG_OUTPUT("\n");
   }
 }
 
 // todo : change to mcu log
 static void log_cobs_payload(cobs_data *payload_cobs, size_t index) {
-  printf("[encode] ==> payload \n");
-  printf("[encode]  -> payload : %d | ", payload_cobs[index].data_ptr[0]);
-  print_bits_of_byte(payload_cobs->data_ptr[0], true);
-  printf("[encode]  -> payload length: %d\n", payload_cobs[index].data_len);
+  RADIO_LOG_OUTPUT("[payload]  -> data : %d \n", payload_cobs[index].data_ptr[0]);
+  RADIO_LOG_OUTPUT("[payload]  -> data : ");
+  print_bits_of_byte(payload_cobs->data_ptr[index], true);
+  RADIO_LOG_OUTPUT("[payload]  -> data length: %d\n", payload_cobs[index].data_len);
 }
 
 static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
                              cobs_encode_result *encoded_result, size_t index) {
-  printf("[encode] ==> encoding \n");
-  printf("[encode]  -> encoded : %u \n", encoded_payload_byte_ptr[index]);
-  printf("[encode]  -> encoded length: %d\n", encoded_result[index].out_len);
-  printf("[encode]\n");
+  RADIO_LOG_OUTPUT("[encoded]  -> data : %u \n", encoded_payload_byte_ptr[index]);
+  RADIO_LOG_OUTPUT("[encoded]  -> data : ");
+  print_bits_of_byte(encoded_payload_byte_ptr[index], true);
+  RADIO_LOG_OUTPUT("[encoded]  -> data length: %d\n", encoded_result[index].out_len);
+  RADIO_LOG_OUTPUT("\n");
 }
 
 static void log_cobs_decoded(uint8_t *decoded_payload_byte_ptr,
                              cobs_decode_result *decoded_result, size_t index) {
-  printf("[decode] ==> decoding \n");
-  printf("[decode]  -> decoded : %u \n", decoded_payload_byte_ptr[index]);
-  printf("[decode]  -> decoded length: %d\n", decoded_result[index].out_len);
-  printf("[decode]\n");
+  RADIO_LOG_OUTPUT("[decoded] ==> decoding \n");
+  RADIO_LOG_OUTPUT("[decoded]  -> data : %u \n", decoded_payload_byte_ptr[index]);
+  RADIO_LOG_OUTPUT("[decoded]  -> data : ");
+  print_bits_of_byte(decoded_payload_byte_ptr[index], true);
+  RADIO_LOG_OUTPUT("[decoded]  -> decoded length: %d\n", decoded_result[index].out_len);
+  RADIO_LOG_OUTPUT("[decoded]\n");
 }
 
 /**
