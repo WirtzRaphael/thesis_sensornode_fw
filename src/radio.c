@@ -416,17 +416,18 @@ void radio_send_temperature_as_bytes(
 
   // -- encode
   uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(100)];
-  cobs_encode_result encoded_result_payload;
+  cobs_encode_result encoded_result_payload[100];
   uint8_t decoded_payload[100];
-  cobs_decode_result decode_result_payload;
+  cobs_decode_result decode_result_payload[100];
   size_t i;
 
-  printf("encode\n");
-  radio_encode(&encoded_payload, sizeof(encoded_payload), payload_bytes,
-               dimof(payload_bytes));
+  printf("===== encode\n");
+  radio_encode(encoded_payload, sizeof(encoded_payload), payload_bytes,
+               dimof(payload_bytes), encoded_result_payload);
 
-  printf("decode\n");
-  radio_decode(&decoded_payload, sizeof(decoded_payload), (cobs_data) encoded_payload,
+  printf("===== decode\n");
+  radio_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
+               sizeof(encoded_payload), encoded_result_payload,
                dimof(payload_bytes));
 
   rc232_tx_packet_bytes(encoded_payload[0], dryrun);
