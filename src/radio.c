@@ -101,7 +101,7 @@ void radio_init(void) {
   // TaskHandle_t xHandle = NULL;
   if (xTaskCreate(vRadioTask, /* pointer to the task */
                   "radio",    /* task name for kernel awareness debugging */
-                  2000 / sizeof(StackType_t), /* task stack size */
+                  2500 / sizeof(StackType_t), /* task stack size */
                   (void *)NULL,         /* optional task startup argument */
                   tskIDLE_PRIORITY + 2, /* initial priority */
                   (TaskHandle_t *)NULL  /* optional task handle to create */
@@ -152,37 +152,40 @@ void radio_encode(void *encoded_payload_ptr, size_t encoded_payload_len,
 }
 
 // todo : add error handling ? logs.
+// todo : refactor parameters
 // fixme : only decoding one value
 void radio_decode(
     // cobs_data *decoded_payload_ptr,
     void *decoded_payload_ptr, size_t decoded_payload_len,
-    uint8_t *encoded_payload_ptr, size_t encoded_payload_len,
+    void *encoded_payload_ptr, size_t encoded_payload_len,
     cobs_encode_result *encoded_result_payload,
+    cobs_decode_result *decoded_result_payload,
     // const void *encoded_payload,
     size_t payload_bytes_len) {
-  cobs_decode_result decoded_result_payload;
+  // cobs_decode_result decoded_result_payload;
   uint8_t *decoded_payload_byte_ptr = (uint8_t *)decoded_payload_ptr;
   uint8_t *encoded_payload_byte_ptr = (uint8_t *)encoded_payload_ptr;
 
   size_t i;
-
-  decoded_result_payload =
-      cobs_decode(decoded_payload_ptr, decoded_payload_len, encoded_payload_ptr,
-                  encoded_payload_len);
+  for (i = 0; i < payload_bytes_len; i++) {
+    decoded_result_payload[i] =
+        cobs_decode(decoded_payload_ptr, decoded_payload_len,
+                    encoded_payload_byte_ptr, encoded_payload_len);
+  }
 
   // input data
   for (i = 0; i < payload_bytes_len; i++) {
-    printf("[decode] encoded : %d \n", encoded_payload_ptr[i]);
+    printf("[decode] encoded : %d \n", encoded_payload_ptr);
   }
   printf("[decode] encoded length: %d\n", encoded_payload_len);
 
   printf("[decode] ==> decoding \n");
   // decoded data
-  for (i = 0; i < decoded_result_payload.out_len; i++) {
+  for (i = 0; i < decoded_result_payload->out_len; i++) {
     printf("[decode]  -> decoded [%d] : %d | ", i, decoded_payload_byte_ptr[i]);
     print_bits_of_byte(decoded_payload_byte_ptr[i], true);
   }
-  printf("[decode]  -> decoded length: %d\n", decoded_result_payload.out_len);
+  printf("[decode]  -> decoded length: %d\n", decoded_result_payload->out_len);
   printf("[decode]\n");
 }
 
@@ -428,10 +431,11 @@ void radio_send_temperature_as_bytes(
                                {&data_16LE_byte[1], 1}};
 
   // -- encode
-  uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(100)];
-  cobs_encode_result encoded_result_payload[100];
-  uint8_t decoded_payload[100];
-  cobs_decode_result decode_result_payload[100];
+  // fixme : stackoverflow when (multiple) executions
+  uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(50)];
+  cobs_encode_result encoded_result_payload[10];
+  uint8_t decoded_payload[50];
+  cobs_decode_result decode_result_payload[10];
   size_t i;
 
   printf("===== encode\n");
@@ -439,9 +443,19 @@ void radio_send_temperature_as_bytes(
                dimof(payload_bytes), encoded_result_payload);
 
   printf("===== decode\n");
+  for (i = 0; i < dimof(payload_bytes); i++) {
+    decode_result_payload[i] =
+        cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
+                    encoded_result_payload[i].out_len);
+    printf("decode data: %u\n", *decoded_payload);
+    printf("decode data: %u\n", decoded_payload[i]);
+    printf("decode data len: %d\n", decode_result_payload[i].out_len);
+  }
+  /*
   radio_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
                sizeof(encoded_payload), encoded_result_payload,
-               dimof(payload_bytes));
+               decode_result_payload, dimof(payload_bytes));
+               */
 
   rc232_tx_packet_bytes(encoded_payload[0], dryrun);
   rc232_tx_packet_bytes(encoded_payload[1], dryrun);
