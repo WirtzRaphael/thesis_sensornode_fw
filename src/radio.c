@@ -41,7 +41,7 @@
 #define ACTIVATE_RF                  (0)
 
 #define RADIO_LOG_OUTPUT printf
-// #define RADIO_LOG_OUTPUT McuLog_trace
+// #define RADIO_LOG_OUTPUT McuLog_trace // fixme : some values missing
 
 #ifndef dimof
   #define dimof(X) (sizeof(X) / sizeof((X)[0]))
@@ -358,66 +358,92 @@ void radio_send_temperature_as_bytes(
 
   uint8_t byte_start_temperature = 5; // start byte for temperature
   uint8_t i_temperature = 5;          // number of temperature values
+  // -- temperature values
+  uint8_t temperature_16LE_byte[2] = {0};
+  McuUtility_SetValue16LE(0xCA, temperature_16LE_byte);
+  uint8_t temperature_16LE_byte2[2] = {0};
+  McuUtility_SetValue16LE(0xA0, temperature_16LE_byte);
+  /*
+  for (uint8_t i = 0; i < i_temperature; i++) {
+    McuUtility_constrain(temperature_measurement->id, 0, 255);
+    // convert_temperature_to_byte(temperature_16LE_byte,
+    // temperature_measurement);
+    McuUtility_SetValue16LE(0xCA, temperature_16LE_byte);
+    payload_bytes[payload_index].data_len = 2;
+    payload_bytes[payload_index].data_ptr = temperature_16LE_byte;
+    payload_index += 1;
+  }
+  */
+
+  // todo : crc (after encoding)?
+  /*
+  uint8_t crc[2] = {0};
+  payload_bytes[payload_index].data_len = 2;
+  payload_bytes[payload_index].data_ptr = crc;
+  */
 
   // -- create payload
   RADIO_LOG_OUTPUT("[send] ==> create payload\n");
   // todo : time information (?)
   // cobs_data cobs_payload[] = {data_16LE_byte, sizeof(data_16LE_byte)};
-  //cobs_data payload_bytes[payload_header_temperature.payload_length] = {{&payload_header, 1}};
-  cobs_data payload_bytes[PAYLOAD_SENSOR_LENGTH] = {{&payload_header, 1}};
+  // cobs_data payload_bytes[payload_header_temperature.payload_length] =
+  // {{&payload_header, 1}};
+  cobs_data payload_bytes[PAYLOAD_SENSOR_LENGTH] = {
+      {&payload_header, 1},
+      {temperature_16LE_byte, 2},
+      {temperature_16LE_byte2, 2},
+      {"\x0E", 1}};
   uint8_t payload_index = 1;
-
-  // -- temperature values
-  uint8_t temperature_16LE_byte[2] = {0};
-  for (uint8_t i = 0; i < i_temperature; i++) {
-    McuUtility_constrain(temperature_measurement->id, 0, 255);
-    convert_temperature_to_byte(temperature_16LE_byte, temperature_measurement);
-    payload_bytes[payload_index].data_len = 2;
-    payload_bytes[payload_index].data_ptr = temperature_16LE_byte;
-    payload_index += 1;
-  }
-
-  // todo : crc
-  uint8_t crc[2] = {0};
-  payload_bytes[payload_index].data_len = 2;
-  payload_bytes[payload_index].data_ptr = crc;
 
   // -- encode
   RADIO_LOG_OUTPUT("[send] ==> encoding \n");
   // fixme : stackoverflow when (multiple) executions
   // payload overhead : one byte for every 254 bytes
-  uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(50)];
   cobs_encode_result encoded_result_payload;
-  uint8_t decoded_payload[50];
   cobs_decode_result decode_result_payload;
+  uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(50)];
+  uint8_t decoded_payload[50];
   size_t i;
-
+  size_t encoding_length = 0;
   // each byte of the payload
-  for (i = 0; i < dimof(payload_bytes); i++) {
+  for (size_t i = 0; i < dimof(payload_bytes); i++) {
     // encoded_result_payload[i] =
     RADIO_LOG_OUTPUT("[send] ==> encoding payload byte %d \n", i);
     encoded_result_payload =
         cobs_encode(encoded_payload, sizeof(encoded_payload),
                     payload_bytes[i].data_ptr, payload_bytes[i].data_len);
+    encoding_length += encoded_result_payload.out_len;
 
-    RADIO_LOG_OUTPUT("[send] ==> decoding payload byte %d \n", i);
+    RADIO_LOG_OUTPUT("[send]  -> decoding payload byte %d \n", i);
     decode_result_payload =
         cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
                     encoded_result_payload.out_len);
 
-    RADIO_LOG_OUTPUT("[send] ==> encoding summary byte %d \n", i);
+    RADIO_LOG_OUTPUT("[send]  -> coding trace byte %d \n", i);
     log_cobs_payload(payload_bytes[i].data_ptr, payload_bytes[i].data_len);
     log_cobs_encoded(encoded_payload, encoded_result_payload);
     log_cobs_decoded(decoded_payload, decode_result_payload);
   }
-
-  // fixme : access results via index ?
-  RADIO_LOG_OUTPUT("[decoded]  -> data per index : %u \n", decoded_payload[0]);
-  RADIO_LOG_OUTPUT("[decoded]  -> data per index : %u \n", decoded_payload[1]);
+  RADIO_LOG_OUTPUT("[send] ==> summary \n");
+  RADIO_LOG_OUTPUT("[send]  -> payload \n");
+  for (size_t i = 0; i < dimof(payload_bytes); i++) {
+    printf("%u ", payload_bytes[i].data_ptr[0]);
+  }
+  printf("\n");
+  RADIO_LOG_OUTPUT("[send]  -> encoding \n");
+  for (size_t i = 0; i < sizeof(encoded_payload); i++) {
+    printf("%u ", encoded_payload[i]);
+  }
+  printf("\n");
+  RADIO_LOG_OUTPUT("[send]  -> decoding \n");
+  for (size_t i = 0; i < sizeof(decoded_payload); i++) {
+    printf("%u ", decoded_payload[i]);
+  }
+  printf("\n");
 
   // -- send
-  // todo : test
-  rc232_tx_packet_bytes(encoded_payload, dryrun, dimof(payload_bytes));
+  // todo : reduce length to send
+  rc232_tx_packet_bytes(encoded_payload, encoding_length, dryrun);
   // rc232_tx_packet_bytes(&encoded_payload[0], dryrun, 1);
 }
 
@@ -429,12 +455,12 @@ void radio_send_test(void) { rc232_tx_packet_string("hello world", false); }
 static void print_bits_of_byte(uint8_t byte, bool print) {
   for (int i = 7; i >= 0; i--) {
     if (print) {
-      RADIO_LOG_OUTPUT("%c", (byte & (1 << i)) ? '1' : '0');
+      printf("%c", (byte & (1 << i)) ? '1' : '0');
     }
-    RADIO_LOG_OUTPUT("%c", (byte & (1 << i)) ? '1' : '0');
+    printf("%c", (byte & (1 << i)) ? '1' : '0');
   }
   if (print) {
-    RADIO_LOG_OUTPUT("\n");
+    printf("\n");
   }
 }
 
