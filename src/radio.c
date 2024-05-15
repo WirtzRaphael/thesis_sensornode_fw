@@ -61,6 +61,57 @@ char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
 typedef enum { SENSOR_TEMPERATURE, AUTHENTICATION } PAYLOAD_CONTENT;
 
 typedef struct {
+  const uint8_t *data_ptr;
+  size_t data_len;
+  const uint8_t *encoded_ptr;
+  size_t encoded_len;
+  const char *description_ptr;
+} cobs_data_info_2;
+
+typedef struct {
+  const uint8_t *data_ptr;
+  size_t data_len;
+  const char *description_ptr;
+}cobs_data_info;
+
+static const cobs_data_info_2 payload_bytes_test[] = {
+    {"", 0, "\x01", 1, "Empty"},
+    {"1", 1,
+     "\x02"
+     "1",
+     2, "1 non-zero byte"},
+    {"12345", 5,
+     "\x06"
+     "12345",
+     6, "5 non-zero bytes"},
+    {"12345\x00"
+     "6789",
+     10,
+     "\x06"
+     "12345\x05"
+     "6789",
+     11, "Zero in middle"},
+    {"\x00"
+     "12345\x00"
+     "6789",
+     11,
+     "\x01\x06"
+     "12345\x05"
+     "6789",
+     12, "Zero at start and middle"},
+    {"12345\x00"
+     "6789\x00",
+     11,
+     "\x06"
+     "12345\x05"
+     "6789\x01",
+     12, "Zero at start and end"},
+    {"\x00", 1, "\x01\x01", 2, "1 zero byte"},
+    {"\x00\x00", 2, "\x01\x01\x01", 3, "2 zero bytes"},
+    {"\x00\x00\x00", 3, "\x01\x01\x01\x01", 4, "3 zero bytes"},
+};
+
+typedef struct {
   PAYLOAD_CONTENT payload_header;
   size_t payload_length;
 } payload_header;
