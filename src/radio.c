@@ -426,37 +426,37 @@ void radio_send_temperature_as_bytes(
   // -- encode
   // fixme : stackoverflow when (multiple) executions
   uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(50)];
-  cobs_encode_result encoded_result_payload[10];
+  cobs_encode_result encoded_result_payload;
   uint8_t decoded_payload[50];
-  cobs_decode_result decode_result_payload[10];
+  cobs_decode_result decode_result_payload;
   size_t i;
 
+  // each byte of the payload
   for (i = 0; i < dimof(payload_bytes); i++) {
-    encoded_result_payload[i] =
+    // encoded_result_payload[i] =
+    RADIO_LOG_OUTPUT("[send] ==> encoding payload \n");
+    encoded_result_payload =
         cobs_encode(encoded_payload, sizeof(encoded_payload),
                     payload_bytes[i].data_ptr, payload_bytes[i].data_len);
-    RADIO_LOG_OUTPUT("[send] ==> encoding payload \n");
-    log_cobs_payload(payload_bytes, i);
-    log_cobs_encoded(encoded_payload, encoded_result_payload[i], i);
-  //}
 
-  // fixme : decoding wrong values
-  //for (i = 0; i < dimof(payload_bytes); i++) {
-    decode_result_payload[i] =
-        cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
-                    encoded_result_payload[i].out_len);
     RADIO_LOG_OUTPUT("[send] ==> decoding payload\n");
-    log_cobs_encoded(encoded_payload, encoded_result_payload[i], i);
-    log_cobs_decoded(decoded_payload, decode_result_payload[i], i);
+    decode_result_payload =
+        cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
+                    encoded_result_payload.out_len);
+
+    RADIO_LOG_OUTPUT("[send] ==> encoding summary\n");
     log_cobs_payload(payload_bytes, i);
-    printf("[decode] decoded data %u\n", *decoded_payload);
-    print_bits_of_byte(decoded_payload[i], true);
-    printf("[decode] decode data len: %d\n", decode_result_payload->out_len);
+    log_cobs_encoded(encoded_payload, encoded_result_payload);
+    log_cobs_decoded(decoded_payload, decode_result_payload);
   }
-  RADIO_LOG_OUTPUT("[decoded]  -> data : %u \n", decoded_payload[0]);
-  RADIO_LOG_OUTPUT("[decoded]  -> data : %u \n", decoded_payload[1]);
+
+  // fixme : access results via index ?
+  RADIO_LOG_OUTPUT("[decoded]  -> data per index : %u \n", decoded_payload[0]);
+  RADIO_LOG_OUTPUT("[decoded]  -> data per index : %u \n", decoded_payload[1]);
 
   // -- send
+  // todo : send whole encoded package (use length info)
+  // todo : send mulitple bytes in one function / transmission
   rc232_tx_packet_bytes(encoded_payload[0], dryrun);
   rc232_tx_packet_bytes(encoded_payload[1], dryrun);
   rc232_tx_packet_bytes(encoded_payload[2], dryrun);
@@ -490,20 +490,22 @@ static void log_cobs_payload(cobs_data *payload_cobs, size_t index) {
 }
 
 static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
-                             cobs_encode_result encoded_result, size_t index) {
+                             cobs_encode_result encoded_result) {
   RADIO_LOG_OUTPUT("[encoded]  -> data : %u \n",
-                   encoded_payload_byte_ptr[index]);
+                   *(encoded_payload_byte_ptr));
+  // fixme : wrong value data
   RADIO_LOG_OUTPUT("[encoded]  -> data : ");
-  print_bits_of_byte(encoded_payload_byte_ptr[index], true);
+  print_bits_of_byte(*(encoded_payload_byte_ptr), true);
   RADIO_LOG_OUTPUT("[encoded]  -> length: %d\n", encoded_result.out_len);
 }
 
 static void log_cobs_decoded(uint8_t *decoded_payload_byte_ptr,
-                             cobs_decode_result decoded_result, size_t index) {
+                             cobs_decode_result decoded_result) {
+  // fixme : wrong value data
   RADIO_LOG_OUTPUT("[decoded]  -> data : %u \n",
-                   decoded_payload_byte_ptr[index]);
+                   *(decoded_payload_byte_ptr));
   RADIO_LOG_OUTPUT("[decoded]  -> data : ");
-  print_bits_of_byte(decoded_payload_byte_ptr[index], true);
+  print_bits_of_byte(*(decoded_payload_byte_ptr), true);
   RADIO_LOG_OUTPUT("[decoded]  -> length: %d\n", decoded_result.out_len);
 }
 

@@ -12,9 +12,9 @@ typedef struct {
 } cobs_data;
 
 static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
-                             cobs_encode_result encoded_result, size_t index);
+                             cobs_encode_result encoded_result);
 static void log_cobs_decoded(uint8_t *decoded_payload_byte_ptr,
-                             cobs_decode_result decoded_result, size_t index);
+                             cobs_decode_result decoded_result);
 static void log_cobs_payload(cobs_data *payload_cobs, size_t index);
 void radio_authentication(void);
 void radio_encoding_cobs_example(void);
