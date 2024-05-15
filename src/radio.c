@@ -436,6 +436,7 @@ void radio_send_temperature_as_bytes(
 
   // -- encode
   // fixme : stackoverflow when (multiple) executions
+  // payload overhead : one byte for every 254 bytes 
   uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(50)];
   cobs_encode_result encoded_result_payload;
   uint8_t decoded_payload[50];
@@ -492,6 +493,12 @@ static void print_bits_of_byte(uint8_t byte, bool print) {
 }
 
 // todo : change to mcu log
+/**
+ * @brief Log info of payload for cobs encoding
+ * 
+ * @param payload_cobs 
+ * @param index 
+ */
 static void log_cobs_payload(cobs_data *payload_cobs, size_t index) {
   RADIO_LOG_OUTPUT("[payload]  -> data : %d \n",
                    payload_cobs[index].data_ptr[0]);
@@ -500,6 +507,12 @@ static void log_cobs_payload(cobs_data *payload_cobs, size_t index) {
   RADIO_LOG_OUTPUT("[payload]  -> length: %d\n", payload_cobs[index].data_len);
 }
 
+/**
+ * @brief Log info of encoded payload for cobs encoding
+ * 
+ * @param encoded_payload_byte_ptr 
+ * @param encoded_result 
+ */
 static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
                              cobs_encode_result encoded_result) {
   RADIO_LOG_OUTPUT("[encoded]  -> data : %u \n", *(encoded_payload_byte_ptr));
@@ -509,6 +522,12 @@ static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
   RADIO_LOG_OUTPUT("[encoded]  -> length: %d\n", encoded_result.out_len);
 }
 
+/**
+ * @brief Log info of decoded payload for cobs encoding
+ * 
+ * @param decoded_payload_byte_ptr 
+ * @param decoded_result 
+ */
 static void log_cobs_decoded(uint8_t *decoded_payload_byte_ptr,
                              cobs_decode_result decoded_result) {
   // fixme : wrong value data
