@@ -63,16 +63,16 @@ typedef enum { SENSOR_TEMPERATURE, AUTHENTICATION } PAYLOAD_CONTENT;
 typedef struct {
   const uint8_t *data_ptr;
   size_t data_len;
-  const uint8_t *encoded_ptr;
-  size_t encoded_len;
   const char *description_ptr;
-} cobs_data_info_2;
+}cobs_data_info;
 
 typedef struct {
   const uint8_t *data_ptr;
   size_t data_len;
+  const uint8_t *encoded_ptr;
+  size_t encoded_len;
   const char *description_ptr;
-}cobs_data_info;
+} cobs_data_info_2;
 
 static const cobs_data_info_2 payload_bytes_test[] = {
     {"", 0, "\x01", 1, "Empty"},
@@ -113,12 +113,13 @@ static const cobs_data_info_2 payload_bytes_test[] = {
 
 // todo : refactor
 typedef struct {
-  PAYLOAD_CONTENT payload_header;
-  size_t payload_length;
+  uint8_t command : 4;
+  uint8_t command_parameter : 4;
+  //size_t payload_length : 4;
 } payload_header;
 
 #define PAYLOAD_SENSOR_LENGTH 15
-static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
+//static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
 
 static void vRadioTask(void *pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -398,11 +399,10 @@ void radio_send_temperature_as_string(
  * - use cobs for encoding
  * todo : always read out fix number of sensor values / readout queue
  * todo : change, compress format / algorithm to reduce number of temperatures
+ * todo : typedef / enum
  * fixme : bit output for mulitple bytes
  * (eg only diffs) diffs) todo : error code return
  */
-// -- id : convert uint8 to byte
-// todo : don't send, only check ?
 // fixme : id maximum too low -> overhead
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
@@ -416,24 +416,21 @@ void radio_send_temperature_as_bytes(
   RADIO_LOG_OUTPUT("[send] ==> create payload\n");
   // todo : time information (?)
 
+  // - 4 bit : command
+  // temperature 1
+  // - 4 bit : command parameter
+  // number of measurements
+  uint8_t header = 0x05 << 4 | 0x02;
   cobs_data_info payload_bytes[] = {
       {"", 0, "Empty"},
-      {"5", 1, "Header"},
+      {&header, 1, "Header"},    // write later
+      {"", 1, "Message length"}, // write later
+      {"", 1, "Time"},
       {"3", 1, "Test"},
       {temperature_16LE_byte, 2, "Temperature 1"},
       {&temperature_16LE_byte2[0], 1, "Temperature 2"},
       {&temperature_16LE_byte2[1], 1, "Temperature 2"},
   };
-
-  /*
-        {"\x03", 1},
-        {&temperature_16LE_byte[0], 1},
-        {&temperature_16LE_byte[1], 1},
-        {&temperature_16LE_byte2[0], 1},
-        {&temperature_16LE_byte2[1], 1},
-        {"\x0E", 2}};
-        */
-  uint8_t payload_index = 1;
 
   // -- encode
   RADIO_LOG_OUTPUT("[send] ==> encoding \n");
@@ -441,7 +438,7 @@ void radio_send_temperature_as_bytes(
   cobs_decode_result decode_result_payload;
   uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(50)];
   uint8_t decoded_payload[50];
-  // size_t encoding_length = 0;
+  size_t encoding_length = 0;
   size_t i;
   for (size_t i = 0; i < dimof(payload_bytes); i++) {
     // encoded_result_payload[i] =
@@ -457,7 +454,7 @@ void radio_send_temperature_as_bytes(
     if (encoded_result_payload.status == COBS_ENCODE_OUT_BUFFER_OVERFLOW) {
       RADIO_LOG_OUTPUT("[send]  -> encoding buffer overflow\n");
     }
-    // encoding_length += encoded_result_payload.out_len;
+    encoding_length += encoded_result_payload.out_len;
     decode_result_payload =
         cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
                     encoded_result_payload.out_len);
@@ -495,12 +492,15 @@ void radio_send_temperature_as_bytes(
     printf("\n");
     */
 
+  // write message length into payload
+  uint8_t message_length_value = (uint8_t)encoding_length;
+  payload_bytes[2].data_ptr = &message_length_value;
   // -- send
   // todo : reduce length to send
+  // todo : package with length in it.
+
   // rc232_tx_packet_bytes(encoded_payload, encoding_length, dryrun);
-  // todo : in header lenth of payload
   // rc232_tx_packet_bytes(encoded_payload, sizeof(encoded_payload), dryrun);
-  // rc232_tx_packet_bytes(&encoded_payload[0], dryrun, 1);
 }
 
 /**
