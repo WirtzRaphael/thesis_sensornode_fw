@@ -494,16 +494,15 @@ static void print_bits_of_byte(uint8_t byte, bool print) {
 // todo : change to mcu log
 /**
  * @brief Log info of payload for cobs encoding
- * 
- * @param payload_cobs 
- * @param index 
+ *
+ * @param payload_cobs
+ * @param index
  */
-static void log_cobs_payload(cobs_data *payload_cobs, size_t index) {
-  RADIO_LOG_OUTPUT("[payload]  -> data : %d \n",
-                   payload_cobs[index].data_ptr[0]);
+static void log_cobs_payload(uint8_t *payload_byte_ptr, size_t length) {
+  RADIO_LOG_OUTPUT("[payload]  -> data : %d \n", *(payload_byte_ptr));
   RADIO_LOG_OUTPUT("[payload]  -> data : ");
-  print_bits_of_byte(payload_cobs->data_ptr[index], true);
-  RADIO_LOG_OUTPUT("[payload]  -> length: %d\n", payload_cobs[index].data_len);
+  print_bits_of_byte(*(payload_byte_ptr), true);
+  RADIO_LOG_OUTPUT("[payload]  -> length: %d\n", length);
 }
 
 /**
