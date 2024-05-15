@@ -11,6 +11,7 @@
  * todo : function headers
  */
 #include "radio.h"
+#include "McuLib.h"
 #include "McuLog.h"
 #include "McuRTOS.h"
 #include "McuUtility.h"
@@ -399,44 +400,52 @@ void radio_send_temperature_as_string(
  *
  * - use cobs for encoding
  * todo : refactor
+ * todo : always read out fix number of sensor values / readout queue
  * todo : change, compress format / algorithm to reduce number of temperatures
+ * fixme : bit output for mulitple bytes
  * (eg only diffs) diffs) todo : error code return
  */
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
   // -- id : convert uint8 to byte
-  // fixme : id maximum too low
-  McuUtility_constrain(temperature_measurement->id, 0, 255);
+  // todo : don't send, only check ?
+  // fixme : id maximum too low -> overhead
 
+  // todo : subfunction
+  // todo : uppler limit array / avoid dynamic
   // -- temperature : convert float to byte
-  // - 1% resolution for tmp117 with +/- 0.1°C accuracy
-  // fixme : data loss conversion (eg. 26.03 -> 2600)
-  // todo : check accuracy 16/32 bit
-  uint8_t data_16LE_byte[2] = {0};
-  McuUtility_constrain((int32_t)temperature_measurement->temperature, -20, 150);
-  uint16_t temperature = (uint16_t)(temperature_measurement->temperature * 100);
-  McuUtility_SetValue16LE(temperature, data_16LE_byte);
-  RADIO_LOG_OUTPUT(" ==> Sensor - Temperature \n");
-  RADIO_LOG_OUTPUT("  -> converted to byte:\n");
-  print_bits_of_byte(data_16LE_byte[1], true);
-  print_bits_of_byte(data_16LE_byte[0], true);
+#define PAYLOAD_LENGTH 15             // rename / enum ?
+  uint8_t payload_header = 0x01;      // todo : enum
+  uint8_t byte_start_temperature = 5; // start byte for temperature
+  uint8_t i_temperature = 5;          // number of temperature values
 
-  // -- payload
-  // todo : add more to payload
+  // -- create payload
+  RADIO_LOG_OUTPUT("[send] ==> create payload\n");
   // todo : time information (?)
-  // todo : protocol diy (header, payload, checksum, etc.)
   // cobs_data cobs_payload[] = {data_16LE_byte, sizeof(data_16LE_byte)};
-  cobs_data payload_bytes[] = {
-      // header
-      // payload
-      {&data_16LE_byte[0], 1},
-      {&data_16LE_byte[1], 1}
-      // CRC
-  };
+  cobs_data payload_bytes[PAYLOAD_LENGTH] = {{&payload_header, 1}};
+  uint8_t payload_index = 1;
+
+  // -- temperature values
+  uint8_t temperature_16LE_byte[2] = {0};
+  for (uint8_t i = 0; i < i_temperature; i++) {
+    McuUtility_constrain(temperature_measurement->id, 0, 255);
+    // payload_bytes[i + byte_start_temperature] = {&data_16LE_byte[0], 2};
+    convert_temperature_to_byte(temperature_16LE_byte, temperature_measurement);
+    payload_bytes[payload_index].data_len = 2;
+    payload_bytes[payload_index].data_ptr = temperature_16LE_byte;
+    payload_index += 1;
+  }
+
+  // todo : crc
+  uint8_t crc[2] = {0};
+  payload_bytes[payload_index].data_len = 2;
+  payload_bytes[payload_index].data_ptr = crc;
 
   // -- encode
+  RADIO_LOG_OUTPUT("[send] ==> encoding \n");
   // fixme : stackoverflow when (multiple) executions
-  // payload overhead : one byte for every 254 bytes 
+  // payload overhead : one byte for every 254 bytes
   uint8_t encoded_payload[COBS_ENCODE_DST_BUF_LEN_MAX(50)];
   cobs_encode_result encoded_result_payload;
   uint8_t decoded_payload[50];
@@ -446,18 +455,18 @@ void radio_send_temperature_as_bytes(
   // each byte of the payload
   for (i = 0; i < dimof(payload_bytes); i++) {
     // encoded_result_payload[i] =
-    RADIO_LOG_OUTPUT("[send] ==> encoding payload \n");
+    RADIO_LOG_OUTPUT("[send] ==> encoding payload byte %d \n", i);
     encoded_result_payload =
         cobs_encode(encoded_payload, sizeof(encoded_payload),
                     payload_bytes[i].data_ptr, payload_bytes[i].data_len);
 
-    RADIO_LOG_OUTPUT("[send] ==> decoding payload\n");
+    RADIO_LOG_OUTPUT("[send] ==> decoding payload byte %d \n", i);
     decode_result_payload =
         cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
                     encoded_result_payload.out_len);
 
-    RADIO_LOG_OUTPUT("[send] ==> encoding summary\n");
-    log_cobs_payload(payload_bytes, i);
+    RADIO_LOG_OUTPUT("[send] ==> encoding summary byte %d \n", i);
+    log_cobs_payload(payload_bytes[i].data_ptr, payload_bytes[i].data_len);
     log_cobs_encoded(encoded_payload, encoded_result_payload);
     log_cobs_decoded(decoded_payload, decode_result_payload);
   }
@@ -467,11 +476,9 @@ void radio_send_temperature_as_bytes(
   RADIO_LOG_OUTPUT("[decoded]  -> data per index : %u \n", decoded_payload[1]);
 
   // -- send
+  // todo : test
   rc232_tx_packet_bytes(encoded_payload, dryrun, dimof(payload_bytes));
-  //rc232_tx_packet_bytes(&encoded_payload[0], dryrun, 1);
-  //rc232_tx_packet_bytes(encoded_payload[1], dryrun);
-  //rc232_tx_packet_bytes(encoded_payload[2], dryrun);
-  //rc232_tx_packet_bytes(encoded_payload[3], dryrun);
+  // rc232_tx_packet_bytes(&encoded_payload[0], dryrun, 1);
 }
 
 /**
@@ -513,6 +520,7 @@ static void convert_temperature_to_byte(
   print_bits_of_byte(data_16LE_byte[1], true);
   print_bits_of_byte(data_16LE_byte[0], true);
 }
+
 /**
  * @brief Log info of payload for cobs encoding
  *
@@ -528,9 +536,9 @@ static void log_cobs_payload(uint8_t *payload_byte_ptr, size_t length) {
 
 /**
  * @brief Log info of encoded payload for cobs encoding
- * 
- * @param encoded_payload_byte_ptr 
- * @param encoded_result 
+ *
+ * @param encoded_payload_byte_ptr
+ * @param encoded_result
  */
 static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
                              cobs_encode_result encoded_result) {
@@ -543,9 +551,9 @@ static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
 
 /**
  * @brief Log info of decoded payload for cobs encoding
- * 
- * @param decoded_payload_byte_ptr 
- * @param decoded_result 
+ *
+ * @param decoded_payload_byte_ptr
+ * @param decoded_result
  */
 static void log_cobs_decoded(uint8_t *decoded_payload_byte_ptr,
                              cobs_decode_result decoded_result) {
