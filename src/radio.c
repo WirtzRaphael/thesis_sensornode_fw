@@ -58,6 +58,16 @@ pico_unique_board_id_t pico_uid = {0};
 char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
                      1]; // Each byte to two hex chars + null terminator
 
+typedef enum { SENSOR_TEMPERATURE, AUTHENTICATION } PAYLOAD_CONTENT;
+
+typedef struct {
+  PAYLOAD_CONTENT payload_header;
+  size_t payload_length;
+} payload_header;
+
+#define PAYLOAD_SENSOR_LENGTH 15
+static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
+
 static void vRadioTask(void *pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
   const TickType_t xDelay_radio_task = pdMS_TO_TICKS(radio_time_intervals_ms);
@@ -121,7 +131,6 @@ void radio_init(void) {
  * @return char
  */
 char radio_get_rf_destination_address(void) { return rf_destination_address; }
-
 
 /**
  * @brief Scan radio network and authenticate.
@@ -334,23 +343,19 @@ void radio_send_temperature_as_string(
  * @brief Send temperature values as bytes.
  *
  * - use cobs for encoding
- * todo : refactor
  * todo : always read out fix number of sensor values / readout queue
  * todo : change, compress format / algorithm to reduce number of temperatures
  * fixme : bit output for mulitple bytes
  * (eg only diffs) diffs) todo : error code return
  */
+// -- id : convert uint8 to byte
+// todo : don't send, only check ?
+// fixme : id maximum too low -> overhead
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
-  // -- id : convert uint8 to byte
-  // todo : don't send, only check ?
-  // fixme : id maximum too low -> overhead
+  uint8_t payload_header = payload_header_temperature.payload_header;
+  size_t payload_length = payload_header_temperature.payload_length;
 
-  // todo : subfunction
-  // todo : uppler limit array / avoid dynamic
-  // -- temperature : convert float to byte
-#define PAYLOAD_LENGTH 15             // rename / enum ?
-  uint8_t payload_header = 0x01;      // todo : enum
   uint8_t byte_start_temperature = 5; // start byte for temperature
   uint8_t i_temperature = 5;          // number of temperature values
 
@@ -358,14 +363,14 @@ void radio_send_temperature_as_bytes(
   RADIO_LOG_OUTPUT("[send] ==> create payload\n");
   // todo : time information (?)
   // cobs_data cobs_payload[] = {data_16LE_byte, sizeof(data_16LE_byte)};
-  cobs_data payload_bytes[PAYLOAD_LENGTH] = {{&payload_header, 1}};
+  //cobs_data payload_bytes[payload_header_temperature.payload_length] = {{&payload_header, 1}};
+  cobs_data payload_bytes[PAYLOAD_SENSOR_LENGTH] = {{&payload_header, 1}};
   uint8_t payload_index = 1;
 
   // -- temperature values
   uint8_t temperature_16LE_byte[2] = {0};
   for (uint8_t i = 0; i < i_temperature; i++) {
     McuUtility_constrain(temperature_measurement->id, 0, 255);
-    // payload_bytes[i + byte_start_temperature] = {&data_16LE_byte[0], 2};
     convert_temperature_to_byte(temperature_16LE_byte, temperature_measurement);
     payload_bytes[payload_index].data_len = 2;
     payload_bytes[payload_index].data_ptr = temperature_16LE_byte;
@@ -441,12 +446,13 @@ static void print_bits_of_byte(uint8_t byte, bool print) {
  * @param temperature_measurement
  * @note 16 bit little endian
  * @note 1% resolution for tmp117 with +/- 0.1°C accuracy
- * fixme : data loss conversion (eg. 26.03 -> 2600)
+ * fixme : data loss conversion (eg. 26.03 -> 2600) / overflow multiplication?
  * todo : check accuracy 16/32 bit
  */
 static void convert_temperature_to_byte(
     uint8_t *data_16LE_byte,
     temperature_measurement_t *temperature_measurement) {
+  // todo : constrains int32 correct? (min -20°C, max 150°C)
   McuUtility_constrain((int32_t)temperature_measurement->temperature, -20, 150);
   uint16_t temperature = (uint16_t)(temperature_measurement->temperature * 100);
   McuUtility_SetValue16LE(temperature, data_16LE_byte);
