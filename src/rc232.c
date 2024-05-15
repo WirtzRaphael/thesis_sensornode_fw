@@ -149,7 +149,7 @@ void rc232_reset(void) {
 }
 
 /**
- * @brief Send a message as string to transmit.
+ * @brief Transmit string
  */
 void rc232_tx_packet_string(const uint8_t *message, bool dryrun) {
   if (!uart_is_writable(UART_RADIO_ID)) {
@@ -181,20 +181,18 @@ void rc232_tx_packet_string(const uint8_t *message, bool dryrun) {
 }
 
 /**
- * @brief Send a message as byte to transmit.
- * todo : multiple bytes
- * todo : hdlc lite protocol
+ * @brief Transmit bytes
  */
-void rc232_tx_packet_bytes(uint8_t byte, bool dryrun) {
+void rc232_tx_packet_bytes(uint8_t *bytes, size_t length, bool dryrun) {
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
     return;
   }
 
   // RXDprint_binary
-  McuLog_trace("[RC232] Send message : %d\n", byte);
+  McuLog_trace("[RC232] Send message : %d\n", bytes);
   if (!dryrun) {
-    uart_write_blocking(UART_RADIO_ID, &byte, 1);
+    uart_write_blocking(UART_RADIO_ID, bytes, length);
     // No explicit packet end character
   }
 

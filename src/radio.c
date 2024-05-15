@@ -467,12 +467,11 @@ void radio_send_temperature_as_bytes(
   RADIO_LOG_OUTPUT("[decoded]  -> data per index : %u \n", decoded_payload[1]);
 
   // -- send
-  // todo : send whole encoded package (use length info)
-  // todo : send mulitple bytes in one function / transmission
-  rc232_tx_packet_bytes(encoded_payload[0], dryrun);
-  rc232_tx_packet_bytes(encoded_payload[1], dryrun);
-  rc232_tx_packet_bytes(encoded_payload[2], dryrun);
-  rc232_tx_packet_bytes(encoded_payload[3], dryrun);
+  rc232_tx_packet_bytes(encoded_payload, dryrun, dimof(payload_bytes));
+  //rc232_tx_packet_bytes(&encoded_payload[0], dryrun, 1);
+  //rc232_tx_packet_bytes(encoded_payload[1], dryrun);
+  //rc232_tx_packet_bytes(encoded_payload[2], dryrun);
+  //rc232_tx_packet_bytes(encoded_payload[3], dryrun);
 }
 
 /**
