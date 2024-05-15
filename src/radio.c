@@ -8,6 +8,7 @@
  *
  * todo : sync time
  * todo : buffer handling (?) -> rc232
+ * todo : function headers
  */
 #include "radio.h"
 #include "McuLog.h"
@@ -113,9 +114,13 @@ void radio_init(void) {
   }
 }
 
+/**
+ * @brief Get radio destination address.
+ *
+ * @return char
+ */
 char radio_get_rf_destination_address(void) { return rf_destination_address; }
 
-// todo : error log encoding result
 /**
  * @brief Encode data as cobs protocol.
  *
@@ -125,6 +130,7 @@ char radio_get_rf_destination_address(void) { return rf_destination_address; }
  * @param payload_bytes_len
  * @param encoded_result_payload
  */
+// todo : delete wrapper function -> lessons learned / replaced
 void radio_encode(void *encoded_payload_ptr, size_t encoded_payload_len,
                   cobs_data *payload_bytes, size_t payload_bytes_len,
                   cobs_encode_result *encoded_result_payload) {
@@ -145,9 +151,7 @@ void radio_encode(void *encoded_payload_ptr, size_t encoded_payload_len,
   }
 }
 
-// todo : add error handling ? logs.
-// todo : refactor parameters
-// fixme : only decoding one value
+// todo : delete wrapper function -> lessons learned / replaced
 void radio_decode(
     // cobs_data *decoded_payload_ptr,
     void *decoded_payload_ptr, size_t decoded_payload_len,
@@ -368,7 +372,7 @@ static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
 
 /**
  * @brief Send temperature values.
- *
+ * NOTE: Do no use
  */
 void radio_send_temperature_as_string(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
@@ -395,7 +399,6 @@ void radio_send_temperature_as_string(
  *
  * - use cobs for encoding
  * todo : refactor
- * todo : time information
  * todo : change, compress format / algorithm to reduce number of temperatures
  * (eg only diffs) diffs) todo : error code return
  */
@@ -408,6 +411,7 @@ void radio_send_temperature_as_bytes(
   // -- temperature : convert float to byte
   // - 1% resolution for tmp117 with +/- 0.1°C accuracy
   // fixme : data loss conversion (eg. 26.03 -> 2600)
+  // todo : check accuracy 16/32 bit
   uint8_t data_16LE_byte[2] = {0};
   McuUtility_constrain((int32_t)temperature_measurement->temperature, -20, 150);
   uint16_t temperature = (uint16_t)(temperature_measurement->temperature * 100);
@@ -418,10 +422,17 @@ void radio_send_temperature_as_bytes(
   print_bits_of_byte(data_16LE_byte[0], true);
 
   // -- payload
-  // todo : add more
+  // todo : add more to payload
+  // todo : time information (?)
+  // todo : protocol diy (header, payload, checksum, etc.)
   // cobs_data cobs_payload[] = {data_16LE_byte, sizeof(data_16LE_byte)};
-  cobs_data payload_bytes[] = {{&data_16LE_byte[0], 1},
-                               {&data_16LE_byte[1], 1}};
+  cobs_data payload_bytes[] = {
+      // header
+      // payload
+      {&data_16LE_byte[0], 1},
+      {&data_16LE_byte[1], 1}
+      // CRC
+  };
 
   // -- encode
   // fixme : stackoverflow when (multiple) executions
@@ -491,8 +502,7 @@ static void log_cobs_payload(cobs_data *payload_cobs, size_t index) {
 
 static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
                              cobs_encode_result encoded_result) {
-  RADIO_LOG_OUTPUT("[encoded]  -> data : %u \n",
-                   *(encoded_payload_byte_ptr));
+  RADIO_LOG_OUTPUT("[encoded]  -> data : %u \n", *(encoded_payload_byte_ptr));
   // fixme : wrong value data
   RADIO_LOG_OUTPUT("[encoded]  -> data : ");
   print_bits_of_byte(*(encoded_payload_byte_ptr), true);
@@ -502,8 +512,7 @@ static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
 static void log_cobs_decoded(uint8_t *decoded_payload_byte_ptr,
                              cobs_decode_result decoded_result) {
   // fixme : wrong value data
-  RADIO_LOG_OUTPUT("[decoded]  -> data : %u \n",
-                   *(decoded_payload_byte_ptr));
+  RADIO_LOG_OUTPUT("[decoded]  -> data : %u \n", *(decoded_payload_byte_ptr));
   RADIO_LOG_OUTPUT("[decoded]  -> data : ");
   print_bits_of_byte(*(decoded_payload_byte_ptr), true);
   RADIO_LOG_OUTPUT("[decoded]  -> length: %d\n", decoded_result.out_len);
