@@ -111,6 +111,7 @@ static const cobs_data_info_2 payload_bytes_test[] = {
     {"\x00\x00\x00", 3, "\x01\x01\x01\x01", 4, "3 zero bytes"},
 };
 
+// todo : refactor
 typedef struct {
   PAYLOAD_CONTENT payload_header;
   size_t payload_length;
@@ -146,7 +147,8 @@ static void vRadioTask(void *pvParameters) {
       temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
       sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
                                          &temperature_measurement_sensor1);
-      radio_send_temperature_as_string(&temperature_measurement_sensor1, true);
+      // radio_send_temperature_as_string(&temperature_measurement_sensor1,
+      // true);
       radio_send_temperature_as_bytes(&temperature_measurement_sensor1, false);
       // todo : send sensor 2
     }
@@ -595,17 +597,41 @@ static void log_print_buffer_as_char(uint8_t *buffer, size_t length) {
  *
  */
 void radio_encoding_cobs_example(void) {
-  cobs_data cobs_data_tests[] = {
-      {"", 0},
-      {"1", 1},
-      {"26.44", 5},
+  cobs_data_info_2 cobs_data_tests[] = {
+      {"", 0, "\x01", 1, "Empty"},
+      {"1", 1,
+       "\x02"
+       "1",
+       2, "1 non-zero byte"},
+      {"12345", 5,
+       "\x06"
+       "12345",
+       6, "5 non-zero bytes"},
+      {"12345\x00"
+       "6789",
+       10,
+       "\x06"
+       "12345\x05"
+       "6789",
+       11, "Zero in middle"},
       {"\x00"
        "12345\x00"
        "6789",
-       11},
-      {"\x00", 1},
-      {"\x00\x00", 2},
-      {"\x00\x00\x00", 3},
+       11,
+       "\x01\x06"
+       "12345\x05"
+       "6789",
+       12, "Zero at start and middle"},
+      {"12345\x00"
+       "6789\x00",
+       11,
+       "\x06"
+       "12345\x05"
+       "6789\x01",
+       12, "Zero at start and end"},
+      {"\x00", 1, "\x01\x01", 2, "1 zero byte"},
+      {"\x00\x00", 2, "\x01\x01\x01", 3, "2 zero bytes"},
+      {"\x00\x00\x00", 3, "\x01\x01\x01\x01", 4, "3 zero bytes"},
   };
   uint8_t encode_out[COBS_ENCODE_DST_BUF_LEN_MAX(100)];
   cobs_encode_result encode_result;
