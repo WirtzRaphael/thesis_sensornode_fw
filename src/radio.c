@@ -491,7 +491,28 @@ static void print_bits_of_byte(uint8_t byte, bool print) {
   }
 }
 
-// todo : change to mcu log
+// todo : error handling
+/**
+ * @brief Convert temperature to byte.
+ *
+ * @param data_16LE_byte
+ * @param temperature_measurement
+ * @note 16 bit little endian
+ * @note 1% resolution for tmp117 with +/- 0.1°C accuracy
+ * fixme : data loss conversion (eg. 26.03 -> 2600)
+ * todo : check accuracy 16/32 bit
+ */
+static void convert_temperature_to_byte(
+    uint8_t *data_16LE_byte,
+    temperature_measurement_t *temperature_measurement) {
+  McuUtility_constrain((int32_t)temperature_measurement->temperature, -20, 150);
+  uint16_t temperature = (uint16_t)(temperature_measurement->temperature * 100);
+  McuUtility_SetValue16LE(temperature, data_16LE_byte);
+  RADIO_LOG_OUTPUT("[send] ==> sensor: Temperature \n");
+  RADIO_LOG_OUTPUT("[send]  -> converted to byte:\n");
+  print_bits_of_byte(data_16LE_byte[1], true);
+  print_bits_of_byte(data_16LE_byte[0], true);
+}
 /**
  * @brief Log info of payload for cobs encoding
  *
