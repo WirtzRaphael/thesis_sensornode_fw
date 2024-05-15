@@ -25,6 +25,7 @@
 // note hw v1 : i2c1 x14 floating
 #define I2Cx           i2c0
 #define PRINTF_SENSORS (0)
+#define LOG_SENSORS    (0)
 
 static error_t error;
 static uint16_t id;
@@ -64,7 +65,8 @@ temperature_sensor_t temperatureSensor2 = {.i2c = I2Cx,
  */
 static void vSensorsTask(void *pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xDelay_sensor_sampling = pdMS_TO_TICKS(sampling_time_temparature_ms);
+  const TickType_t xDelay_sensor_sampling =
+      pdMS_TO_TICKS(sampling_time_temparature_ms);
 
   for (;;) {
     /* Task code goes here. */
@@ -172,10 +174,10 @@ sensors_read_temperature(temperature_sensor_t *temperature_sensor,
   temperature_measurement->timediff_to_start = 1;
 
   // Output
+#if LOG_SENSORS
   McuLog_trace("Sensor TMP117: number %d, Celsius %f\n",
                temperature_sensor->sensor_nr,
                temperature_measurement->temperature);
-#if PRINTF_SENSORS
   printf("Sensor TMP117: (number %d, Celsius %f\n",
          temperature_sensor->sensor_nr, temperature_measurement->temperature);
 #endif
@@ -193,7 +195,9 @@ static error_t
 add_temperature_to_queue(queue_t *temperature_sensor_queue,
                          temperature_measurement_t *temperature) {
   if (queue_try_add(temperature_sensor_queue, temperature)) {
+#if LOG_SENSORS
     McuLog_trace("Temperature sensor queue add success\n");
+#endif
     return ERR_OK;
   } else {
     McuLog_error("Temperature sensor queue add failed\n");
@@ -216,7 +220,9 @@ add_temperature_to_xQueue(QueueHandle_t xQueue_temperature,
     return ERR_FAILED;
   }
   if (xQueueSendToBack(xQueue_temperature, temperature, 0) == pdPASS) {
+#if LOG_SENSORS
     McuLog_trace("Temperature sensor xQueue add success\n");
+#endif
     return ERR_OK;
   } else {
     McuLog_error("Temperature sensor xQueue add failed\n");
