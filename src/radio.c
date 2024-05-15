@@ -474,11 +474,13 @@ void radio_send_temperature_as_bytes(
     //log_cobs_encoded(encoded_payload, encoded_result_payload);
     //printf("[encoded] bytes : %c\n", (char) encoded_payload[i]); // not working
     log_cobs_decoded(decoded_payload, decode_result_payload);
+    // note : decode should be equal to payload (working 05-15)
     printf("[decoded] data : %c (char) | %d \n", (char) decoded_payload[i], (uint8_t) decoded_payload[i]); // not working
   }
 
   log_print_buffer_as_char(encoded_payload, sizeof(encoded_payload));
 
+  // todo : clean up output
   /*
     RADIO_LOG_OUTPUT("[send] ==> summary \n");
     RADIO_LOG_OUTPUT("[send]  -> payload (first byte) \n");
