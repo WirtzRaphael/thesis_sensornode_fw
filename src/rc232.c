@@ -190,7 +190,9 @@ void rc232_tx_packet_bytes(uint8_t *bytes, size_t length, bool dryrun) {
   }
 
   // RXDprint_binary
-  McuLog_trace("[RC232] Send message : %d\n", bytes);
+  for (uint8_t i = 0; i < length; i++) {
+    McuLog_trace("[RC232] Send byte : %u \n", bytes[i]);
+  }
   if (!dryrun) {
     uart_write_blocking(UART_RADIO_ID, bytes, length);
     // No explicit packet end character
