@@ -398,6 +398,8 @@ void radio_send_temperature_as_string(
   rc232_tx_packet_string(buffer, dryrun);
 }
 
+
+// reference : https://github.com/bang-olufsen/yahdlc/blob/master/C/test/yahdlc_test.cpp
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
   // -- temperature values
@@ -412,9 +414,14 @@ void radio_send_temperature_as_bytes(
   // Initialize data to be send with random values (up to 0x70 to keep below the
   // values to be escaped)
   printf("Data to be sent: ");
+  send_data[0] = 0x01;
+  send_data[1] = 0x30;
+  send_data[2] = 0x30;
+  send_data[3] = 0xA4;
   for (i = 0; i < sizeof(send_data); i++) {
-    send_data[i] = (char)(rand() % 0x70);
+    //send_data[i] = (char)(rand() % 0x70);
     printf("%c", send_data[i]);
+    printf("%d", send_data[i]);
   }
   printf("\n");
 
@@ -426,6 +433,7 @@ void radio_send_temperature_as_bytes(
   printf("Data frame: ");
   for (i = 0; i < frame_length; i++) {
     printf("%c", frame_data[i]);
+    printf("%d", frame_data[i]);
   }
   printf("\n");
 
@@ -442,6 +450,7 @@ void radio_send_temperature_as_bytes(
   printf("Data received: ");
   for (i = 0; i < recv_length; i++) {
     printf("%c", recv_data[i]);
+    printf("%d", recv_data[i]);
   }
   printf("\n");
 }
