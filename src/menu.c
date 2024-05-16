@@ -118,7 +118,7 @@ void menu_handler_radio(void) {
     // radio_send_temperature_as_string();
     break;
   case 't':
-    radio_send_test();
+    radio_send_test_string();
     break;
   default:
     printf("Invalid option\n");
@@ -148,7 +148,7 @@ void menu_handler_rc232(void) {
     break;
   case 'c':
     rc232_config_destination_address(RC232_BROADCAST_ADDRESS);
-    radio_send_test();
+    radio_send_test_string();
     rc232_config_destination_address(
         radio_get_rf_destination_address()); // set back to default
     break;
