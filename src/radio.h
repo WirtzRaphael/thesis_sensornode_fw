@@ -5,8 +5,26 @@
 #include <errno.h>
 #include <stdint.h>
 
-static void convert_temperature_to_byte(uint8_t *data_16LE_byte,
-                                 temperature_measurement_t *temperature_measurement);
+typedef struct {
+    temperature_measurement_t measurement;
+    uint8_t measurement_byte[2];
+    uint8_t index;
+    uint8_t temperature_index;
+    //uint8_t start_index;
+    //uint8_t end_index;
+    //uint8_t src_index;
+}radio_data_temperature_t;;
+
+/*
+typedef struct {
+    uint8_t info_field: 5;
+    uint8_t parameter : 3;
+}radio_data_info_t;
+*/
+
+static void
+convert_temperature_to_byte(uint8_t *data_16LE_byte,
+                            temperature_measurement_t *temperature_measurement);
 static void log_hdlc_data(char *data_ptr, size_t send_data);
 static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len);
 static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len);

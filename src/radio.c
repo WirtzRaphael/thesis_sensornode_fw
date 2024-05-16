@@ -48,10 +48,17 @@
   #define dimof(X) (sizeof(X) / sizeof((X)[0]))
 #endif
 
+// todo struct
 int rf_channel_start = 0;
 int rf_channel_end = 0;
 char rf_channel = RF_CHANNEL_DEFAULT;
 char rf_destination_address = RF_DESTINATION_ADDR_DEFAULT;
+
+// check : init temperature values etc.?
+static radio_data_temperature_t data_temperature = {
+    .index = 0,
+    .temperature_index = 1,
+};
 
 static uint16_t radio_time_intervals_ms = 500;
 
@@ -366,36 +373,36 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   // -- data to send
   // todo : upperlimit check
   // Up to 0x70 to keep below the values to be escaped
-  // Content info field
-  temperature_measurement_t temperature_measurement = {0, 0, 0};
-  uint8_t temperature_16LE_byte[2] = {0};
+  radio_data_temperature_t data_temperature;
   error_t error;
-  uint8_t temperature_start = 1;
-  uint8_t index = 0;
 
   // -- fill data to send
+  // Content info field
   send_data[0] = 0x01;
-  index += 1;
+  data_temperature.index += 1;
 
+  // Measurement values
   // reads multiple values from queue until buffer full or queue empty
-  for (index = temperature_start; index < 2 * RADIO_TEMPERATURE_VALUES;
-       index += 2) {
+  for (data_temperature.index;
+       data_temperature.index < 2 * RADIO_TEMPERATURE_VALUES;
+       data_temperature.index += 2) {
     McuLog_trace("index : %d\n", index);
-    if (index > sizeof(send_data)) {
+    if (data_temperature.index > sizeof(send_data)) {
       McuLog_error("[radio] buffer overflow for data to send\n");
       return ERR_OVERFLOW;
     }
-    error = sensors_temperature_xQueue_receive(
-        xQueue_temperature, &temperature_measurement);
+    error = sensors_temperature_xQueue_receive(xQueue_temperature,
+                                               &data_temperature.measurement);
     if (!(error == ERR_OK)) {
       printf("[radio] No new temperature value received\n");
       continue;
     }
-    convert_temperature_to_byte(temperature_16LE_byte,
-                                &temperature_measurement);
-    printf("temperature: %f\n", temperature_measurement.temperature);
-    send_data[index] = temperature_16LE_byte[0];
-    send_data[index + 1] = temperature_16LE_byte[1];
+    convert_temperature_to_byte(data_temperature.measurement_byte,
+                                &data_temperature.measurement);
+    printf("temperature: %f\n", data_temperature.measurement.temperature);
+    send_data[data_temperature.index] = data_temperature.measurement_byte[0];
+    send_data[data_temperature.index + 1] =
+        data_temperature.measurement_byte[1];
   }
   log_hdlc_data(send_data, sizeof(send_data));
 
@@ -499,7 +506,6 @@ static void print_bits_of_byte(uint8_t byte, bool print) {
   }
 }
 
-// todo : error handling
 /**
  * @brief Convert temperature to byte.
  *
