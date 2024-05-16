@@ -15,7 +15,6 @@
 #include "McuLog.h"
 #include "McuRTOS.h"
 #include "McuUtility.h"
-#include "cobs.h"
 #include "pico/stdlib.h"
 #include "pico/time.h"
 #include "pico/types.h"
@@ -67,11 +66,11 @@ typedef enum { SENSOR_TEMPERATURE, AUTHENTICATION } PAYLOAD_CONTENT;
 typedef struct {
   uint8_t command : 4;
   uint8_t command_parameter : 4;
-  //size_t payload_length : 4;
+  // size_t payload_length : 4;
 } payload_header;
 
 #define PAYLOAD_SENSOR_LENGTH 15
-//static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
+// static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
 
 static void vRadioTask(void *pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -344,8 +343,17 @@ void radio_send_temperature_as_string(
   rc232_tx_packet_string(buffer, dryrun);
 }
 
-
-// reference : https://github.com/bang-olufsen/yahdlc/blob/master/C/test/yahdlc_test.cpp
+/**
+ * @brief Send temperature values as bytes.
+ *
+ * - use HDLC-Lite for encoding
+ * todo : always read out fix number of sensor values / readout queue
+ * todo : change, compress format / algorithm to reduce number of temperatures
+ * todo : typedef / enum
+ * todo : error code return
+ * reference :
+ * https://github.com/bang-olufsen/yahdlc/blob/master/C/test/yahdlc_test.cpp
+ */
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
   // -- temperature values
@@ -357,15 +365,54 @@ void radio_send_temperature_as_bytes(
   char frame_data[24];
   unsigned int i, frame_length = 0;
 
-  // Initialize data to be send with random values (up to 0x70 to keep below the
-  // values to be escaped)
-  printf("Data to be sent: ");
+  uint8_t temperature_16LE_byte[2] = {0};
+  McuUtility_SetValue16LE(0xCA, temperature_16LE_byte);
+  uint8_t temperature_16LE_byte2[2] = {0};
+  McuUtility_SetValue16LE(0xA0, temperature_16LE_byte2);
+
+  // -- data to send
+  // Up to 0x70 to keep below the values to be escaped
   send_data[0] = 0x01;
   send_data[1] = 0x30;
   send_data[2] = 0x30;
   send_data[3] = 0xA4;
+
+  printf("Data to be sent: ");
+  log_hdlc_data(send_data, sizeof(send_data));
+
+  // -- encoding
+  // Initialize control field structure and create frame
+  control.frame = YAHDLC_FRAME_DATA;
+  ret = yahdlc_frame_data(&control, send_data, sizeof(send_data), frame_data,
+                          &frame_length);
+  log_hdlc_encoded(frame_data, frame_length);
+
+  // -- decode
+  char recv_data[24];
+  unsigned int recv_length = 0; // todo : data type
+  // Decode the data up to end flag sequence byte which should return no valid
+  ret = yahdlc_get_data(&control, frame_data, frame_length - 1, recv_data,
+                        &recv_length);
+  // Decode the end flag sequence byte which should result in a decoded frame
+  ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1, recv_data,
+                        &recv_length);
+  log_hdlc_decoded(recv_data, recv_length);
+}
+
+void radio_encoding_hdlc_example(void) {
+  // -- temperature values
+  int ret;
+  yahdlc_control_t control;
+  control.frame = YAHDLC_FRAME_DATA;
+  char send_data[16];
+  char frame_data[24];
+  unsigned int i, frame_length = 0;
+
+  // Initialize data to be send with random values (up to 0x70 to keep below
+  // the values to be escaped)
+  printf("Data to be sent: ");
   for (i = 0; i < sizeof(send_data); i++) {
-    //send_data[i] = (char)(rand() % 0x70);
+    // send_data[i] = (char)(rand() % 0x70);
     printf("%c", send_data[i]);
     printf("%d", send_data[i]);
   }
@@ -428,6 +475,7 @@ static void print_bits_of_byte(uint8_t byte, bool print) {
  * @note 1% resolution for tmp117 with +/- 0.1°C accuracy
  * fixme : data loss conversion (eg. 26.03 -> 2600) / overflow multiplication?
  * todo : check accuracy 16/32 bit
+ * todo : change range, start values from 0 and in range of sensor.
  */
 static void convert_temperature_to_byte(
     uint8_t *data_16LE_byte,
@@ -445,14 +493,10 @@ static void convert_temperature_to_byte(
 static void log_hdlc_data(uint8_t *data_ptr, size_t data_len) {
   RADIO_LOG_OUTPUT("[hdlc] ==> Data to send \n");
   RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
-  for (uint8_t i = 0; i < data_len; i++) {
-    RADIO_LOG_OUTPUT("%c", data_ptr[i]);
-  }
-  RADIO_LOG_OUTPUT("\n[hdlc]  -> int : ");
-  for (uint8_t i = 0; i < data_len; i++) {
-    RADIO_LOG_OUTPUT("%d", data_ptr[i]);
-  }
-  RADIO_LOG_OUTPUT("\n[hdlc]  -> bin : ");
+  log_buffer_as_char(data_ptr, data_len);
+  RADIO_LOG_OUTPUT("[hdlc]  -> int : ");
+  log_buffer_as_int(data_ptr, data_len);
+  RADIO_LOG_OUTPUT("[hdlc]  -> bin : ");
   print_bits_of_byte(*(data_ptr), true);
   RADIO_LOG_OUTPUT("[hdlc]  -> length: %d\n", data_len);
 }
@@ -460,36 +504,35 @@ static void log_hdlc_data(uint8_t *data_ptr, size_t data_len) {
 static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len) {
   RADIO_LOG_OUTPUT("[hdlc] ==> Data encoded \n");
   RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
-  for (uint8_t i = 0; i < encoded_len; i++) {
-    RADIO_LOG_OUTPUT("%c", encoded_ptr[i]);
-  }
-  RADIO_LOG_OUTPUT("\n[hdlc]  -> int : ");
-  for (uint8_t i = 0; i < encoded_len; i++) {
-    RADIO_LOG_OUTPUT("%d", encoded_ptr[i]);
-  }
-  RADIO_LOG_OUTPUT("\n[hdlc]  -> bin : ");
+  log_buffer_as_char(encoded_ptr, encoded_len);
+  RADIO_LOG_OUTPUT("[hdlc]  -> int : ");
+  log_buffer_as_int(encoded_ptr, encoded_len);
+  RADIO_LOG_OUTPUT("[hdlc]  -> bin : ");
   print_bits_of_byte(*(encoded_ptr), true);
-  RADIO_LOG_OUTPUT("\n[hdlc]  -> length: %d\n", encoded_len);
+  RADIO_LOG_OUTPUT("[hdlc]  -> length: %d\n", encoded_len);
 }
 
 static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len) {
   RADIO_LOG_OUTPUT("[hdlc] ==> Data decoded \n");
   RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
-  for (uint8_t i = 0; i < decoded_len; i++) {
-    RADIO_LOG_OUTPUT("%c", decoded_ptr[i]);
-  }
-  RADIO_LOG_OUTPUT("\n[hdlc]  -> int : ");
-  for (uint8_t i = 0; i < decoded_len; i++) {
-    RADIO_LOG_OUTPUT("%d", decoded_ptr[i]);
-  }
-  RADIO_LOG_OUTPUT("\n[hdlc]  -> bin : ");
+  log_buffer_as_char(decoded_ptr, decoded_len);
+  RADIO_LOG_OUTPUT("[hdlc]  -> int : ");
+  log_buffer_as_int(decoded_ptr,decoded_len);
+  RADIO_LOG_OUTPUT("[hdlc]  -> bin : ");
   print_bits_of_byte(*(decoded_ptr), true);
-  RADIO_LOG_OUTPUT("\n[hdlc]  -> length: %d\n", decoded_len);
+  RADIO_LOG_OUTPUT("[hdlc]  -> length: %d\n", decoded_len);
 }
 
-static void log_print_buffer_as_char(uint8_t *buffer, size_t length) {
+static void log_buffer_as_char(char *buffer, size_t length) {
   for (size_t i = 0; i < length; i++) {
     printf("%c", (char)buffer[i]);
+  }
+  printf("\n");
+}
+
+static void log_buffer_as_int(char *buffer, size_t length){ 
+  for (size_t i = 0; i < length; i++) {
+    printf("%d", (char)buffer[i]);
   }
   printf("\n");
 }

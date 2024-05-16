@@ -11,9 +11,11 @@ static void convert_temperature_to_byte(uint8_t *data_16LE_byte,
 static void log_hdlc_data(uint8_t *data_ptr, size_t send_data);
 static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len);
 static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len);
-static void log_print_buffer_as_char(uint8_t *buffer, size_t length);
+static void log_buffer_as_char(char *buffer, size_t length);
+static void log_buffer_as_int(char *buffer, size_t length);
 void radio_authentication(void);
 void radio_encoding_cobs_example(void);
+void radio_encoding_hdlc_example(void);
 static void radio_send_authentication_request(void);
 static error_t radio_wait_for_authentication_response(uint32_t timeout_ms);
 /*
