@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/_types.h>
+#include "yahdlc.h"
+
 //
 #include "application.h"
 #include "rc232.h"
@@ -64,7 +66,7 @@ typedef struct {
   const uint8_t *data_ptr;
   size_t data_len;
   const char *description_ptr;
-}cobs_data_info;
+} cobs_data_info;
 
 typedef struct {
   const uint8_t *data_ptr;
@@ -115,11 +117,11 @@ static const cobs_data_info_2 payload_bytes_test[] = {
 typedef struct {
   uint8_t command : 4;
   uint8_t command_parameter : 4;
-  //size_t payload_length : 4;
+  // size_t payload_length : 4;
 } payload_header;
 
 #define PAYLOAD_SENSOR_LENGTH 15
-//static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
+// static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
 
 static void vRadioTask(void *pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -393,6 +395,11 @@ void radio_send_temperature_as_string(
   rc232_tx_packet_string(buffer, dryrun);
 }
 
+void radio_send_temperature_as_bytes(
+    temperature_measurement_t *temperature_measurement, bool dryrun) {
+  // -- temperature values
+}
+
 /**
  * @brief Send temperature values as bytes.
  *
@@ -404,7 +411,7 @@ void radio_send_temperature_as_string(
  * (eg only diffs) diffs) todo : error code return
  */
 // fixme : id maximum too low -> overhead
-void radio_send_temperature_as_bytes(
+void radio_send_temperature_as_bytes_cobs(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
   // -- temperature values
   uint8_t temperature_16LE_byte[2] = {0};
@@ -457,22 +464,37 @@ void radio_send_temperature_as_bytes(
     encoding_length += encoded_result_payload.out_len;
     decode_result_payload =
         cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
-                    encoded_result_payload.out_len);
+                    sizeof(encoded_result_payload));
+    // encoded_result_payload.out_len);
     if (decode_result_payload.status == COBS_DECODE_OK) {
       RADIO_LOG_OUTPUT("[send]  -> decoding ok\n");
     } else {
       RADIO_LOG_OUTPUT("[send]  -> decoding error\n");
     }
+  }
 
-    printf("[payload]  -> description : %s\n", payload_bytes[i].description_ptr);
-    printf("[payload]  -> data : %s (char) | %d \n", payload_bytes[i].data_ptr, *payload_bytes[i].data_ptr);
+  printf("[decoded] data : %c (char) | %d \n", (char)decoded_payload[i],
+         (uint8_t)decoded_payload[i]); // not working
+  printf("decode run (2) \n");
+  size_t encoded_length = strlen(encoded_payload) / 2;
+  for (size_t i = 0; i < dimof(payload_bytes); i++) {
+    decode_result_payload =
+        cobs_decode(decoded_payload, sizeof(decoded_payload), encoded_payload,
+                    strlen(encoded_payload));
+    printf("[payload]  -> description : %s\n",
+           payload_bytes[i].description_ptr);
+    printf("[payload]  -> data : %s (char) | %d \n", payload_bytes[i].data_ptr,
+           *payload_bytes[i].data_ptr);
+
     printf("[payload]  -> length : %d\n", payload_bytes[i].data_len);
-    //log_cobs_payload(payload_bytes[i].data_ptr, payload_bytes[i].data_len);
-    //log_cobs_encoded(encoded_payload, encoded_result_payload);
-    //printf("[encoded] bytes : %c\n", (char) encoded_payload[i]); // not working
+    // log_cobs_payload(payload_bytes[i].data_ptr, payload_bytes[i].data_len);
+    // log_cobs_encoded(encoded_payload, encoded_result_payload);
+    // printf("[encoded] bytes : %c\n", (char) encoded_payload[i]); // not
+    // working
     log_cobs_decoded(decoded_payload, decode_result_payload);
     // note : decode should be equal to payload (working 05-15)
-    printf("[decoded] data : %c (char) | %d \n", (char) decoded_payload[i], (uint8_t) decoded_payload[i]); // not working
+    printf("[decoded] data : %c (char) | %d \n", (char)decoded_payload[i],
+           (uint8_t)decoded_payload[i]); // not working
   }
 
   log_print_buffer_as_char(encoded_payload, sizeof(encoded_payload));
@@ -589,7 +611,7 @@ static void log_cobs_decoded(uint8_t *decoded_payload_byte_ptr,
 
 static void log_print_buffer_as_char(uint8_t *buffer, size_t length) {
   for (size_t i = 0; i < length; i++) {
-    printf("%c",(char) buffer[i]);
+    printf("%c", (char)buffer[i]);
   }
   printf("\n");
 }
