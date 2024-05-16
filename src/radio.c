@@ -30,11 +30,8 @@
 #include "rc232.h"
 #include "sensors.h"
 
-#define RF_CHANNEL_DEFAULT          (5)
-#define RF_CHANNEL_MIN              (1)
-#define RF_CHANNEL_MAX              (10)
-#define RF_DESTINATION_ADDR_DEFAULT (20)
-#define PROTOCOL_AUTH_SIZE_BYTES    (10)
+#define PROTOCOL_AUTH_SIZE_BYTES (10)
+#define RF_CHANNEL_DEFAULT       (1)
 
 // Use fix channel or scan channels
 #define SCAN_CHANNELS_FOR_CONNECTION (0)
@@ -50,13 +47,12 @@
 
 // todo refactor (get set ?, no define) / Init ?
 static rf_settings_t rf_settings = {
-    .destination_address = RF_DESTINATION_ADDR_DEFAULT,
+    .destination_address = 20,
     .source_address = 99,
     .channel_id = RF_CHANNEL_DEFAULT,
-    .channel_start = RF_CHANNEL_MIN,
-    .channel_end = RF_CHANNEL_MAX,
+    .channel_start = 1,
+    .channel_end = 10,
 };
-char rf_destination_address = RF_DESTINATION_ADDR_DEFAULT;
 
 // check : init temperature values etc.?
 static radio_data_temperature_t data_temperature = {
@@ -67,8 +63,6 @@ static radio_data_temperature_t data_temperature = {
 static uint16_t radio_time_intervals_ms = 500;
 
 pico_unique_board_id_t pico_uid = {0};
-char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
-                     1]; // Each byte to two hex chars + null terminator
 
 static void vRadioTask(void *pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -111,8 +105,8 @@ static void vRadioTask(void *pvParameters) {
  * @brief Initialize radio.
  */
 void radio_init(void) {
-  pico_get_unique_board_id_string(pico_uid_string, sizeof(pico_uid_string));
-  McuLog_trace("pico unique id: %s \n", pico_uid_string);
+  pico_get_unique_board_id(&pico_uid);
+  McuLog_trace("pico unique id: %d \n", pico_uid.id);
 
   // BaseType_t xReturned;
   // TaskHandle_t xHandle = NULL;
@@ -133,7 +127,9 @@ void radio_init(void) {
  *
  * @return char
  */
-char radio_get_rf_destination_address(void) { return rf_settings.destination_address; }
+char radio_get_rf_destination_address(void) {
+  return rf_settings.destination_address;
+}
 
 /**
  * @brief Scan radio network and authenticate.
@@ -215,7 +211,7 @@ void radio_authentication(void) {
   }
 
   // reset to default address
-  rc232_config_destination_address(rf_destination_address);
+  rc232_config_destination_address(rf_settings.destination_address);
   rc232_config_rf_channel_number(rf_settings.channel_id);
 }
 
@@ -241,8 +237,10 @@ static void radio_send_authentication_request(void) {
   strcat(payload, "-");
   printf("payload (string): %s\n", payload);
   // - board information
+  /* pico_uid.id (int, 8 bytes)
   printf("pico uid string: %s\n", pico_uid_string);
   strcat(payload, pico_uid_string);
+  */
   printf("payload (string): %s\n", payload);
 // -- checksum
 #if TRANSMISSION_IN_BYTES
@@ -347,7 +345,6 @@ void radio_send_temperature_as_string(
  * - use HDLC-Lite for encoding
  * -
  * todo : change, compress format / algorithm to reduce number of temperatures
- * todo : typedef / enum
  * todo : refactor
  * reference :
  * https://github.com/bang-olufsen/yahdlc/blob/master/C/test/yahdlc_test.cpp
