@@ -18,13 +18,14 @@
 #include "cobs.h"
 #include "pico/stdlib.h"
 #include "pico/time.h"
+#include "pico/types.h"
 #include "pico/unique_id.h"
 #include "semphr.h"
+#include "yahdlc.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/_types.h>
-#include "yahdlc.h"
 
 //
 #include "application.h"
@@ -398,6 +399,49 @@ void radio_send_temperature_as_string(
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
   // -- temperature values
+  int ret;
+  yahdlc_control_t control;
+  control.frame = YAHDLC_FRAME_DATA;
+  // control.seq_no = 0;
+  char send_data[16];
+  char frame_data[24];
+  unsigned int i, frame_length = 0;
+
+  // Initialize data to be send with random values (up to 0x70 to keep below the
+  // values to be escaped)
+  printf("Data to be sent: ");
+  for (i = 0; i < sizeof(send_data); i++) {
+    send_data[i] = (char)(rand() % 0x70);
+    printf("%c", send_data[i]);
+  }
+  printf("\n");
+
+  // Initialize control field structure and create frame
+  control.frame = YAHDLC_FRAME_DATA;
+  ret = yahdlc_frame_data(&control, send_data, sizeof(send_data), frame_data,
+                          &frame_length);
+
+  printf("Data frame: ");
+  for (i = 0; i < frame_length; i++) {
+    printf("%c", frame_data[i]);
+  }
+  printf("\n");
+
+  char recv_data[24];
+  unsigned int recv_length = 0; // todo : data type
+  // Decode the data up to end flag sequence byte which should return no valid
+  // messages error
+  ret = yahdlc_get_data(&control, frame_data, frame_length - 1, recv_data,
+                        &recv_length);
+  // Now decode the end flag sequence byte
+  // which should result in a decoded frame
+  ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1, recv_data,
+                        &recv_length);
+  printf("Data received: ");
+  for (i = 0; i < recv_length; i++) {
+    printf("%c", recv_data[i]);
+  }
+  printf("\n");
 }
 
 /**
