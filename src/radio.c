@@ -352,57 +352,83 @@ void radio_send_temperature_as_string(
  * reference :
  * https://github.com/bang-olufsen/yahdlc/blob/master/C/test/yahdlc_test.cpp
  */
-void radio_send_temperature_as_bytes(
+error_t radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
   // -- temperature values
-  int ret;
+  int hdlc_ret;
   yahdlc_control_t control;
   control.frame = YAHDLC_FRAME_DATA;
   // control.seq_no = 0;
   char send_data[16];
   char frame_data[24];
-  unsigned int i, frame_length = 0;
-
-  // todo : function to get/fill data (readout queue) / error code -> later algorithm
-  uint8_t temperature_16LE_byte[2] = {0};
-  McuUtility_SetValue16LE(0xCA, temperature_16LE_byte);
-  uint8_t temperature_16LE_byte2[2] = {0};
-  McuUtility_SetValue16LE(0xA0, temperature_16LE_byte2);
+  unsigned int frame_length = 0;
 
   // -- data to send
+  // todo : senosor 2 etc.
+  // todo : upperlimit check
   // Up to 0x70 to keep below the values to be escaped
+  // Content info field
+  temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
+  uint8_t temperature_16LE_byte[2] = {0};
+  error_t error;
+  uint8_t temperature_start = 1;
+  uint8_t index = 0;
+
+  // -- fill data to send
   send_data[0] = 0x01;
-  send_data[1] = 0x30;
-  send_data[2] = 0x31;
-  send_data[3] = 0x70;
-  send_data[4] = 0xA4;
-  send_data[5] = 0x10;
-  send_data[6] = 0xC0;
-  send_data[7] = 0x60;
+  index += 1;
+
+  for (index = temperature_start; index < 2 * RADIO_TEMPERATURE_VALUES;
+       index += 2) {
+    McuLog_trace("index : %d\n", index);
+    if (index > sizeof(send_data)) {
+      McuLog_error("[radio] buffer overflow for data to send\n");
+      return ERR_OVERFLOW;
+    }
+    error = sensors_temperature_xQueue_receive(
+        xQueue_temperature_sensor_1, &temperature_measurement_sensor1);
+    if (!(error == ERR_OK)) {
+      printf("[radio] No new temperature value received\n");
+      continue;
+    }
+    convert_temperature_to_byte(temperature_16LE_byte,
+                                &temperature_measurement_sensor1);
+    printf("temperature: %f\n", temperature_measurement_sensor1.temperature);
+    send_data[index] = temperature_16LE_byte[0];
+    send_data[index + 1] = temperature_16LE_byte[1];
+  }
   log_hdlc_data(send_data, sizeof(send_data));
 
   // -- encoding
   // Initialize control field structure and create frame
   control.frame = YAHDLC_FRAME_DATA;
-  ret = yahdlc_frame_data(&control, send_data, sizeof(send_data), frame_data,
+  hdlc_ret = yahdlc_frame_data(&control, send_data, sizeof(send_data), frame_data,
                           &frame_length);
+  if (hdlc_ret != 0) {
+    McuLog_error("hdlc encode frame data error\n");
+    return ERR_FRAMING;
+  }
   log_hdlc_encoded(frame_data, frame_length);
 
+#if RADIO_DEBUG_DECODE
   // -- decode
   char recv_data[24];
   unsigned int recv_length = 0; // todo : data type
   // Decode the data up to end flag sequence byte which should return no valid
-  ret = yahdlc_get_data(&control, frame_data, frame_length - 1, recv_data,
+  hdlc_ret = yahdlc_get_data(&control, frame_data, frame_length - 1, recv_data,
                         &recv_length);
   // Decode the end flag sequence byte which should result in a decoded frame
-  ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1, recv_data,
+  hdlc_ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1, recv_data,
                         &recv_length);
+  if (hdlc_ret != 0) {
+    McuLog_error("hdlc decode frame data error\n");
+    return ERR_FRAMING;
+  }
   log_hdlc_decoded(recv_data, recv_length);
+#endif
 
-  RADIO_LOG_OUTPUT("send data (bytes) \n");
   rc232_tx_packet_bytes(send_data, sizeof(send_data), true);
-  RADIO_LOG_OUTPUT("send data (string) \n");
-  rc232_tx_packet_string(send_data, true);
+  return ERR_OK;
 }
 
 void radio_encoding_hdlc_example(void) {
@@ -457,7 +483,9 @@ void radio_encoding_hdlc_example(void) {
 /**
  * @brief Send test message.
  */
-void radio_send_test_string(void) { rc232_tx_packet_string("hello world", false); }
+void radio_send_test_string(void) {
+  rc232_tx_packet_string("hello world", false);
+}
 
 static void print_bits_of_byte(uint8_t byte, bool print) {
   for (int i = 7; i >= 0; i--) {
@@ -498,11 +526,11 @@ static void convert_temperature_to_byte(
 
 /**
  * @brief Log hdlc encoding data to send
- * 
- * @param data_ptr 
- * @param data_len 
+ *
+ * @param data_ptr
+ * @param data_len
  */
-static void log_hdlc_data(uint8_t *data_ptr, size_t data_len) {
+static void log_hdlc_data(char *data_ptr, size_t data_len) {
   RADIO_LOG_OUTPUT("[hdlc] ==> Data to send \n");
   RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
   log_buffer_as_char(data_ptr, data_len);
@@ -515,8 +543,8 @@ static void log_hdlc_data(uint8_t *data_ptr, size_t data_len) {
 
 /**
  * @brief Log hdlc encoded data
- * 
- * @param encoded_ptr 
+ *
+ * @param encoded_ptr
  * @param encoded_len
  */
 static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len) {
@@ -532,16 +560,16 @@ static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len) {
 
 /**
  * @brief Log hdlc decoded data
- * 
- * @param decoded_ptr 
- * @param decoded_len 
+ *
+ * @param decoded_ptr
+ * @param decoded_len
  */
 static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len) {
   RADIO_LOG_OUTPUT("[hdlc] ==> Data decoded \n");
   RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
   log_buffer_as_char(decoded_ptr, decoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> int : ");
-  log_buffer_as_int(decoded_ptr,decoded_len);
+  log_buffer_as_int(decoded_ptr, decoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> bin : ");
   print_bits_of_byte(*(decoded_ptr), true);
   RADIO_LOG_OUTPUT("[hdlc]  -> length: %d\n", decoded_len);
@@ -549,8 +577,8 @@ static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len) {
 
 /**
  * @brief Log buffer as char
- * 
- * @param buffer 
+ *
+ * @param buffer
  * @param length
  */
 static void log_buffer_as_char(char *buffer, size_t length) {
@@ -562,11 +590,11 @@ static void log_buffer_as_char(char *buffer, size_t length) {
 
 /**
  * @brief Log buffer as int
- * 
- * @param buffer 
- * @param length 
+ *
+ * @param buffer
+ * @param length
  */
-static void log_buffer_as_int(char *buffer, size_t length){ 
+static void log_buffer_as_int(char *buffer, size_t length) {
   for (size_t i = 0; i < length; i++) {
     printf("|%d", (char)buffer[i]);
   }
