@@ -96,11 +96,11 @@ static void vRadioTask(void *pvParameters) {
       // todo : readout all values queue
       // todo : case empty queue / no new value / nothing to send
       temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
-      sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
+      sensors_temperature_xQueue_receive(xQueue_temperature,
                                          &temperature_measurement_sensor1);
       // radio_send_temperature_as_string(&temperature_measurement_sensor1,
       // true);
-      radio_send_temperature_as_bytes(&temperature_measurement_sensor1, false);
+      radio_send_temperature_as_bytes(xQueue_temperature, false);
       // todo : send sensor 2
     }
 
@@ -346,14 +346,14 @@ void radio_send_temperature_as_string(
  * @brief Send temperature values as bytes.
  *
  * - use HDLC-Lite for encoding
+ * -
  * todo : change, compress format / algorithm to reduce number of temperatures
  * todo : typedef / enum
- * todo : error code return
  * reference :
  * https://github.com/bang-olufsen/yahdlc/blob/master/C/test/yahdlc_test.cpp
  */
-error_t radio_send_temperature_as_bytes(
-    temperature_measurement_t *temperature_measurement, bool dryrun) {
+error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
+                                        bool dryrun) {
   // -- temperature values
   int hdlc_ret;
   yahdlc_control_t control;
@@ -364,11 +364,10 @@ error_t radio_send_temperature_as_bytes(
   unsigned int frame_length = 0;
 
   // -- data to send
-  // todo : senosor 2 etc.
   // todo : upperlimit check
   // Up to 0x70 to keep below the values to be escaped
   // Content info field
-  temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
+  temperature_measurement_t temperature_measurement = {0, 0, 0};
   uint8_t temperature_16LE_byte[2] = {0};
   error_t error;
   uint8_t temperature_start = 1;
@@ -378,6 +377,7 @@ error_t radio_send_temperature_as_bytes(
   send_data[0] = 0x01;
   index += 1;
 
+  // reads multiple values from queue until buffer full or queue empty
   for (index = temperature_start; index < 2 * RADIO_TEMPERATURE_VALUES;
        index += 2) {
     McuLog_trace("index : %d\n", index);
@@ -386,14 +386,14 @@ error_t radio_send_temperature_as_bytes(
       return ERR_OVERFLOW;
     }
     error = sensors_temperature_xQueue_receive(
-        xQueue_temperature_sensor_1, &temperature_measurement_sensor1);
+        xQueue_temperature, &temperature_measurement);
     if (!(error == ERR_OK)) {
       printf("[radio] No new temperature value received\n");
       continue;
     }
     convert_temperature_to_byte(temperature_16LE_byte,
-                                &temperature_measurement_sensor1);
-    printf("temperature: %f\n", temperature_measurement_sensor1.temperature);
+                                &temperature_measurement);
+    printf("temperature: %f\n", temperature_measurement.temperature);
     send_data[index] = temperature_16LE_byte[0];
     send_data[index + 1] = temperature_16LE_byte[1];
   }
@@ -402,8 +402,8 @@ error_t radio_send_temperature_as_bytes(
   // -- encoding
   // Initialize control field structure and create frame
   control.frame = YAHDLC_FRAME_DATA;
-  hdlc_ret = yahdlc_frame_data(&control, send_data, sizeof(send_data), frame_data,
-                          &frame_length);
+  hdlc_ret = yahdlc_frame_data(&control, send_data, sizeof(send_data),
+                               frame_data, &frame_length);
   if (hdlc_ret != 0) {
     McuLog_error("hdlc encode frame data error\n");
     return ERR_FRAMING;
@@ -416,10 +416,10 @@ error_t radio_send_temperature_as_bytes(
   unsigned int recv_length = 0; // todo : data type
   // Decode the data up to end flag sequence byte which should return no valid
   hdlc_ret = yahdlc_get_data(&control, frame_data, frame_length - 1, recv_data,
-                        &recv_length);
+                             &recv_length);
   // Decode the end flag sequence byte which should result in a decoded frame
-  hdlc_ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1, recv_data,
-                        &recv_length);
+  hdlc_ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1,
+                             recv_data, &recv_length);
   if (hdlc_ret != 0) {
     McuLog_error("hdlc decode frame data error\n");
     return ERR_FRAMING;
