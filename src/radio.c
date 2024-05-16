@@ -103,11 +103,11 @@ static void vRadioTask(void *pvParameters) {
       // todo : readout all values queue
       // todo : case empty queue / no new value / nothing to send
       temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
-      sensors_temperature_xQueue_receive(xQueue_temperature,
+      sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
                                          &temperature_measurement_sensor1);
       // radio_send_temperature_as_string(&temperature_measurement_sensor1,
       // true);
-      radio_send_temperature_as_bytes(xQueue_temperature, false);
+      radio_send_temperature_as_bytes(xQueue_temperature_sensor_1, false);
       // todo : send sensor 2
     }
 
