@@ -5,7 +5,24 @@
 #include <errno.h>
 #include <stdint.h>
 
+#define RADIO_BUFFER_TEMPERATURE_LEN(SRC_LEN) (((SRC_LEN) * 2) + 1)
+#define RADIO_TEMPERATURE_VALUES              5
+#define RADIO_DEBUG_DECODE                    (1)
+
+typedef enum {
+    AUTHENTICATION,
+    SENSORS_TEMPERATURE_1,
+    SENSORS_TEMPERATURE_2,
+    SENSORS_TEMPERATURE_3,
+    SENSORS_TEMPERATURE_4,
+    SENSORS_RS232_1,
+ } radio_data_info_field;
+ 
+
+#define PAYLOAD_SENSOR_LENGTH 15 // todo
+
 typedef struct {
+  radio_data_info_field info_field : 8;
     temperature_measurement_t measurement;
     uint8_t measurement_byte[2];
     uint8_t index;

@@ -371,14 +371,15 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   unsigned int frame_length = 0;
 
   // -- data to send
-  // todo : upperlimit check
   // Up to 0x70 to keep below the values to be escaped
   radio_data_temperature_t data_temperature;
+  //  data_temperature.info_field = SENSORS_TEMPERATURE_1;
   error_t error;
 
   // -- fill data to send
   // Content info field
-  send_data[0] = 0x01;
+  // note : direct usage?
+  send_data[0] = SENSORS_TEMPERATURE_1;
   data_temperature.index += 1;
 
   // Measurement values
