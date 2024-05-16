@@ -59,7 +59,7 @@ static void uart_wait(void) {
  * @brief Enter the configuration state. Change from IDLE to CONFIG state.
  */
 static void enter_config_state(void) {
-  McuLog_trace("Enter config state");
+  McuLog_trace("[rc232] Enter config state");
 #if LOG_LEVEL_DEBUG
   McuLog_debug("Config pin low");
 #endif
@@ -72,7 +72,7 @@ static void enter_config_state(void) {
  * fixme : maybe clear buffer after command
  */
 void exit_config_state(void) {
-  McuLog_trace("Exit config state");
+  McuLog_trace("[rc232] Exit config state");
 #if LOG_LEVEL_DEBUG
   McuLog_debug("Config pin high");
   McuLog_debug("Send X to radio");
@@ -143,7 +143,7 @@ void rc232_init() {
  *
  */
 void rc232_reset(void) {
-  McuLog_trace("Reset radio");
+  McuLog_trace("[rc232] Reset radio");
   gpio_put(PL_GPIO_RADIO_RESET, false);
   sleep_ms(100);
   gpio_put(PL_GPIO_RADIO_RESET, true);
@@ -153,13 +153,14 @@ void rc232_reset(void) {
  * @brief Transmit string
  */
 void rc232_tx_packet_string(const uint8_t *message, bool dryrun) {
+  McuLog_trace("[rc232] TX data (string) \n");
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
     return;
   }
 
   // RXD
-  McuLog_trace("[RC232] Send message : %s", message);
+  McuLog_trace("[rc232] Send message : %s", message);
   if (!dryrun) {
     // todo : check implicit CR/LF conversion in uart_puts i.e. uart_putc
     uart_puts(UART_RADIO_ID, message);
@@ -185,6 +186,7 @@ void rc232_tx_packet_string(const uint8_t *message, bool dryrun) {
  * @brief Transmit bytes
  */
 void rc232_tx_packet_bytes(uint8_t *bytes, size_t length, bool dryrun) {
+  McuLog_trace("[rc232] TX data (bytes) \n");
   if (!uart_is_writable(UART_RADIO_ID)) {
     McuLog_error("Radio UART not writable");
     return;
@@ -192,7 +194,7 @@ void rc232_tx_packet_bytes(uint8_t *bytes, size_t length, bool dryrun) {
 
   // RXDprint_binary
   for (uint8_t i = 0; i < length; i++) {
-    McuLog_trace("[RC232] Send byte : %u \n", bytes[i]);
+    McuLog_trace("[rc232] Send byte : %u \n", bytes[i]);
   }
   if (!dryrun) {
     uart_write_blocking(UART_RADIO_ID, bytes, length);
@@ -226,7 +228,7 @@ void rc232_rx_read_buffer_full(void) {
   uint8_t rec_buffer[1];
   while (uart_is_readable(UART_RADIO_ID)) {
     uart_read_blocking(UART_RADIO_ID, rec_buffer, 1);
-    McuLog_trace("Received %s from radio\n", rec_buffer);
+    McuLog_trace("[rc232] Received %s from radio\n", rec_buffer);
     printf("Received %s from radio\n", rec_buffer);
   }
 }
@@ -362,7 +364,7 @@ void rc232_read_temperature(void) {
   // -- Send : Command byte
   // uart_write_blocking(UART_ID, &pre, 1);
   uart_puts(UART_RADIO_ID, "U");
-  McuLog_trace("Send U to radio");
+  McuLog_trace("[rc232] Send U to radio");
   uart_wait();
 
   // -- Receive : 1byte value + Prompt ('>')
@@ -370,14 +372,14 @@ void rc232_read_temperature(void) {
   uint8_t rec_buffer[buffer_size];
   uart_read_blocking(UART_RADIO_ID, rec_buffer, buffer_size);
   for (uint8_t i = 0; i < buffer_size; i++) {
-    McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
+    McuLog_trace("[rc232] Radio received [%d] : %d \n", i, rec_buffer[i]);
   }
 
   check_config_prompt(rec_buffer[1]);
 
   // Temperature calculation
   uint8_t temperature = rec_buffer[0] - 128;
-  McuLog_trace("Temperature is : %d", temperature);
+  McuLog_trace("[rc232] Temperature is : %d", temperature);
 #if PRINTF
   printf("Temperature is : %d\n", temperature);
 #endif
@@ -401,7 +403,7 @@ void rc232_read_voltage(void) {
   // -- Send : Command byte
   // uart_write_blocking(UART_ID, &pre, 1);
   uart_puts(UART_RADIO_ID, "V");
-  McuLog_trace("Send U to radio");
+  McuLog_trace("[rc232] Send U to radio");
   uart_wait();
 
   // -- Receive : 1byte value + Prompt ('>')
@@ -409,14 +411,14 @@ void rc232_read_voltage(void) {
   uint8_t rec_buffer[buffer_size];
   uart_read_blocking(UART_RADIO_ID, rec_buffer, buffer_size);
   for (uint8_t i = 0; i < buffer_size; i++) {
-    McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
+    McuLog_trace("[rc232] Radio received [%d] : %d \n", i, rec_buffer[i]);
   }
 
   check_config_prompt(rec_buffer[1]);
 
   // Voltage calculation
   uint8_t voltage = rec_buffer[0] * 0.030;
-  McuLog_trace("Voltage is : %d", voltage);
+  McuLog_trace("[rc232] Voltage is : %d", voltage);
 #if PRINTF
   printf("Voltage is : %d\n", voltage);
 #endif
@@ -443,7 +445,7 @@ uint8_t rc232_signal_strength_indicator(void) {
   // -- Send : Command byte
   // uart_write_blocking(UART_ID, &pre, 1);
   uart_puts(UART_RADIO_ID, "S");
-  McuLog_trace("Send S to radio");
+  McuLog_trace("[rc232] Send S to radio");
   uart_wait();
 
   // -- Receive : 1byte value + Prompt ('>')
@@ -451,14 +453,14 @@ uint8_t rc232_signal_strength_indicator(void) {
   uint8_t rec_buffer[buffer_size];
   uart_read_blocking(UART_RADIO_ID, rec_buffer, buffer_size);
   for (uint8_t i = 0; i < buffer_size; i++) {
-    McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
+    McuLog_trace("[rc232] Radio received [%d] : %d \n", i, rec_buffer[i]);
   }
 
   check_config_prompt(rec_buffer[1]);
 
   // -- Signal strenght calculation
   uint8_t rssi = rec_buffer[0];
-  McuLog_trace("RSSI is : %d", rssi);
+  McuLog_trace("[rc232] RSSI is : %d", rssi);
 #if PRINTF
   printf("RSSI is : %d\n", rssi);
 #endif
@@ -486,7 +488,7 @@ void rc232_sleep(void) {
   // -- Send : Command byte
   // uart_write_blocking(UART_ID, &pre, 1);
   uart_puts(UART_RADIO_ID, "Z");
-  McuLog_trace("Send Z to radio");
+  McuLog_trace("[rc232] Send Z to radio");
   uart_wait();
   // don't exit config state. i.e hold gpio low.
 }
@@ -504,7 +506,7 @@ uint8_t wait_config_prompt(void) {
 
   uint8_t rec_prompt[1];
   uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
-  McuLog_trace("Received %d from radio\n", rec_prompt[0]);
+  McuLog_trace("[rc232] Received %d from radio\n", rec_prompt[0]);
   return check_config_prompt(rec_prompt[0]);
 }
 
@@ -523,7 +525,7 @@ void rc232_get_configuration_memory(void) {
 
   // -- Send : Command byte
   uart_puts(UART_RADIO_ID, "0");
-  McuLog_trace("Send 0 to radio");
+  McuLog_trace("[rc232] Send 0 to radio");
   uart_wait();
 
   // Readout buffer
@@ -569,8 +571,8 @@ void rc232_memory_read_one_byte(uint8_t address) {
 
   // -- Send : Command byte
   uart_puts(UART_RADIO_ID, "Y");
-  // McuLog_trace("Send Y to radio");
-  McuLog_trace("Get NVM byte from radio");
+  // McuLog_trace("[rc232] Send Y to radio");
+  McuLog_trace("[rc232] Get NVM byte from radio");
   if (wait_config_prompt() == ERR_FAULT) {
     return;
   }
@@ -580,7 +582,7 @@ void rc232_memory_read_one_byte(uint8_t address) {
 #if PRINTF
   printf("address: 0x%02hhX (%d)\n", address, address);
 #endif
-  McuLog_trace("address: %d", address);
+  McuLog_trace("[rc232] address: %d", address);
   uart_wait();
 
   // -- Receive : 1byte value + Prompt ('>')
@@ -595,7 +597,7 @@ for (uint8_t i = 0; i < buffer_size; i++) {
 #if PRINTF
   printf("config value : %d \n", rec_buffer[0]);
 #endif
-  McuLog_trace("config value : %d \n", rec_buffer[0]);
+  McuLog_trace("[rc232] config value : %d \n", rec_buffer[0]);
 
   exit_config_state();
 }
@@ -640,8 +642,8 @@ void rc232_memory_write_configuration(void) {
   // -- Send : Memory configuration state
   uart_puts(UART_RADIO_ID, "M");
   uart_wait();
-  McuLog_trace("Send M to radio");
-  McuLog_trace("Memory configuration state !");
+  McuLog_trace("[rc232] Send M to radio");
+  McuLog_trace("[rc232] Memory configuration state !");
 
   /* AVOID MULTIPLE WRITES <--
   // Configuration parameters {address, data}
@@ -649,21 +651,21 @@ void rc232_memory_write_configuration(void) {
   unsigned char config_channel[] = {NVM_ADDR_RF_CHANNEL, 5};
   uart_write_blocking(UART_RADIO_ID, config_channel, 2);
   uart_wait();
-  McuLog_trace("Config NVM : RF Channel (Addr : %d, Value : %d)",
+  McuLog_trace("[rc232] Config NVM : RF Channel (Addr : %d, Value : %d)",
                config_channel[0], config_channel[1]);
 
   // -- RF Power
   unsigned char config_power[] = {NVM_ADDR_RF_POWER, 1};
   uart_write_blocking(UART_RADIO_ID, config_power, 2);
   uart_wait();
-  McuLog_trace("Config NVM : RF Power (Addr : %d, Value : %d)", config_power[0],
+  McuLog_trace("[rc232] Config NVM : RF Power (Addr : %d, Value : %d)", config_power[0],
                config_power[1]);
 
   // -- RF Data rate
   // 4 : 1.2kbit/s
   unsigned char config_data_rate[] = {NVM_ADDR_RF_DATA_RATE, 4};
   uart_write_blocking(UART_RADIO_ID, config_data_rate, 2);
-  McuLog_trace("Config NVM : Data rate (Addr : %d, Value : %d)",
+  McuLog_trace("[rc232] Config NVM : Data rate (Addr : %d, Value : %d)",
                config_data_rate[0], config_data_rate[1]);
   uart_wait();
 
@@ -671,28 +673,28 @@ void rc232_memory_write_configuration(void) {
   unsigned char config_led[] = {NVM_ADDR_LED_CONTROL, 1};
   uart_write_blocking(UART_RADIO_ID, config_led, 2);
   uart_wait();
-  McuLog_trace("Config NVM : Led Control (Addr : %d, Value : %d)",
+  McuLog_trace("[rc232] Config NVM : Led Control (Addr : %d, Value : %d)",
                config_led[0], config_led[1]);
 
   // -- Unique ID
   unsigned char config_unique_id[] = {NVM_ADDR_UID, 6};
   uart_write_blocking(UART_RADIO_ID, config_unique_id, 2);
   uart_wait();
-  McuLog_trace("Config NVM : Unique ID (UID) (Addr : %d, Value : %d)",
+  McuLog_trace("[rc232] Config NVM : Unique ID (UID) (Addr : %d, Value : %d)",
                config_unique_id[0], config_unique_id[1]);
 
   // -- System ID
   unsigned char config_system_id[] = {NVM_ADDR_SID, 1};
   uart_write_blocking(UART_RADIO_ID, config_system_id, 2);
   uart_wait();
-  McuLog_trace("Config NVM : System ID (SID) (Addr : %d, Value : %d)",
+  McuLog_trace("[rc232] Config NVM : System ID (SID) (Addr : %d, Value : %d)",
                config_system_id[0], config_system_id[1]);
 
   // -- Destination ID
   unsigned char config_destination_id[] = {NVM_ADDR_DID, 20};
   uart_write_blocking(UART_RADIO_ID, config_destination_id, 2);
   uart_wait();
-  McuLog_trace("Config NVM : Destination ID (DID) (Addr : %d, Value : %d)",
+  McuLog_trace("[rc232] Config NVM : Destination ID (DID) (Addr : %d, Value : %d)",
                config_destination_id[0], config_destination_id[1]);
 
   // -- Packet end character
@@ -701,21 +703,21 @@ void rc232_memory_write_configuration(void) {
   unsigned char config_packet_end_char[] = {NVM_ADDR_PACKET_END_CHAR, 0x00};
   uart_write_blocking(UART_RADIO_ID, config_packet_end_char, 2);
   uart_wait();
-  McuLog_trace("Config NVM : Packet end character (Addr : %d, Value : %d)",
+  McuLog_trace("[rc232] Config NVM : Packet end character (Addr : %d, Value : %d)",
                config_packet_end_char[0], config_packet_end_char[1]);
 
   // -- Address mode
   unsigned char config_address_mode[] = {NVM_ADDR_ADDRESS_MODE, 0x02};
   uart_write_blocking(UART_RADIO_ID, config_address_mode, 2);
   uart_wait();
-  McuLog_trace("Config NVM : Packet end character (Addr : %d, Value : %d)",
+  McuLog_trace("[rc232] Config NVM : Packet end character (Addr : %d, Value : %d)",
                config_address_mode[0], config_address_mode[1]);
 
   // -- CRC mode
   unsigned char config_crc[] = {NVM_ADDR_CRC, 0x02};
   uart_write_blocking(UART_RADIO_ID, config_crc, 2);
   uart_wait();
-  McuLog_trace("Config NVM : CRC mode (Addr : %d, Value : %d)", config_crc[0],
+  McuLog_trace("[rc232] Config NVM : CRC mode (Addr : %d, Value : %d)", config_crc[0],
                config_crc[1]);
 
   // -- UART
@@ -727,7 +729,7 @@ void rc232_memory_write_configuration(void) {
   unsigned char config_uart_flow[] = {NVM_ADDR_UART_FW_CTRL, 0x01};
   uart_write_blocking(UART_RADIO_ID, config_uart_flow, 2);
   uart_wait();
-  McuLog_trace("Config NVM : UART HW flow control (Addr : %d, Value : %d)",
+  McuLog_trace("[rc232] Config NVM : UART HW flow control (Addr : %d, Value : %d)",
                config_uart_flow[0], config_uart_flow[1]);
   */ // --> AVOID MULIPLE WRITES
 
@@ -737,7 +739,7 @@ void rc232_memory_write_configuration(void) {
   unsigned char cmdExit[] = {NVM_CMD_EXIT};
   uart_write_blocking(UART_RADIO_ID, cmdExit, 1);
   // uart_write_blocking(UART_RADIO_ID, data1, sizeof(data1));
-  McuLog_trace("Send %d to radio", cmdExit[0]);
+  McuLog_trace("[rc232] Send %d to radio", cmdExit[0]);
 
   sleep_ms(t_MEMORY_CONFIG_MS);
 
@@ -749,5 +751,5 @@ void rc232_memory_write_configuration(void) {
   rc232_rx_read_buffer_full();
 
   exit_config_state();
-  McuLog_trace("Exit memory configuration state !");
+  McuLog_trace("[rc232] Exit memory configuration state !");
 }
