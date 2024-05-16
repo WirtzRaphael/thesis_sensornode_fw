@@ -14,6 +14,7 @@ static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len);
 static void log_print_buffer_as_char(uint8_t *buffer, size_t length);
 void radio_authentication(void);
 void radio_encoding_cobs_example(void);
+void radio_encoding_hdlc_example(void);
 static void radio_send_authentication_request(void);
 static error_t radio_wait_for_authentication_response(uint32_t timeout_ms);
 /*

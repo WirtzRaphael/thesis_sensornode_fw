@@ -67,11 +67,11 @@ typedef enum { SENSOR_TEMPERATURE, AUTHENTICATION } PAYLOAD_CONTENT;
 typedef struct {
   uint8_t command : 4;
   uint8_t command_parameter : 4;
-  //size_t payload_length : 4;
+  // size_t payload_length : 4;
 } payload_header;
 
 #define PAYLOAD_SENSOR_LENGTH 15
-//static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
+// static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
 
 static void vRadioTask(void *pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -344,8 +344,17 @@ void radio_send_temperature_as_string(
   rc232_tx_packet_string(buffer, dryrun);
 }
 
-
-// reference : https://github.com/bang-olufsen/yahdlc/blob/master/C/test/yahdlc_test.cpp
+/**
+ * @brief Send temperature values as bytes.
+ *
+ * - use HDLC-Lite for encoding
+ * todo : always read out fix number of sensor values / readout queue
+ * todo : change, compress format / algorithm to reduce number of temperatures
+ * todo : typedef / enum
+ * todo : error code return
+ * reference :
+ * https://github.com/bang-olufsen/yahdlc/blob/master/C/test/yahdlc_test.cpp
+ */
 void radio_send_temperature_as_bytes(
     temperature_measurement_t *temperature_measurement, bool dryrun) {
   // -- temperature values
@@ -357,15 +366,54 @@ void radio_send_temperature_as_bytes(
   char frame_data[24];
   unsigned int i, frame_length = 0;
 
-  // Initialize data to be send with random values (up to 0x70 to keep below the
-  // values to be escaped)
-  printf("Data to be sent: ");
+  uint8_t temperature_16LE_byte[2] = {0};
+  McuUtility_SetValue16LE(0xCA, temperature_16LE_byte);
+  uint8_t temperature_16LE_byte2[2] = {0};
+  McuUtility_SetValue16LE(0xA0, temperature_16LE_byte2);
+
+  // -- data to send
+  // Up to 0x70 to keep below the values to be escaped
   send_data[0] = 0x01;
   send_data[1] = 0x30;
   send_data[2] = 0x30;
   send_data[3] = 0xA4;
+
+  printf("Data to be sent: ");
+  log_hdlc_data(send_data, sizeof(send_data));
+
+  // -- encoding
+  // Initialize control field structure and create frame
+  control.frame = YAHDLC_FRAME_DATA;
+  ret = yahdlc_frame_data(&control, send_data, sizeof(send_data), frame_data,
+                          &frame_length);
+  log_hdlc_encoded(frame_data, frame_length);
+
+  // -- decode
+  char recv_data[24];
+  unsigned int recv_length = 0; // todo : data type
+  // Decode the data up to end flag sequence byte which should return no valid
+  ret = yahdlc_get_data(&control, frame_data, frame_length - 1, recv_data,
+                        &recv_length);
+  // Decode the end flag sequence byte which should result in a decoded frame
+  ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1, recv_data,
+                        &recv_length);
+  log_hdlc_decoded(recv_data, recv_length);
+}
+
+void radio_encoding_hdlc_example(void) {
+  // -- temperature values
+  int ret;
+  yahdlc_control_t control;
+  control.frame = YAHDLC_FRAME_DATA;
+  char send_data[16];
+  char frame_data[24];
+  unsigned int i, frame_length = 0;
+
+  // Initialize data to be send with random values (up to 0x70 to keep below
+  // the values to be escaped)
+  printf("Data to be sent: ");
   for (i = 0; i < sizeof(send_data); i++) {
-    //send_data[i] = (char)(rand() % 0x70);
+    // send_data[i] = (char)(rand() % 0x70);
     printf("%c", send_data[i]);
     printf("%d", send_data[i]);
   }
@@ -428,6 +476,7 @@ static void print_bits_of_byte(uint8_t byte, bool print) {
  * @note 1% resolution for tmp117 with +/- 0.1°C accuracy
  * fixme : data loss conversion (eg. 26.03 -> 2600) / overflow multiplication?
  * todo : check accuracy 16/32 bit
+ * todo : change range, start values from 0 and in range of sensor.
  */
 static void convert_temperature_to_byte(
     uint8_t *data_16LE_byte,

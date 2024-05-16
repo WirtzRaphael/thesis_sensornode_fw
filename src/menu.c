@@ -112,7 +112,7 @@ void menu_handler_radio(void) {
     radio_authentication();
     break;
   case 'c':
-    radio_encoding_cobs_example();
+    radio_encoding_hdlc_example();
     break;
   case 's':
     // radio_send_temperature_as_string();
