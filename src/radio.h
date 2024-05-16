@@ -8,11 +8,9 @@
 
 static void convert_temperature_to_byte(uint8_t *data_16LE_byte,
                                  temperature_measurement_t *temperature_measurement);
-static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
-                             cobs_encode_result encoded_result);
-static void log_cobs_decoded(uint8_t *decoded_payload_byte_ptr,
-                             cobs_decode_result decoded_result);
-static void log_cobs_payload(uint8_t *payload_byte_ptr, size_t length);
+static void log_hdlc_data(uint8_t *data_ptr, size_t send_data);
+static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len);
+static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len);
 static void log_print_buffer_as_char(uint8_t *buffer, size_t length);
 void radio_authentication(void);
 void radio_encoding_cobs_example(void);

@@ -442,47 +442,49 @@ static void convert_temperature_to_byte(
   print_bits_of_byte(data_16LE_byte[0], true);
 }
 
-/**
- * @brief Log info of payload for cobs encoding
- *
- * @param payload_cobs
- * @param index
- */
-static void log_cobs_payload(uint8_t *payload_byte_ptr, size_t length) {
-  RADIO_LOG_OUTPUT("[payload]  -> data : %d \n", *(payload_byte_ptr));
-  RADIO_LOG_OUTPUT("[payload]  -> data : ");
-  print_bits_of_byte(*(payload_byte_ptr), true);
-  RADIO_LOG_OUTPUT("[payload]  -> length: %d\n", length);
+static void log_hdlc_data(uint8_t *data_ptr, size_t data_len) {
+  RADIO_LOG_OUTPUT("[hdlc] ==> Data to send \n");
+  RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
+  for (uint8_t i = 0; i < data_len; i++) {
+    RADIO_LOG_OUTPUT("%c", data_ptr[i]);
+  }
+  RADIO_LOG_OUTPUT("\n[hdlc]  -> int : ");
+  for (uint8_t i = 0; i < data_len; i++) {
+    RADIO_LOG_OUTPUT("%d", data_ptr[i]);
+  }
+  RADIO_LOG_OUTPUT("\n[hdlc]  -> bin : ");
+  print_bits_of_byte(*(data_ptr), true);
+  RADIO_LOG_OUTPUT("[hdlc]  -> length: %d\n", data_len);
 }
 
-/**
- * @brief Log info of encoded payload for cobs encoding
- *
- * @param encoded_payload_byte_ptr
- * @param encoded_result
- */
-static void log_cobs_encoded(uint8_t *encoded_payload_byte_ptr,
-                             cobs_encode_result encoded_result) {
-  RADIO_LOG_OUTPUT("[encoded]  -> data : %u \n", *(encoded_payload_byte_ptr));
-  // fixme : wrong value data
-  RADIO_LOG_OUTPUT("[encoded]  -> data : ");
-  print_bits_of_byte(*(encoded_payload_byte_ptr), true);
-  RADIO_LOG_OUTPUT("[encoded]  -> length: %d\n", encoded_result.out_len);
+static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len) {
+  RADIO_LOG_OUTPUT("[hdlc] ==> Data encoded \n");
+  RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
+  for (uint8_t i = 0; i < encoded_len; i++) {
+    RADIO_LOG_OUTPUT("%c", encoded_ptr[i]);
+  }
+  RADIO_LOG_OUTPUT("\n[hdlc]  -> int : ");
+  for (uint8_t i = 0; i < encoded_len; i++) {
+    RADIO_LOG_OUTPUT("%d", encoded_ptr[i]);
+  }
+  RADIO_LOG_OUTPUT("\n[hdlc]  -> bin : ");
+  print_bits_of_byte(*(encoded_ptr), true);
+  RADIO_LOG_OUTPUT("\n[hdlc]  -> length: %d\n", encoded_len);
 }
 
-/**
- * @brief Log info of decoded payload for cobs encoding
- *
- * @param decoded_payload_byte_ptr
- * @param decoded_result
- */
-static void log_cobs_decoded(uint8_t *decoded_payload_byte_ptr,
-                             cobs_decode_result decoded_result) {
-  // fixme : wrong value data
-  RADIO_LOG_OUTPUT("[decoded]  -> data : %u \n", *(decoded_payload_byte_ptr));
-  RADIO_LOG_OUTPUT("[decoded]  -> data : ");
-  print_bits_of_byte(*(decoded_payload_byte_ptr), true);
-  RADIO_LOG_OUTPUT("[decoded]  -> length: %d\n", decoded_result.out_len);
+static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len) {
+  RADIO_LOG_OUTPUT("[hdlc] ==> Data decoded \n");
+  RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
+  for (uint8_t i = 0; i < decoded_len; i++) {
+    RADIO_LOG_OUTPUT("%c", decoded_ptr[i]);
+  }
+  RADIO_LOG_OUTPUT("\n[hdlc]  -> int : ");
+  for (uint8_t i = 0; i < decoded_len; i++) {
+    RADIO_LOG_OUTPUT("%d", decoded_ptr[i]);
+  }
+  RADIO_LOG_OUTPUT("\n[hdlc]  -> bin : ");
+  print_bits_of_byte(*(decoded_ptr), true);
+  RADIO_LOG_OUTPUT("\n[hdlc]  -> length: %d\n", decoded_len);
 }
 
 static void log_print_buffer_as_char(uint8_t *buffer, size_t length) {
