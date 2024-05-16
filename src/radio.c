@@ -67,7 +67,7 @@ typedef struct {
   const uint8_t *data_ptr;
   size_t data_len;
   const char *description_ptr;
-} cobs_data_info;
+}cobs_data_info;
 
 typedef struct {
   const uint8_t *data_ptr;
@@ -76,6 +76,8 @@ typedef struct {
   size_t encoded_len;
   const char *description_ptr;
 } cobs_data_info_2;
+
+
 
 static const cobs_data_info_2 payload_bytes_test[] = {
     {"", 0, "\x01", 1, "Empty"},
@@ -118,11 +120,11 @@ static const cobs_data_info_2 payload_bytes_test[] = {
 typedef struct {
   uint8_t command : 4;
   uint8_t command_parameter : 4;
-  // size_t payload_length : 4;
+  //size_t payload_length : 4;
 } payload_header;
 
 #define PAYLOAD_SENSOR_LENGTH 15
-// static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
+//static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
 
 static void vRadioTask(void *pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();

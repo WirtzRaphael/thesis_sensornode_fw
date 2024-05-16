@@ -1,0 +1,63 @@
+[23:50:27.257] tio v3.2
+[23:50:27.257] Press ctrl-t q to quit
+[23:50:27.258] Connected to /dev/ttyACM0
+[app] Semaphore give B
+[radio] Semaphore take Button B
+[radio] Send sensors values 
+[send] ==> create payload
+[send] ==> encoding 
+[send]  -> encoding ok
+[send]  -> decoding ok
+[payload]  -> description : Empty
+[payload]  -> data :  (char) | 0 
+[payload]  -> length : 0
+[decoded]  -> data : 191 
+[decoded]  -> data : 1100111111111111
+[decoded]  -> length: 0
+[decoded] data : � (char) | 191 
+[send]  -> encoding ok
+[send]  -> decoding ok
+[payload]  -> description : Header
+[payload]  -> data : 5 (char) | 53 
+[payload]  -> length : 1
+[decoded]  -> data : 53 
+[decoded]  -> data : 0000111100110011
+[decoded]  -> length: 1
+[decoded] data : T (char) | 84 
+[send]  -> encoding ok
+[send]  -> decoding ok
+[payload]  -> description : Test
+[payload]  -> data : 3 (char) | 51 
+[payload]  -> length : 1
+[decoded]  -> data : 51 
+[decoded]  -> data : 0000111100001111
+[decoded]  -> length: 1
+[decoded] data :  (char) | 0 
+[send]  -> encoding ok
+[send]  -> decoding ok
+[payload]  -> description : Temperature 1
+[payload]  -> data : � (char) | 202 
+[payload]  -> length : 2
+[decoded]  -> data : 202 
+[decoded]  -> data : 1111000011001100
+[decoded]  -> length: 2
+[decoded] data :   (char) | 32 
+[send]  -> encoding ok
+[send]  -> decoding ok
+[payload]  -> description : Temperature 2
+[payload]  -> data : � (char) | 160 
+[payload]  -> length : 1
+[decoded]  -> data : 160 
+[decoded]  -> data : 1100110000000000
+[decoded]  -> length: 1
+[decoded] data :  (char) | 1 
+[send]  -> encoding ok
+[send]  -> decoding ok
+[payload]  -> description : Temperature 2
+[payload]  -> data :  (char) | 0 
+[payload]  -> length : 1
+[decoded]  -> data : 0 
+[decoded]  -> data : 0000000000000000
+[decoded]  -> length: 1
+[decoded] data :  (char) | 0 
+1��T �_�3 �U 
