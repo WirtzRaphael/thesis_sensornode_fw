@@ -1,6 +1,7 @@
 #ifndef RADIO_H_
 #define RADIO_H_
 
+#include "pico/types.h"
 #include "sensors.h"
 #include <errno.h>
 #include <stdint.h>
@@ -10,19 +11,21 @@
 #define RADIO_DEBUG_DECODE                    (1)
 
 typedef enum {
-    AUTHENTICATION,
-    SENSORS_TEMPERATURE_1,
-    SENSORS_TEMPERATURE_2,
-    SENSORS_TEMPERATURE_3,
-    SENSORS_TEMPERATURE_4,
-    SENSORS_RS232_1,
- } radio_data_info_field;
- 
-
-#define PAYLOAD_SENSOR_LENGTH 15 // todo
+  AUTHENTICATION,
+  SENSORS_TEMPERATURE_1,
+  SENSORS_TEMPERATURE_2,
+  SENSORS_TEMPERATURE_3,
+  SENSORS_TEMPERATURE_4,
+  SENSORS_RS232_1,
+} data_content;
 
 typedef struct {
-  radio_data_info_field info_field : 8;
+  uint8_t protocol_version : 3;
+  data_content data_content : 5;
+} data_info_field;
+
+typedef struct {
+  data_info_field data_info;
   temperature_measurement_t measurement;
   uint8_t measurement_byte[2];
   uint8_t index;
@@ -33,13 +36,14 @@ typedef struct {
 } radio_data_temperature_t;
 
 typedef struct {
-    // volatile
-    uint8_t channel_id;
-    uint8_t destination_address;
-    uint8_t source_address;
-    // fix values
-    uint8_t channel_start;
-    uint8_t channel_end;
+  // volatile
+  uint8_t destination_address;
+  uint8_t source_address;
+  // fix values
+  uint8_t channel_id;
+  uint8_t channel_default;
+  uint8_t channel_start;
+  uint8_t channel_end;
 } rf_settings_t;
 
 static void
@@ -58,6 +62,7 @@ void radio_init(void);
 void radio_send_temperature_as_string(
     temperature_measurement_t *temperature_measurement, bool dryrun);
 error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
+                                        data_info_field data_info_field,
                                         bool dryrun);
 void radio_send_test_string(void);
 char radio_get_rf_destination_address(void);

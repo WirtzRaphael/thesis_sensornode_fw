@@ -30,6 +30,7 @@
 #include "rc232.h"
 #include "sensors.h"
 
+#define PROTOCOL_VERSION         (1)
 #define PROTOCOL_AUTH_SIZE_BYTES (10)
 #define RF_CHANNEL_DEFAULT       (1)
 
@@ -49,7 +50,8 @@
 static rf_settings_t rf_settings = {
     .destination_address = 20,
     .source_address = 99,
-    .channel_id = RF_CHANNEL_DEFAULT,
+    .channel_id = 1,
+    .channel_default = 1,
     .channel_start = 1,
     .channel_end = 10,
 };
@@ -89,12 +91,20 @@ static void vRadioTask(void *pvParameters) {
       // todo : readout all values queue
       // todo : case empty queue / no new value / nothing to send
       temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
+      data_info_field data_info_temperature_1 = {PROTOCOL_VERSION,
+                                                 SENSORS_TEMPERATURE_1};
       sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
                                          &temperature_measurement_sensor1);
-      // radio_send_temperature_as_string(&temperature_measurement_sensor1,
-      // true);
-      radio_send_temperature_as_bytes(xQueue_temperature_sensor_1, false);
-      // todo : send sensor 2
+      radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
+                                      data_info_temperature_1, false);
+      temperature_measurement_t temperature_measurement_sensor2 = {0, 0, 0};
+      data_info_field data_info_temperature_2 = {PROTOCOL_VERSION,
+                                                 SENSORS_TEMPERATURE_2};
+      sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
+                                         &temperature_measurement_sensor2);
+      radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
+                                      data_info_temperature_2, false);
+
     }
 
     //  printf("radio killed the video star.");
@@ -152,8 +162,8 @@ void radio_authentication(void) {
   rf_settings.channel_start = RC1701_RF_CHANNEL_MIN;
   rf_settings.channel_end = RC1701_RF_CHANNEL_MAX;
 #else // only default channel
-  rf_settings.channel_start = RF_CHANNEL_DEFAULT;
-  rf_settings.channel_end = RF_CHANNEL_DEFAULT;
+  rf_settings.channel_start = rf_settings.channel_default;
+  rf_settings.channel_end = rf_settings.channel_default;
 #endif
 
   // check channel range
@@ -346,11 +356,17 @@ void radio_send_temperature_as_string(
  * -
  * todo : change, compress format / algorithm to reduce number of temperatures
  * todo : refactor
+ * todo : multiple sensors !
  * reference :
  * https://github.com/bang-olufsen/yahdlc/blob/master/C/test/yahdlc_test.cpp
  */
 error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
+                                        data_info_field data_info_field,
                                         bool dryrun) {
+  if (!data_info_field.protocol_version || !data_info_field.data_content) {
+    McuLog_error("[radio] invalid data info field parameters\n");
+    return ERR_PARAM_DATA;
+  }
   // -- temperature values
   int hdlc_ret;
   yahdlc_control_t control;
@@ -362,15 +378,15 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
 
   // -- data to send
   // Up to 0x70 to keep below the values to be escaped
-  radio_data_temperature_t data_temperature;
   //  data_temperature.info_field = SENSORS_TEMPERATURE_1;
   error_t error;
 
   // -- fill data to send
   // Content info field
   // note : direct usage?
-  send_data[0] = SENSORS_TEMPERATURE_1;
-  data_temperature.index += 1;
+  send_data[0] = send_data[1] = SENSORS_TEMPERATURE_1;
+  data_temperature.index++;
+  data_temperature.index++;
 
   // Measurement values
   // reads multiple values from queue until buffer full or queue empty
@@ -396,6 +412,11 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
         data_temperature.measurement_byte[1];
   }
   log_hdlc_data(send_data, sizeof(send_data));
+
+  if (data_temperature.index <= data_temperature.temperature_index) {
+    McuLog_error("[radio] No new temperature value received\n");
+    return ERR_NOTAVAIL;
+  }
 
   // -- encoding
   // Initialize control field structure and create frame
