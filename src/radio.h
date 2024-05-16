@@ -23,21 +23,24 @@ typedef enum {
 
 typedef struct {
   radio_data_info_field info_field : 8;
-    temperature_measurement_t measurement;
-    uint8_t measurement_byte[2];
-    uint8_t index;
-    uint8_t temperature_index;
-    //uint8_t start_index;
-    //uint8_t end_index;
-    //uint8_t src_index;
-}radio_data_temperature_t;;
+  temperature_measurement_t measurement;
+  uint8_t measurement_byte[2];
+  uint8_t index;
+  uint8_t temperature_index;
+  // uint8_t start_index;
+  // uint8_t end_index;
+  // uint8_t src_index;
+} radio_data_temperature_t;
 
-/*
 typedef struct {
-    uint8_t info_field: 5;
-    uint8_t parameter : 3;
-}radio_data_info_t;
-*/
+    // volatile
+    uint8_t channel_id;
+    uint8_t destination_address;
+    uint8_t source_address;
+    // fix values
+    uint8_t channel_start;
+    uint8_t channel_end;
+} rf_settings_t;
 
 static void
 convert_temperature_to_byte(uint8_t *data_16LE_byte,

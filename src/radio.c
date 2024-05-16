@@ -48,10 +48,14 @@
   #define dimof(X) (sizeof(X) / sizeof((X)[0]))
 #endif
 
-// todo struct
-int rf_channel_start = 0;
-int rf_channel_end = 0;
-char rf_channel = RF_CHANNEL_DEFAULT;
+// todo refactor (get set ?, no define) / Init ?
+static rf_settings_t rf_settings = {
+    .destination_address = RF_DESTINATION_ADDR_DEFAULT,
+    .source_address = 99,
+    .channel_id = RF_CHANNEL_DEFAULT,
+    .channel_start = RF_CHANNEL_MIN,
+    .channel_end = RF_CHANNEL_MAX,
+};
 char rf_destination_address = RF_DESTINATION_ADDR_DEFAULT;
 
 // check : init temperature values etc.?
@@ -65,18 +69,6 @@ static uint16_t radio_time_intervals_ms = 500;
 pico_unique_board_id_t pico_uid = {0};
 char pico_uid_string[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 +
                      1]; // Each byte to two hex chars + null terminator
-
-typedef enum { SENSOR_TEMPERATURE, AUTHENTICATION } PAYLOAD_CONTENT;
-
-// todo : refactor
-typedef struct {
-  uint8_t command : 4;
-  uint8_t command_parameter : 4;
-  // size_t payload_length : 4;
-} payload_header;
-
-#define PAYLOAD_SENSOR_LENGTH 15
-// static payload_header payload_header_temperature = {SENSOR_TEMPERATURE, 15};
 
 static void vRadioTask(void *pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -141,7 +133,7 @@ void radio_init(void) {
  *
  * @return char
  */
-char radio_get_rf_destination_address(void) { return rf_destination_address; }
+char radio_get_rf_destination_address(void) { return rf_settings.destination_address; }
 
 /**
  * @brief Scan radio network and authenticate.
@@ -161,22 +153,22 @@ void radio_authentication(void) {
   McuLog_trace("radio : Scan network and authenticate\n");
 
 #if SCAN_CHANNELS_FOR_CONNECTION
-  channel_start = RC1701_RF_CHANNEL_MIN;
-  channel_end = RC1701_RF_CHANNEL_MAX;
+  rf_settings.channel_start = RC1701_RF_CHANNEL_MIN;
+  rf_settings.channel_end = RC1701_RF_CHANNEL_MAX;
 #else // only default channel
-  rf_channel_start = RF_CHANNEL_DEFAULT;
-  rf_channel_end = RF_CHANNEL_DEFAULT;
+  rf_settings.channel_start = RF_CHANNEL_DEFAULT;
+  rf_settings.channel_end = RF_CHANNEL_DEFAULT;
 #endif
 
   // check channel range
-  if (!(rf_channel_start >= 1 && rf_channel_end <= 10)) {
+  if (!(rf_settings.channel_start >= 1 && rf_settings.channel_end <= 10)) {
     McuLog_error("radio : invalid channel range\n");
     return;
   }
 
   // send request to broadcast address
   rc232_config_destination_address(RC232_BROADCAST_ADDRESS);
-  for (int i = rf_channel_start; i <= rf_channel_end; i++) {
+  for (int i = rf_settings.channel_start; i <= rf_settings.channel_end; i++) {
     McuLog_trace("radio : scanning channel %d\n", i);
 
     rc232_config_rf_channel_number(i);
@@ -224,7 +216,7 @@ void radio_authentication(void) {
 
   // reset to default address
   rc232_config_destination_address(rf_destination_address);
-  rc232_config_rf_channel_number(rf_channel);
+  rc232_config_rf_channel_number(rf_settings.channel_id);
 }
 
 /**
@@ -356,6 +348,7 @@ void radio_send_temperature_as_string(
  * -
  * todo : change, compress format / algorithm to reduce number of temperatures
  * todo : typedef / enum
+ * todo : refactor
  * reference :
  * https://github.com/bang-olufsen/yahdlc/blob/master/C/test/yahdlc_test.cpp
  */
