@@ -263,12 +263,15 @@ static error_t radio_authentication_wait_for_response(uint32_t timeout_ms) {
     vTaskDelay(pdMS_TO_TICKS(t_poll_ms));
 
     // todo : readout buffer / no test data
+    // todo : readout buffer / no test data
     test_data_encoded(frame_data, 24);
+    /*
     /*
     err = rc232_rx_read_bytes(frame_data, 4);
     if (err == !ERR_OK) {
       continue;
     }
+    */
     */
     log_hdlc_encoded(frame_data, sizeof(frame_data));
 
@@ -643,6 +646,12 @@ static void log_buffer_as_int(char *buffer, size_t length) {
   printf("\n");
 }
 
+/**
+ * @brief Encoded hdlc frame data for testing
+ *
+ * @param frame_data
+ * @param option_length : select test data
+ */
 /**
  * @brief Encoded hdlc frame data for testing
  *
