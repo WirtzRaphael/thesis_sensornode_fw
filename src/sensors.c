@@ -110,7 +110,7 @@ void sensors_init(void) {
 
   // Queue of sensor values
   // fixme : queue length / memory usage
-  const int QUEUE_LENGTH = 128;
+  const int QUEUE_LENGTH = 500;
   /*
   queue_init(temperatureSensor1.measurments_queue,
              sizeof(temperature_measurement_t), QUEUE_LENGTH);
