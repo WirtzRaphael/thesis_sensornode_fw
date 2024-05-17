@@ -17,6 +17,10 @@
 
 #include "pico/stdlib.h"
 
+#ifndef dimof
+  #define dimof(X) (sizeof(X) / sizeof((X)[0]))
+#endif
+
 DATEREC date_menu;
 TIMEREC time_menu;
 
@@ -111,7 +115,7 @@ void menu_handler_main(void) {
 void menu_handler_radio(void) {
   const char *radioOptions[] = {"[a]uthenticate", "encoding [c]obs", "[s]end",
                                 "send [t]est message"};
-  menu_display(radioOptions, 4);
+  menu_display(radioOptions, dimof(radioOptions));
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
@@ -146,7 +150,7 @@ void menu_handler_rc232(void) {
                                 "[v]oltage",
                                 "s[l]eep",
                                 "[w]ake up"};
-  menu_display(rc232Options, 8);
+  menu_display(rc232Options, dimof(rc232Options));
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
@@ -198,7 +202,7 @@ void menu_handler_rc232_config(void) {
                                 "[r]eset",
                                 "e[x]it config state",
                                 "[0] get config / check if config mode"};
-  menu_display(rc232Options, 10);
+  menu_display(rc232Options, dimof(rc232Options));
 
   char userCmd = menu_get_user_input();
   uint8_t rssi;
@@ -243,7 +247,7 @@ void menu_handler_rc232_config(void) {
 
 void menu_handler_sensors(void) {
   const char *sensorsOptions[] = {"[r]ead temperature (queue latest)"};
-  menu_display(sensorsOptions, 1);
+  menu_display(sensorsOptions, dimof(sensorsOptions));
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
