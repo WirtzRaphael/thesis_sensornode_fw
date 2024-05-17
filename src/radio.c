@@ -228,21 +228,10 @@ static error_t radio_authentication_request(void) {
 
 #if RADIO_DEBUG_DECODE
   RADIO_LOG_OUTPUT("[auth] hdlc decode frame data\n");
-  // todo : sub function decode ?
-  // -- decode
   char recv_data[24];
-  unsigned int recv_length = 0; // todo : data type
-  // Decode the data up to end flag sequence byte which should return no valid
-  hdlc_ret = yahdlc_get_data(&control, frame_data, frame_length - 1, recv_data,
-                             &recv_length);
-  // Decode the end flag sequence byte which should result in a decoded frame
-  hdlc_ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1,
-                             recv_data, &recv_length);
-  if (hdlc_ret != 0) {
-    McuLog_error("[decode] hdlc decode frame data error\n");
-    return ERR_FRAMING;
-  }
-  log_hdlc_decoded(recv_data, recv_length);
+  unsigned int recv_length = 0;
+  decode_hdlc_frame(&control, frame_data, frame_length, recv_data,
+                    &recv_length);
 #endif
 
   rc232_tx_packet_bytes(send_data, sizeof(send_data), DEACTIVATE_RF);
@@ -286,18 +275,9 @@ static error_t radio_authentication_wait_for_response(uint32_t timeout_ms) {
     // -- decode
     char recv_data[RADIO_BYTES_TO_BITS(4)];
     unsigned int recv_length = 0;
-    // Decode the data up to end flag sequence byte which should return no valid
-    hdlc_ret = yahdlc_get_data(&control, frame_data, frame_length - 1,
-                               recv_data, &recv_length);
-    // Decode the end flag sequence byte which should result in a decoded frame
-    hdlc_ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1,
-                               recv_data, &recv_length);
-    if (hdlc_ret != 0) {
-      RADIO_LOG_OUTPUT("hdlc decode frame data error\n");
-      continue;
-    }
-    log_hdlc_decoded(recv_data, sizeof(recv_data));
-    yahdlc_get_data_reset();
+    decode_hdlc_frame(&control, frame_data, frame_length, recv_data,
+                      &recv_length);
+    // yahdlc_get_data_reset(); // todo : required ?
 
     // -- decompose payload
     data_info_field_t data_info_field;
