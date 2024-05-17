@@ -12,7 +12,7 @@
 #endif
 #include "McuRTOS.h"
 #include "McuLog.h"
-#include "power.h"
+//#include "power.h"
 
 static SemaphoreHandle_t ExtRTC_Sem = NULL;
 
