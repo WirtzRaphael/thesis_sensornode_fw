@@ -8,6 +8,7 @@
  *
  * todo : sync time
  * todo : buffer handling (?) -> rc232
+ * todo : crc (-> fcs ?)
  */
 #include "radio.h"
 #include "McuLib.h"
@@ -82,7 +83,9 @@ static void vRadioTask(void *pvParameters) {
     if (xSemaphoreTake(xButtonASemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button A\n");
       printf("[radio] Synchronize / Authentication");
-      // todo : authentication, connection gateway (sync time)
+      // todo : authentication / connection coordinator
+      radio_authentication();
+      // todo : sync time
     }
     if (xSemaphoreTake(xButtonBSemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button B\n");
@@ -148,10 +151,11 @@ char radio_get_rf_destination_address(void) {
  * - UID gateway -> DID
  * - time sync (optional)
  * todo : refactor when not direct radio buffer used i.e. radio task
+ * todo : buffer read infinit wait -> reset (problematic ?)
  */
 void radio_authentication(void) {
   rc232_rx_read_buffer_full(); // empty buffer
-  McuLog_trace("radio : Scan network and authenticate\n");
+  RADIO_LOG_OUTPUT("radio : Scan network and authenticate\n");
 
 #if SCAN_CHANNELS_FOR_CONNECTION
   rf_settings.channel_start = RC1701_RF_CHANNEL_MIN;
@@ -170,7 +174,7 @@ void radio_authentication(void) {
   // send request to broadcast address
   rc232_config_destination_address(RC232_BROADCAST_ADDRESS);
   for (int i = rf_settings.channel_start; i <= rf_settings.channel_end; i++) {
-    McuLog_trace("radio : scanning channel %d\n", i);
+    RADIO_LOG_OUTPUT("radio : scanning channel %d\n", i);
 
     rc232_config_rf_channel_number(i);
     radio_send_authentication_request();
@@ -184,15 +188,10 @@ void radio_authentication(void) {
 
 /**
  * @brief Send authentication request.
- * todo : crc (-> rc232)
  * todo : refactor : sub functions / avoid duplicate code
  */
 static error_t radio_send_authentication_request(void) {
   // todo : HDLC-Lite (FRAMING PROTOCOL, high-level data link
-  // - address
-  // NONE (before authentication not assigned)
-  // - control field
-  // authentication request
   int hdlc_ret;
   yahdlc_control_t control;
   control.frame = YAHDLC_FRAME_DATA;
@@ -220,12 +219,14 @@ static error_t radio_send_authentication_request(void) {
   hdlc_ret = yahdlc_frame_data(&control, send_data, sizeof(send_data),
                                frame_data, &frame_length);
   if (hdlc_ret != 0) {
-    McuLog_error("hdlc encode frame data error\n");
+    McuLog_error("[auth] hdlc encode frame data error\n");
     return ERR_FRAMING;
   }
   log_hdlc_encoded(frame_data, frame_length);
 
 #if RADIO_DEBUG_DECODE
+  RADIO_LOG_OUTPUT("[auth] hdlc decode frame data\n");
+  // todo : sub function
   // -- decode
   char recv_data[24];
   unsigned int recv_length = 0; // todo : data type
@@ -236,7 +237,7 @@ static error_t radio_send_authentication_request(void) {
   hdlc_ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1,
                              recv_data, &recv_length);
   if (hdlc_ret != 0) {
-    McuLog_error("hdlc decode frame data error\n");
+    McuLog_error("[decode] hdlc decode frame data error\n");
     return ERR_FRAMING;
   }
   log_hdlc_decoded(recv_data, recv_length);
@@ -250,47 +251,72 @@ static error_t radio_send_authentication_request(void) {
  * @brief Wait for authentication response.
  *
  * @return error_t
- * todo : refactor, don't read byte by byte
+ * todo : readout buffer and decode
+ * todo : error arbitration ?
+ * todo : frame length (max) value
  */
 static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
   // uint8_t buffer[PROTOCOL_AUTH_SIZE_BYTES] = {0};
   uint8_t buffer1[1];
   uint8_t buffer2[1];
-  error_t err = ERR_ARBITR;
+  error_t err;
 
   // wait until response or timeout
   for (int t = 0; t <= timeout_ms; t++) {
-    // read buffer - one char
-    err = rc232_rx_read_byte(buffer1);
+    // -- test data
+    data_info_field_t test_data_info_field = {PROTOCOL_VERSION,
+                                              DATA_AUTHENTICATION_ACK};
+    // - one frame
+    uint8_t test_data_receive[] = {1,  255, 76, 49, 27,  130, 71,  50,
+                                   25, 134, 0,  16, 165, 165, 165, 165};
+    // - two frames ...
+    // - frame with additonal data ...
+    // -> test data
+    int hdlc_ret;
+    yahdlc_control_t control;
+    control.frame = YAHDLC_FRAME_DATA;
+    char frame_data[24];
+    unsigned int frame_length = 0;
+    data_info_field_t data_info_field = test_data_info_field;
 
-    // check if received
-    if (err == ERR_OK) {
-      // first char
-      McuLog_trace("radio : received %c\n", buffer1[0]);
-      printf("radio : received %c\n", buffer1[0]);
-      // read buffer - one char
-      err = rc232_rx_read_byte(buffer2);
-      // check if received
-      if (err == ERR_OK) {
-        // second char
-        printf("radio : received %c\n", buffer2[0]);
-        McuLog_trace("radio : received %c\n", buffer2[0]);
-        printf("radio: received %c %c\n", buffer1[0], buffer2[0]);
-        /*
-         * Action based on received control character
-         */
-        if (buffer1[0] == 'A' && buffer2[0] == 'C') {
-          McuLog_trace("radio : acknowledge received\n");
-          // todo : action after acknowledge (payload values, set uid, etc.)
-          // channel) receive response
-          // - Free UID network (optional)
-          // - UID gateway -> DID
-          // - time sync (optional)
-          break;
-        }
-      }
+    vTaskDelay(pdMS_TO_TICKS(10));
+
+    // todo : readout buffer -> data
+
+    err = rc232_rx_read_byte(buffer1);
+    if (err == !ERR_OK) {
+      continue;
     }
-    sleep_ms(1);
+
+    // todo : decode
+    // -- decode
+    char recv_data[24];
+    unsigned int recv_length = 0; // todo : data type
+    // Decode the data up to end flag sequence byte which should return no valid
+    hdlc_ret = yahdlc_get_data(&control, frame_data, frame_length - 1,
+                               recv_data, &recv_length);
+    // Decode the end flag sequence byte which should result in a decoded frame
+    hdlc_ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1,
+                               recv_data, &recv_length);
+    if (hdlc_ret != 0) {
+      RADIO_LOG_OUTPUT("hdlc decode frame data error\n");
+    }
+    // todo : decompose
+    // todo : - unpack data info field
+    // todo : - get receiver address
+    // todo : - board id
+    // todo : check content info
+
+    // Action based on received content
+    if (data_info_field.data_content == DATA_AUTHENTICATION_ACK) {
+      McuLog_trace("radio : acknowledge received\n");
+      // todo : action after acknowledge (payload values, set uid, etc.)
+      // channel) receive response
+      // - Free UID network (optional)
+      // - UID gateway -> DID
+      // - time sync (optional)
+      break;
+    }
   }
   return ERR_OK;
 }
