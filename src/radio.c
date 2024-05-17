@@ -370,13 +370,6 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   data_temperature.index = 0; // reset index
   error_t error_resp;
 
-  // -- data to send
-  // Up to 0x70 to keep below the values to be escaped
-  //  data_temperature.info_field = SENSORS_TEMPERATURE_1;
-
-  // -- fill data to send
-  // Content info field
-  // note : direct usage?
   pack_data_info_field(&data_info_field, send_data[0]);
   data_temperature.index++;
   send_data[1] = 255; // todo : receiver address
@@ -587,8 +580,8 @@ static void log_hdlc_data(char *data_ptr, size_t data_len) {
  */
 static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len) {
   RADIO_LOG_OUTPUT("[hdlc] ==> Data encoded \n");
-  RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
-  log_buffer_as_char(encoded_ptr, encoded_len);
+  //RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
+  //log_buffer_as_char(encoded_ptr, encoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> int : ");
   log_buffer_as_int(encoded_ptr, encoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> bin : ");
@@ -604,8 +597,8 @@ static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len) {
  */
 static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len) {
   RADIO_LOG_OUTPUT("[hdlc] ==> Data decoded \n");
-  RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
-  log_buffer_as_char(decoded_ptr, decoded_len);
+  //RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
+  //log_buffer_as_char(decoded_ptr, decoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> int : ");
   log_buffer_as_int(decoded_ptr, decoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> bin : ");
