@@ -10,6 +10,7 @@
 #include "pico_config.h"
 // tasks and dependencies
 #include "application.h"
+#include "extRTC.h"
 #include "menu.h"
 #include "radio.h"
 #include "rc232.h"
@@ -156,6 +157,9 @@ static void AppTask(void *pv) {
   }
   McuLog_trace("McuW25_ReadID returned: %d", buffer_mcuw25[0]);
 
+  TIMEREC time;
+  DATEREC date;
+
   for (;;) {
 #if APP_HAS_ONBOARD_GREEN_LED
     McuLED_Toggle(led);
@@ -227,7 +231,7 @@ void APP_Run(void) {
   rc232_init();
   radio_init();
 #endif
-  menu_init();
+  ExtRTC_Init(); // --> Timer Service Task
 
 #if PL_CONFIG_USE_BUTTONS
 xButtonASemaphore = xSemaphoreCreateBinary();
