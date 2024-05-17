@@ -174,45 +174,7 @@ void radio_authentication(void) {
 
     rc232_config_rf_channel_number(i);
     radio_send_authentication_request();
-    /*
-     * Wait for response and read control character
-     * todo : refactor, don't read byte by byte
-     */
-    // uint8_t buffer[PROTOCOL_AUTH_SIZE_BYTES] = {0};
-    uint8_t buffer1[1];
-    uint8_t buffer2[1];
-    error_t err = ERR_ARBITR;
-    for (int t = 0; t <= 500; t++) {
-      err = rc232_rx_read_byte(buffer1);
-
-      if (err == ERR_OK) {
-        // first char
-        McuLog_trace("radio : received %c\n", buffer1[0]);
-        printf("radio : received %c\n", buffer1[0]);
-        err = rc232_rx_read_byte(buffer2);
-        if (err == ERR_OK) {
-          // second char
-          printf("radio : received %c\n", buffer2[0]);
-          McuLog_trace("radio : received %c\n", buffer2[0]);
-          printf("radio: received %c %c\n", buffer1[0], buffer2[0]);
-          /*
-           * Action based on received control character
-           */
-          if (buffer1[0] == 'A' && buffer2[0] == 'C') {
-            McuLog_trace("radio : acknowledge received\n");
-            // todo : action after acknowledge (payload values, set uid,
-            // channel) receive response
-            // - Free UID network (optional)
-            // - UID gateway -> DID
-            // - time sync (optional)
-            break;
-          }
-        }
-      }
-      if (err == ERR_OK) {
-        sleep_ms(10); // fixme : delay until sent
-      }
-    }
+    radio_wait_for_authentication_response(2000);
   }
 
   // reset to default address
