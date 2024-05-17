@@ -59,8 +59,8 @@ static void pack_data_info_field(data_info_field_t *field_src, uint8_t data_info
 static void unpack_data_info_field(data_info_field_t *field_dest, uint8_t field);
 void radio_authentication(void);
 void radio_encoding_hdlc_example(void);
-static error_t radio_send_authentication_request(void);
-static error_t radio_wait_for_authentication_response(uint32_t timeout_ms);
+static error_t radio_authentication_request(void);
+static error_t radio_authentication_wait_for_response(uint32_t timeout_ms);
 void radio_init(void);
 void radio_send_temperature_as_string(
     temperature_measurement_t *temperature_measurement, bool dryrun);

@@ -176,9 +176,9 @@ void radio_authentication(void) {
   for (i; i <= rf_settings.channel_end; i++) {
     RADIO_LOG_OUTPUT("[radio]  -> channel %d\n", i);
     rc232_config_rf_channel_number(i);
-    radio_send_authentication_request();
+    radio_authentication_request();
     RADIO_LOG_OUTPUT("[radio]  -> wait for response %d\n", i);
-    radio_wait_for_authentication_response(2000);
+    radio_authentication_wait_for_response(2000);
   }
 
   // todo : finish handshake (more steps)
@@ -193,7 +193,7 @@ void radio_authentication(void) {
  * @brief Send authentication request.
  * todo : refactor : sub functions / avoid duplicate code
  */
-static error_t radio_send_authentication_request(void) {
+static error_t radio_authentication_request(void) {
   // todo : HDLC-Lite (FRAMING PROTOCOL, high-level data link
   int hdlc_ret;
   yahdlc_control_t control;
@@ -259,7 +259,7 @@ static error_t radio_send_authentication_request(void) {
  * todo : error arbitration ?
  * todo : frame length (max) value
  */
-static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
+static error_t radio_authentication_wait_for_response(uint32_t timeout_ms) {
   // uint8_t buffer[PROTOCOL_AUTH_SIZE_BYTES] = {0};
   error_t err;
   bool response = false;
