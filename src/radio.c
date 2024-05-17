@@ -254,7 +254,6 @@ static error_t radio_authentication_request(void) {
  * @brief Wait for authentication response.
  *
  * @return error_t
- * todo : readout buffer and decode
  * todo : acknowledge hdlc frame ?
  * todo : error arbitration ?
  * todo : frame length (max) value
@@ -275,12 +274,14 @@ static error_t radio_authentication_wait_for_response(uint32_t timeout_ms) {
     char frame_data[RADIO_BYTES_TO_BITS(4)];
     vTaskDelay(pdMS_TO_TICKS(t_poll_ms));
 
-    // todo : readout buffer -> data
+    // todo : readout buffer / no test data
     test_data_encoded(frame_data, 24);
+    /*
     err = rc232_rx_read_bytes(frame_data, 4);
     if (err == !ERR_OK) {
       continue;
     }
+    */
     log_hdlc_encoded(frame_data, sizeof(frame_data));
 
     // -- decode
@@ -299,7 +300,7 @@ static error_t radio_authentication_wait_for_response(uint32_t timeout_ms) {
     log_hdlc_decoded(recv_data, sizeof(recv_data));
     yahdlc_get_data_reset();
 
-    // todo : decompose
+    // -- decompose payload
     data_info_field_t data_info_field;
     unpack_data_info_field(&data_info_field, recv_data[0]);
 
@@ -533,6 +534,12 @@ static void convert_temperature_to_byte(
   print_bits_of_byte(data_16LE_byte[0], true);
 }
 
+/**
+ * @brief Pack data info field for payload.
+ * 
+ * @param field_src 
+ * @param data_info_field 
+ */
 static void pack_data_info_field(data_info_field_t *field_src,
                                  uint8_t data_info_field) {
   data_info_field =
@@ -544,6 +551,12 @@ static void pack_data_info_field(data_info_field_t *field_src,
   RADIO_LOG_OUTPUT("[hdlc]  -> packed: %d\n", data_info_field);
 }
 
+/** 
+ * @brief Unpack data info field from payload.
+ *
+ * @param field_dest
+ * @param data_info_field
+ */
 static void unpack_data_info_field(data_info_field_t *field_dest,
                                    uint8_t data_info_field) {
   field_dest->data_content = data_info_field & 0x07;
@@ -632,6 +645,12 @@ static void log_buffer_as_int(char *buffer, size_t length) {
   printf("\n");
 }
 
+/**
+ * @brief Encoded hdlc frame data for testing
+ *
+ * @param frame_data
+ * @param option_length : select test data
+ */
 static void test_data_encoded(char *frame_data, uint8_t option_length) {
   // - encoded values
   if (option_length == 30) {
