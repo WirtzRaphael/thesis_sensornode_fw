@@ -9,5 +9,6 @@ void menu_handler_radio(void);
 void menu_handler_rc232(void);
 void menu_handler_rc232_config(void);
 void menu_handler_sensors(void);
+void menu_handler_time(void);
 
 #endif /* RADIO_HANDLER_H_ */

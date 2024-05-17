@@ -8,6 +8,7 @@
  *
  */
 #include "menu.h"
+#include "extRTC.h"
 #include "radio.h"
 #include "rc232.h"
 #include "sensors.h"
@@ -15,6 +16,9 @@
 #include <stdint.h>
 
 #include "pico/stdlib.h"
+
+DATEREC date_menu;
+TIMEREC time_menu;
 
 /**
  * @brief Task for the menu
@@ -73,9 +77,9 @@ char menu_get_user_input() {
  *
  */
 void menu_handler_main(void) {
-  const char *mainMenuOptions[] = {"[r]adio", "rc[2]32",
-                                   "rc232 [c]onfiguration", "[s]ensors"};
-  menu_display(mainMenuOptions, 4);
+  const char *mainMenuOptions[] = {
+      "[r]adio", "rc[2]32", "rc232 [c]onfiguration", "[s]ensors", "[t]ime"};
+  menu_display(mainMenuOptions, dimof(mainMenuOptions));
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
@@ -90,6 +94,9 @@ void menu_handler_main(void) {
     break;
   case 's':
     menu_handler_sensors();
+    break;
+  case 't':
+    menu_handler_time();
     break;
   default:
     printf("Invalid option\n");
@@ -244,6 +251,28 @@ void menu_handler_sensors(void) {
     // fixme : not shared access to queue (i.e. different task)
     // sensors_print_temperatures_queue_peak();
     sensors_print_temperature_xQueue_latest_all();
+    break;
+  default:
+    printf("Invalid option\n");
+    break;
+  }
+}
+
+void menu_handler_time(void) {
+  const char *timeOptions[] = {"rtc get [d]ate", "rtc get [t]ime"};
+  menu_display(timeOptions, dimof(timeOptions));
+
+  char userCmd = menu_get_user_input();
+  switch (userCmd) {
+  case 'd':
+    ExtRTC_GetDate(&date_menu);
+    // McuExtRTC_GetDate(&date_menu)
+    printf("Date: %d.%d.%d\n", date_menu.Day, date_menu.Month, date_menu.Year);
+    break;
+  case 't':
+    ExtRTC_GetTime(&time_menu);
+    // McuExtRTC_GetTime(&time_menu)
+    printf("Time: %d:%d:%d\n", time_menu.Hour, time_menu.Min, time_menu.Sec);
     break;
   default:
     printf("Invalid option\n");
