@@ -32,7 +32,7 @@
 #endif
 
 #if PL_CONFIG_USE_BUTTONS
-#include "semphr.h"
+  #include "semphr.h"
 // todo review : extern definition in header and here
 SemaphoreHandle_t xButtonASemaphore;
 SemaphoreHandle_t xButtonBSemaphore;
@@ -226,26 +226,27 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
 void APP_Run(void) {
   PL_Init();
   McuBtn_Init();
-  sensors_init();
+  sensors_init(); // --> Sensor Task
 #if PICO_CONFIG_USE_RADIO
   rc232_init();
-  radio_init();
+  radio_init(); // --> Radio Task
 #endif
   ExtRTC_Init(); // --> Timer Service Task
+  menu_init(); // --> Menu Task
 
 #if PL_CONFIG_USE_BUTTONS
-xButtonASemaphore = xSemaphoreCreateBinary();
-if (xButtonASemaphore == NULL) {
-  McuLog_fatal("failed creating semaphore");
-}
-xButtonBSemaphore = xSemaphoreCreateBinary();
-if (xButtonBSemaphore == NULL) {
-  McuLog_fatal("failed creating semaphore");
-}
-xButtonCSemaphore = xSemaphoreCreateBinary();
-if (xButtonCSemaphore == NULL) {
-  McuLog_fatal("failed creating semaphore");
-}
+  xButtonASemaphore = xSemaphoreCreateBinary();
+  if (xButtonASemaphore == NULL) {
+    McuLog_fatal("failed creating semaphore");
+  }
+  xButtonBSemaphore = xSemaphoreCreateBinary();
+  if (xButtonBSemaphore == NULL) {
+    McuLog_fatal("failed creating semaphore");
+  }
+  xButtonCSemaphore = xSemaphoreCreateBinary();
+  if (xButtonCSemaphore == NULL) {
+    McuLog_fatal("failed creating semaphore");
+  }
 #endif
 
   McuLog_info("Create task 'App' ... ");
