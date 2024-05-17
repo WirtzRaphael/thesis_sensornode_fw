@@ -11,13 +11,13 @@
 #define RADIO_DEBUG_DECODE                    (1)
 
 typedef enum {
-  AUTHENTICATION = 0,
-  AUTHENTICATION_ACK,
-  SENSORS_TEMPERATURE_1,
-  SENSORS_TEMPERATURE_2,
-  SENSORS_TEMPERATURE_3,
-  SENSORS_TEMPERATURE_4,
-  SENSORS_RS232_1,
+  DATA_AUTHENTICATION_REQUEST = 0,
+  DATA_AUTHENTICATION_ACK,
+  DATA_SENSORS_TEMPERATURE_1,
+  DATA_SENSORS_TEMPERATURE_2,
+  DATA_SENSORS_TEMPERATURE_3,
+  DATA_SENSORS_TEMPERATURE_4,
+  DATA_SENSORS_RS232_1,
 } data_content_t;
 
 typedef struct {
@@ -58,7 +58,7 @@ static void log_buffer_as_int(char *buffer, size_t length);
 static uint8_t pack_data_info_field(data_info_field_t data_info_field);
 void radio_authentication(void);
 void radio_encoding_hdlc_example(void);
-static void radio_send_authentication_request(void);
+static error_t radio_send_authentication_request(void);
 static error_t radio_wait_for_authentication_response(uint32_t timeout_ms);
 void radio_init(void);
 void radio_send_temperature_as_string(

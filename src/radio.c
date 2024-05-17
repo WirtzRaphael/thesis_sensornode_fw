@@ -8,7 +8,6 @@
  *
  * todo : sync time
  * todo : buffer handling (?) -> rc232
- * todo : function headers
  */
 #include "radio.h"
 #include "McuLib.h"
@@ -37,7 +36,7 @@
 // Use fix channel or scan channels
 #define SCAN_CHANNELS_FOR_CONNECTION (0)
 #define TRANSMISSION_IN_BYTES        (0)
-#define ACTIVATE_RF                  (0)
+#define DEACTIVATE_RF                (1)
 
 #define RADIO_LOG_OUTPUT printf
 // #define RADIO_LOG_OUTPUT McuLog_trace // fixme : some values missing
@@ -90,15 +89,15 @@ static void vRadioTask(void *pvParameters) {
       printf("[radio] Send Temperature 1 \n");
       // fixme : send all values and empty values otherwise
       data_info_field_t data_info_temperature_1 = {PROTOCOL_VERSION,
-                                                 SENSORS_TEMPERATURE_1};
-      // todo : refactor : readout temperatures into array and pass to radio send
-      // fixme : interface readout queue and send values here !
+                                                   DATA_SENSORS_TEMPERATURE_1};
+      // todo : refactor : readout temperatures into array and pass to radio
+      // send fixme : interface readout queue and send values here !
       radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
                                       data_info_temperature_1, false);
 
       printf("[radio] Send Temperature 2 \n");
       data_info_field_t data_info_temperature_2 = {PROTOCOL_VERSION,
-                                                 SENSORS_TEMPERATURE_2};
+                                                   DATA_SENSORS_TEMPERATURE_2};
       radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
                                       data_info_temperature_2, false);
     }
@@ -223,53 +222,66 @@ void radio_authentication(void) {
 
 /**
  * @brief Send authentication request.
+ * todo : crc (-> rc232)
+ * todo : refactor : sub functions / avoid duplicate code
  */
-static void radio_send_authentication_request(void) {
+static error_t radio_send_authentication_request(void) {
   // todo : HDLC-Lite (FRAMING PROTOCOL, high-level data link
-  // control) todo : protocol authentication request todo : send -> tx (rc232)
-  // -- frame delimiter flag
-  // fixme : change buffer from char to int (binary)
-  char frame_flag[5] = "0x7E";
-  // -- payload
-  char payload[3];
-  // todo : combine arrays and send all together
   // - address
   // NONE (before authentication not assigned)
   // - control field
   // authentication request
-  // todo : binary command instruction
-  strcpy(payload, "AR");
-  printf("payload (string): %s\n", payload);
-  strcat(payload, "-");
-  printf("payload (string): %s\n", payload);
-  // - board information
-  /* pico_uid.id (int, 8 bytes)
-  printf("pico uid string: %s\n", pico_uid_string);
-  strcat(payload, pico_uid_string);
-  */
-  printf("payload (string): %s\n", payload);
-// -- checksum
-#if TRANSMISSION_IN_BYTES
-  McuLog_trace("convert message to binary");
-// -- convert to binary
-// todo : convert to binary and send binary
-// todo : bit stuffing
-// todo : escape character
-// todo : crc (optional)
-// unsigned char* message_byte = (unsigned char*) message;
-// printf("payload (binary): %s\n", message_byte);
-#else
-  // -- send
-  // todo : string stuffing
-  // todo : escape character
-  // todo : crc (optional)
-  // frame delimiter flag
-  rc232_tx_packet_string(frame_flag, ACTIVATE_RF);
-  // message
-  rc232_tx_packet_string(payload, ACTIVATE_RF);
-  // frame delimiter flag
-  rc232_tx_packet_string(frame_flag, ACTIVATE_RF);
+  int hdlc_ret;
+  yahdlc_control_t control;
+  control.frame = YAHDLC_FRAME_DATA;
+  // control.seq_no = 0;
+  char send_data[16];
+  char frame_data[24];
+  unsigned int frame_length = 0;
+  uint8_t index = 0;
+
+  // Payload content info
+  data_info_field_t data_info_field = {PROTOCOL_VERSION,
+                                       DATA_AUTHENTICATION_REQUEST};
+  // todo : index refactor
+  send_data[0] = pack_data_info_field(data_info_field);
+  index++;
+  send_data[1] = 255; // todo : receiver address
+  index++;
+
+  // Payload content
+  for (index; index < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; index++) {
+    send_data[index] = pico_uid.id[index];
+  }
+  log_hdlc_data(send_data, sizeof(send_data));
+  control.frame = YAHDLC_FRAME_DATA;
+  hdlc_ret = yahdlc_frame_data(&control, send_data, sizeof(send_data),
+                               frame_data, &frame_length);
+  if (hdlc_ret != 0) {
+    McuLog_error("hdlc encode frame data error\n");
+    return ERR_FRAMING;
+  }
+  log_hdlc_encoded(frame_data, frame_length);
+
+#if RADIO_DEBUG_DECODE
+  // -- decode
+  char recv_data[24];
+  unsigned int recv_length = 0; // todo : data type
+  // Decode the data up to end flag sequence byte which should return no valid
+  hdlc_ret = yahdlc_get_data(&control, frame_data, frame_length - 1, recv_data,
+                             &recv_length);
+  // Decode the end flag sequence byte which should result in a decoded frame
+  hdlc_ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1,
+                             recv_data, &recv_length);
+  if (hdlc_ret != 0) {
+    McuLog_error("hdlc decode frame data error\n");
+    return ERR_FRAMING;
+  }
+  log_hdlc_decoded(recv_data, recv_length);
 #endif
+
+  rc232_tx_packet_bytes(send_data, sizeof(send_data), DEACTIVATE_RF);
+  return ERR_OK;
 }
 
 /**
@@ -370,18 +382,18 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   char frame_data[24];
   unsigned int frame_length = 0;
   data_temperature.index = 0; // reset index
+  error_t error_resp;
 
   // -- data to send
   // Up to 0x70 to keep below the values to be escaped
   //  data_temperature.info_field = SENSORS_TEMPERATURE_1;
-  error_t error;
 
   // -- fill data to send
   // Content info field
   // note : direct usage?
   send_data[0] = pack_data_info_field(data_info_field);
-  send_data[1] = 255; // todo : receiver address
   data_temperature.index++;
+  send_data[1] = 255; // todo : receiver address
   data_temperature.index++;
 
   // Measurement values
@@ -395,9 +407,9 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
       McuLog_error("[radio] buffer overflow for data to send\n");
       return ERR_OVERFLOW;
     }
-    error = sensors_temperature_xQueue_receive(xQueue_temperature,
-                                               &data_temperature.measurement);
-    if (!(error == ERR_OK)) {
+    error_resp = sensors_temperature_xQueue_receive(
+        xQueue_temperature, &data_temperature.measurement);
+    if (!(error_resp == ERR_OK)) {
       printf("[radio] No new temperature value received\n");
       // fill values
       send_data[data_temperature.index] = 0;
@@ -446,7 +458,7 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   log_hdlc_decoded(recv_data, recv_length);
 #endif
 
-  rc232_tx_packet_bytes(send_data, sizeof(send_data), true);
+  rc232_tx_packet_bytes(send_data, sizeof(send_data), DEACTIVATE_RF);
   return ERR_OK;
 }
 
@@ -543,7 +555,7 @@ static void convert_temperature_to_byte(
 }
 
 static uint8_t pack_data_info_field(data_info_field_t data_info_field) {
-  return (data_info_field.protocol_version  | data_info_field.data_content << 3);
+  return (data_info_field.protocol_version | data_info_field.data_content << 3);
 }
 
 /**
