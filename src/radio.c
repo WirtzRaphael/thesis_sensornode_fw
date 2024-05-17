@@ -87,24 +87,20 @@ static void vRadioTask(void *pvParameters) {
     }
     if (xSemaphoreTake(xButtonBSemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button B\n");
-      printf("[radio] Send sensors values \n");
-      // todo : readout all values queue
-      // todo : case empty queue / no new value / nothing to send
-      temperature_measurement_t temperature_measurement_sensor1 = {0, 0, 0};
-      data_info_field data_info_temperature_1 = {PROTOCOL_VERSION,
+      printf("[radio] Send Temperature 1 \n");
+      // fixme : send all values and empty values otherwise
+      data_info_field_t data_info_temperature_1 = {PROTOCOL_VERSION,
                                                  SENSORS_TEMPERATURE_1};
-      sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
-                                         &temperature_measurement_sensor1);
+      // todo : refactor : readout temperatures into array and pass to radio send
+      // fixme : interface readout queue and send values here !
       radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
                                       data_info_temperature_1, false);
-      temperature_measurement_t temperature_measurement_sensor2 = {0, 0, 0};
-      data_info_field data_info_temperature_2 = {PROTOCOL_VERSION,
+
+      printf("[radio] Send Temperature 2 \n");
+      data_info_field_t data_info_temperature_2 = {PROTOCOL_VERSION,
                                                  SENSORS_TEMPERATURE_2};
-      sensors_temperature_xQueue_receive(xQueue_temperature_sensor_1,
-                                         &temperature_measurement_sensor2);
       radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
                                       data_info_temperature_2, false);
-
     }
 
     //  printf("radio killed the video star.");
