@@ -351,19 +351,17 @@ void radio_send_temperature_as_string(
  * - use HDLC-Lite for encoding
  * -
  * todo : change, compress format / algorithm to reduce number of temperatures
- * todo : refactor
- * todo : multiple sensors !
+ * todo : fill all buffer values / overwrite existing buffer values
  * reference :
  * https://github.com/bang-olufsen/yahdlc/blob/master/C/test/yahdlc_test.cpp
  */
 error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
-                                        data_info_field data_info_field,
+                                        data_info_field_t data_info_field,
                                         bool dryrun) {
   if (!data_info_field.protocol_version || !data_info_field.data_content) {
     McuLog_error("[radio] invalid data info field parameters\n");
     return ERR_PARAM_DATA;
   }
-  // -- temperature values
   int hdlc_ret;
   yahdlc_control_t control;
   control.frame = YAHDLC_FRAME_DATA;
@@ -371,6 +369,7 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   char send_data[16];
   char frame_data[24];
   unsigned int frame_length = 0;
+  data_temperature.index = 0; // reset index
 
   // -- data to send
   // Up to 0x70 to keep below the values to be escaped
@@ -387,8 +386,9 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
 
   // Measurement values
   // reads multiple values from queue until buffer full or queue empty
+  // note : number of values multiplied by the size
   for (data_temperature.index;
-       data_temperature.index < 2 * RADIO_TEMPERATURE_VALUES;
+       data_temperature.index <= 2 * RADIO_TEMPERATURE_VALUES;
        data_temperature.index += 2) {
     McuLog_trace("index : %d\n", index);
     if (data_temperature.index > sizeof(send_data)) {
@@ -399,6 +399,9 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
                                                &data_temperature.measurement);
     if (!(error == ERR_OK)) {
       printf("[radio] No new temperature value received\n");
+      // fill values
+      send_data[data_temperature.index] = 0;
+      send_data[data_temperature.index + 1] = 0;
       continue;
     }
     convert_temperature_to_byte(data_temperature.measurement_byte,
