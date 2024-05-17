@@ -272,7 +272,6 @@ static error_t radio_authentication_wait_for_response(uint32_t timeout_ms) {
       continue;
     }
     */
-    */
     log_hdlc_encoded(frame_data, sizeof(frame_data));
 
     // -- decode

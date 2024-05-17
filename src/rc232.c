@@ -184,6 +184,7 @@ void rc232_tx_packet_string(const uint8_t *message, bool dryrun) {
 
 /**
  * @brief Transmit bytes
+ * todo : change bytes to char?
  */
 void rc232_tx_packet_bytes(uint8_t *bytes, size_t length, bool dryrun) {
   McuLog_trace("[rc232] TX data (bytes) \n");
