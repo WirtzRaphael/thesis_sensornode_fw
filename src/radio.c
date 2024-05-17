@@ -272,21 +272,19 @@ static error_t radio_authentication_wait_for_response(uint32_t timeout_ms) {
     control.frame = YAHDLC_FRAME_ACK;
     // control.frame = YAHDLC_FRAME_DATA;
     unsigned int frame_length = 0;
-    char frame_data[24];
+    char frame_data[RADIO_BYTES_TO_BITS(4)];
     vTaskDelay(pdMS_TO_TICKS(t_poll_ms));
 
     // todo : readout buffer -> data
-    // todo : multiple bytes
     test_data_encoded(frame_data, 24);
-    /*    err = rc232_rx_read_byte(buffer1);
+    err = rc232_rx_read_bytes(frame_data, 4);
     if (err == !ERR_OK) {
       continue;
     }
-    */
     log_hdlc_encoded(frame_data, sizeof(frame_data));
 
     // -- decode
-    char recv_data[24];
+    char recv_data[RADIO_BYTES_TO_BITS(4)];
     unsigned int recv_length = 0;
     // Decode the data up to end flag sequence byte which should return no valid
     hdlc_ret = yahdlc_get_data(&control, frame_data, frame_length - 1,

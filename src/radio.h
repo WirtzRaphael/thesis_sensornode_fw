@@ -6,8 +6,9 @@
 #include <errno.h>
 #include <stdint.h>
 
+#define RADIO_BYTES_TO_BITS(BYTES) ((BYTES) * 8)
 #define RADIO_BUFFER_TEMPERATURE_LEN(SRC_LEN) (((SRC_LEN) * 2) + 1)
-#define RADIO_TEMPERATURE_VALUES              5
+#define RADIO_TEMPERATURE_VALUES             (5)
 #define RADIO_DEBUG_DECODE                    (1)
 
 typedef enum {
