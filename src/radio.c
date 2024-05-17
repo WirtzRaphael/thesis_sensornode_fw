@@ -380,7 +380,8 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   // -- fill data to send
   // Content info field
   // note : direct usage?
-  send_data[0] = send_data[1] = SENSORS_TEMPERATURE_1;
+  send_data[0] = pack_data_info_field(data_info_field);
+  send_data[1] = 255; // todo : receiver address
   data_temperature.index++;
   data_temperature.index++;
 
@@ -536,6 +537,10 @@ static void convert_temperature_to_byte(
   RADIO_LOG_OUTPUT("[send]  -> converted to byte:\n");
   print_bits_of_byte(data_16LE_byte[1], true);
   print_bits_of_byte(data_16LE_byte[0], true);
+}
+
+static uint8_t pack_data_info_field(data_info_field_t data_info_field) {
+  return (data_info_field.protocol_version  | data_info_field.data_content << 3);
 }
 
 /**

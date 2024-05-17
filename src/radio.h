@@ -11,21 +11,22 @@
 #define RADIO_DEBUG_DECODE                    (1)
 
 typedef enum {
-  AUTHENTICATION,
+  AUTHENTICATION = 0,
+  AUTHENTICATION_ACK,
   SENSORS_TEMPERATURE_1,
   SENSORS_TEMPERATURE_2,
   SENSORS_TEMPERATURE_3,
   SENSORS_TEMPERATURE_4,
   SENSORS_RS232_1,
-} data_content;
+} data_content_t;
 
 typedef struct {
   uint8_t protocol_version : 3;
-  data_content data_content : 5;
-} data_info_field;
+  data_content_t data_content : 5;
+} data_info_field_t;
 
 typedef struct {
-  data_info_field data_info;
+  data_info_field_t data_info;
   temperature_measurement_t measurement;
   uint8_t measurement_byte[2];
   uint8_t index;
@@ -54,6 +55,7 @@ static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len);
 static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len);
 static void log_buffer_as_char(char *buffer, size_t length);
 static void log_buffer_as_int(char *buffer, size_t length);
+static uint8_t pack_data_info_field(data_info_field_t data_info_field);
 void radio_authentication(void);
 void radio_encoding_hdlc_example(void);
 static void radio_send_authentication_request(void);
@@ -62,7 +64,7 @@ void radio_init(void);
 void radio_send_temperature_as_string(
     temperature_measurement_t *temperature_measurement, bool dryrun);
 error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
-                                        data_info_field data_info_field,
+                                        data_info_field_t data_info_field,
                                         bool dryrun);
 void radio_send_test_string(void);
 char radio_get_rf_destination_address(void);
