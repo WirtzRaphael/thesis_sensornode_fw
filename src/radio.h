@@ -5,6 +5,7 @@
 #include "sensors.h"
 #include <errno.h>
 #include <stdint.h>
+#include "yahdlc.h"
 
 #define RADIO_BYTES_TO_BITS(BYTES) ((BYTES) * 8)
 #define RADIO_BUFFER_TEMPERATURE_LEN(SRC_LEN) (((SRC_LEN) * 2) + 1)
@@ -48,6 +49,10 @@ typedef struct {
   uint8_t channel_end;
 } rf_settings_t;
 
+
+error_t decode_hdlc_frame(yahdlc_control_t *control, char *frame_data,
+                      size_t frame_length, char *recv_data,
+                      size_t *recv_length);
 static void
 convert_temperature_to_byte(uint8_t *data_16LE_byte,
                             temperature_measurement_t *temperature_measurement);

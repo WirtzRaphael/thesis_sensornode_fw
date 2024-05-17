@@ -423,18 +423,9 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
 #if RADIO_DEBUG_DECODE
   // -- decode
   char recv_data[24];
-  unsigned int recv_length = 0; // todo : data type
-  // Decode the data up to end flag sequence byte which should return no valid
-  hdlc_ret = yahdlc_get_data(&control, frame_data, frame_length - 1, recv_data,
-                             &recv_length);
-  // Decode the end flag sequence byte which should result in a decoded frame
-  hdlc_ret = yahdlc_get_data(&control, &frame_data[frame_length - 1], 1,
-                             recv_data, &recv_length);
-  if (hdlc_ret != 0) {
-    McuLog_error("hdlc decode frame data error\n");
-    return ERR_FRAMING;
-  }
-  log_hdlc_decoded(recv_data, recv_length);
+  unsigned int recv_length = 0;
+  decode_hdlc_frame(&control, frame_data, frame_length, recv_data,
+                    &recv_length);
 #endif
 
   rc232_tx_packet_bytes(send_data, sizeof(send_data), DEACTIVATE_RF);
@@ -535,9 +526,9 @@ static void convert_temperature_to_byte(
 
 /**
  * @brief Pack data info field for payload.
- * 
- * @param field_src 
- * @param data_info_field 
+ *
+ * @param field_src
+ * @param data_info_field
  */
 static void pack_data_info_field(data_info_field_t *field_src,
                                  uint8_t data_info_field) {
@@ -550,7 +541,7 @@ static void pack_data_info_field(data_info_field_t *field_src,
   RADIO_LOG_OUTPUT("[hdlc]  -> packed: %d\n", data_info_field);
 }
 
-/** 
+/**
  * @brief Unpack data info field from payload.
  *
  * @param field_dest
@@ -565,6 +556,34 @@ static void unpack_data_info_field(data_info_field_t *field_dest,
   RADIO_LOG_OUTPUT("[hdlc]  -> protocol version: %d\n",
                    field_dest->protocol_version);
   RADIO_LOG_OUTPUT("[hdlc]  -> data content: %d\n", field_dest->data_content);
+}
+
+/**
+ * @brief Decode hdlc frame data wrapper function.
+ *
+ * @param control
+ * @param frame_data
+ * @param frame_length
+ * @param recv_data
+ * @param recv_length
+ * @return int : error code hdlc
+ */
+error_t decode_hdlc_frame(yahdlc_control_t *control, char *frame_data,
+                          size_t frame_length, char *recv_data,
+                          size_t *recv_length) {
+  uint8_t hdlc_ret;
+  // Decode the data up to end flag sequence byte which should return no valid
+  hdlc_ret = yahdlc_get_data(control, frame_data, frame_length - 1, recv_data,
+                             recv_length);
+  // Decode the end flag sequence byte which should result in a decoded frame
+  hdlc_ret = yahdlc_get_data(control, &frame_data[frame_length - 1], 1,
+                             recv_data, recv_length);
+  if (hdlc_ret != 0) {
+    McuLog_error("hdlc decode frame data error\n");
+    return ERR_FRAMING;
+  }
+  log_hdlc_decoded(recv_data, *recv_length);
+  return ERR_OK;
 }
 
 /**
@@ -592,8 +611,8 @@ static void log_hdlc_data(char *data_ptr, size_t data_len) {
  */
 static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len) {
   RADIO_LOG_OUTPUT("[hdlc] ==> Data encoded \n");
-  //RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
-  //log_buffer_as_char(encoded_ptr, encoded_len);
+  // RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
+  // log_buffer_as_char(encoded_ptr, encoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> int : ");
   log_buffer_as_int(encoded_ptr, encoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> bin : ");
@@ -609,8 +628,8 @@ static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len) {
  */
 static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len) {
   RADIO_LOG_OUTPUT("[hdlc] ==> Data decoded \n");
-  //RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
-  //log_buffer_as_char(decoded_ptr, decoded_len);
+  // RADIO_LOG_OUTPUT("[hdlc]  -> char : ");
+  // log_buffer_as_char(decoded_ptr, decoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> int : ");
   log_buffer_as_int(decoded_ptr, decoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> bin : ");
