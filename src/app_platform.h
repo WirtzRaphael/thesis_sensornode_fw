@@ -26,6 +26,7 @@
    * a) enable 'library pico_cyw43_arch_lwip_sys_freertos' in CMakeLists.txt of src folder
    * b) Enable set(PICO_BOARD pico_w) in CMakeLists.txt in project root
    */
+   // todo : cleanup  HW Version
 #define PL_CONFIG_USE_WIFI            (0 && PL_CONFIG_USE_PICO_W) /* if using WiFi functionality */
 #define PL_CONFIG_USE_PING            (0 && PL_CONFIG_USE_WIFI)   /* using ping application */
 #define PL_CONFIG_USE_NTP_CLIENT      (0 && PL_CONFIG_USE_WIFI)   /* using ntp application */
@@ -35,7 +36,7 @@
 
 #define PL_CONFIG_USE_BUTTONS           (1) /* if using push button/navigation switch */
 #define PL_CONFIG_USE_BUTTON_NEXT_PREV  (0 && (PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_1 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_5 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_7)) /* if having 'next' and 'previous' buttons */
-#define PL_CONFIG_USE_I2C               (1 && (PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_1 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_2 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_3 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_5 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_6 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_7)) /* if using I2C */
+#define PL_CONFIG_USE_I2C               (1) /* if using I2C */
 #define PL_CONFIG_USE_GUI               (0 && PL_CONFIG_USE_I2C) /* if using lvgl GUI or not */
 #define PL_CONFIG_USE_GUI_KEY_NAV       (0 && PL_CONFIG_USE_GUI && PL_CONFIG_USE_BUTTONS) /* if using navigation keys for GUI */
 #define PL_CONFIG_USE_GUI_ENERGY_DASHBOARD   (0 && PL_CONFIG_IS_APP_VHS) /* energy flow dash-board */
@@ -59,7 +60,7 @@
 #define PL_CONFIG_USE_ROAD              (0 && (PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_3 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_5 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_7)) /* if having support for the magnetic/coil road */
 #define PL_CONFIG_USE_OLED_CLOCK        (0 && PL_CONFIG_USE_GUI) /* if showing clock/time/date on OLED. */
 #define PL_CONFIG_USE_POWER             (0) /* if using the power management module */
-#define PL_CONFIG_USE_PCF85063A         (0 && PL_CONFIG_USE_I2C && (PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_5 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_7)) /* using external RTC */
+#define PL_CONFIG_USE_PCF85063A         (1 && PL_CONFIG_USE_I2C) /* using external RTC */
 #define PL_CONFIG_USE_EXT_RTC           (PL_CONFIG_USE_PCF85063A)
 #define PL_CONFIG_USE_LIGHTS            (0 && (PL_CONFIG_USE_PWM_LED|PL_CONFIG_USE_NEO_PIXEL_HW) && !PL_CONFIG_IS_APP_LED_COUNTER) /* lights module which interfaces both the normal LED and WS2812b */
 #define PL_CONFIG_USE_SEMIHOSTING       (0 && PL_CONFIG_USE_UNIT_TESTS)
