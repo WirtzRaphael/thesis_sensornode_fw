@@ -70,5 +70,6 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
 void radio_send_test_string(void);
 char radio_get_rf_destination_address(void);
 static void print_bits_of_byte(uint8_t byte, bool print);
+static void test_data_encoded(char *frame_data, uint8_t option);
 
 #endif /* RADIO_H_ */

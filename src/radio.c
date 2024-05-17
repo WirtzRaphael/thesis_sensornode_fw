@@ -20,8 +20,10 @@
 #include "pico/unique_id.h"
 #include "semphr.h"
 #include "yahdlc.h"
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/_types.h>
 
@@ -83,9 +85,7 @@ static void vRadioTask(void *pvParameters) {
     if (xSemaphoreTake(xButtonASemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button A\n");
       printf("[radio] Synchronize / Authentication");
-      // todo : authentication / connection coordinator
       radio_authentication();
-      // todo : sync time
     }
     if (xSemaphoreTake(xButtonBSemaphore, xButtonSemaphore) == pdTRUE) {
       printf("[radio] Semaphore take Button B\n");
@@ -116,11 +116,12 @@ void radio_init(void) {
   pico_get_unique_board_id(&pico_uid);
   McuLog_trace("pico unique id: %d \n", pico_uid.id);
 
+  // todo : stack depth (2500 increased)
   // BaseType_t xReturned;
   // TaskHandle_t xHandle = NULL;
   if (xTaskCreate(vRadioTask, /* pointer to the task */
                   "radio",    /* task name for kernel awareness debugging */
-                  2500 / sizeof(StackType_t), /* task stack size */
+                  3500 / sizeof(StackType_t), /* task stack size */
                   (void *)NULL,         /* optional task startup argument */
                   tskIDLE_PRIORITY + 2, /* initial priority */
                   (TaskHandle_t *)NULL  /* optional task handle to create */
@@ -146,7 +147,7 @@ char radio_get_rf_destination_address(void) {
  * - Send authentication request
  * - Waiting for acknowledge
  * -
- * todo : save or directly use response, like:
+ * todo : settings from response
  * - Free UID network (optional)
  * - UID gateway -> DID
  * - time sync (optional)
@@ -179,6 +180,9 @@ void radio_authentication(void) {
     RADIO_LOG_OUTPUT("[radio]  -> wait for response %d\n", i);
     radio_wait_for_authentication_response(2000);
   }
+
+  // todo : finish handshake (more steps)
+  // todo : settings from response / time sync?
 
   // reset to default address
   rc232_config_destination_address(rf_settings.destination_address);
@@ -259,38 +263,21 @@ static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
   // uint8_t buffer[PROTOCOL_AUTH_SIZE_BYTES] = {0};
   error_t err;
   bool response = false;
-
   RADIO_LOG_OUTPUT("[auth] ==> Wait for response\n");
   // wait until response or timeout
-  for (int t = 0; t <= timeout_ms || response == true; t++) {
-    // -- test data
-    /*
-    data_info_field_t test_data_info_field = {PROTOCOL_VERSION,
-                                              DATA_AUTHENTICATION_ACK};
-                                              */
-    // - one frame decoded
-    char frame_data[24] = {126, 255, 16,  25, 255, 0,  0, 233, 9,   234, 9,
-                           233, 9,   233, 9,  170, 68, 0, 16,  213, 15,  126};
-    // decoded values
-    /*
-    {1,  255, 76, 49, 27,  130, 71,  50,
-                                   25, 134, 0,  16, 165, 165, 165, 165};
-                           */
-    // - two frames ...
-    // - frame with additonal data ...
-    // -> test data
+  uint8_t t_poll_ms = 10;
+  for (int t = 0; t <= timeout_ms || response == true; t = t + t_poll_ms) {
     int hdlc_ret;
     yahdlc_control_t control;
     control.frame = YAHDLC_FRAME_ACK;
     // control.frame = YAHDLC_FRAME_DATA;
     unsigned int frame_length = 0;
-    // char frame_data[24];
-    // data_info_field_t data_info_field = test_data_info_field;
-
-    vTaskDelay(pdMS_TO_TICKS(10));
+    char frame_data[24];
+    vTaskDelay(pdMS_TO_TICKS(t_poll_ms));
 
     // todo : readout buffer -> data
     // todo : multiple bytes
+    test_data_encoded(frame_data, 24);
     /*    err = rc232_rx_read_byte(buffer1);
     if (err == !ERR_OK) {
       continue;
@@ -298,10 +285,9 @@ static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
     */
     log_hdlc_encoded(frame_data, sizeof(frame_data));
 
-    // todo : decode
     // -- decode
     char recv_data[24];
-    unsigned int recv_length = 0; // todo : data type
+    unsigned int recv_length = 0;
     // Decode the data up to end flag sequence byte which should return no valid
     hdlc_ret = yahdlc_get_data(&control, frame_data, frame_length - 1,
                                recv_data, &recv_length);
@@ -310,19 +296,17 @@ static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
                                recv_data, &recv_length);
     if (hdlc_ret != 0) {
       RADIO_LOG_OUTPUT("hdlc decode frame data error\n");
+      continue;
     }
     log_hdlc_decoded(recv_data, sizeof(recv_data));
-    // yahdlc_get_data_reset();
+    yahdlc_get_data_reset();
+
     // todo : decompose
     data_info_field_t data_info_field;
     unpack_data_info_field(&data_info_field, recv_data[0]);
 
-    // todo : - unpack data info field
     // todo : - get receiver address
     // todo : - board id
-    // todo : check content info
-
-    // Action based on received content
     if (data_info_field.data_content == DATA_AUTHENTICATION_ACK) {
       RADIO_LOG_OUTPUT("radio : acknowledge received\n");
       // todo : action after acknowledge (payload values, set uid, etc.)
@@ -331,10 +315,10 @@ static error_t radio_wait_for_authentication_response(uint32_t timeout_ms) {
       // - UID gateway -> DID
       // - time sync (optional)
       response = true;
-      break;
+      return ERR_OK;
     }
   }
-  return ERR_OK;
+  return ERR_FAILED;
 }
 
 /**
@@ -655,4 +639,26 @@ static void log_buffer_as_int(char *buffer, size_t length) {
     printf("|%d", (char)buffer[i]);
   }
   printf("\n");
+}
+
+static void test_data_encoded(char *frame_data, uint8_t option_length) {
+  // - encoded values
+  if (option_length == 30) {
+    // one frame exactly
+    char frame_data[30] = {23,  30, 126, 255, 16,  25,  255, 0, 0,
+                           233, 9,  234, 9,   233, 9,   233, 9, 170,
+                           68,  0,  16,  213, 15,  126, 23,  3};
+    strncpy(frame_data, frame_data, 30);
+  } else if (option_length == 24) {
+    // one frame with additional data
+    char frame_data[24] = {126, 255, 16,  25, 255, 0,  0, 233, 9,   234, 9,
+                           233, 9,   233, 9,  170, 68, 0, 16,  213, 15,  126};
+    strncpy(frame_data, frame_data, 24);
+  } else {
+    strncpy(frame_data, "hello world", 11);
+  }
+  /* - decoded
+  {1,  255, 76, 49, 27,  130, 71,  50,
+                         25, 134, 0,  16, 165, 165, 165, 165};
+                         */
 }
