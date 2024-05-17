@@ -102,7 +102,7 @@ void rc232_read_voltage(void);
 uint8_t rc232_signal_strength_indicator(void);
 void rc232_rx_read_buffer_full(void);
 // error_t rc232_uart_read_bytes(uint8_t *buffer, uint8_t buffer_size);
-error_t rc232_rx_read_byte(uint8_t *buffer);
+error_t rc232_rx_read_bytes(uint8_t *buffer, size_t buffer_size);
 void rc232_tx_packet_string(const uint8_t *message, bool dryrun);
 void rc232_tx_packet_bytes(uint8_t *bytes, size_t length, bool dryrun);
 void rc232_memory_read_one_byte(uint8_t address);

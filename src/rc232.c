@@ -230,22 +230,21 @@ void rc232_rx_read_buffer_full(void) {
     uart_read_blocking(UART_RADIO_ID, rec_buffer, 1);
     McuLog_trace("[rc232] Received %s from radio\n", rec_buffer);
     printf("Received %s from radio\n", rec_buffer);
+    printf("Received %d from radio\n", *rec_buffer);
   }
 }
 
 /**
- * @brief Read one byte from the radio buffer.
+ * @brief Read one byte from the radio buffer non-blocking guard.
  *
  * @param buffer Buffer to store the received byte
  * @return error_t Error code
- *
- * todo : cobs protocol
  */
-error_t rc232_rx_read_byte(uint8_t *buffer) {
+error_t rc232_rx_read_bytes(uint8_t *buffer, size_t length) {
   if (!uart_is_readable(UART_RADIO_ID)) {
     return ERR_FAILED;
   }
-  uart_read_blocking(UART_RADIO_ID, buffer, 1);
+  uart_read_blocking(UART_RADIO_ID, buffer, length);
 
   return ERR_OK;
 }
