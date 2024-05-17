@@ -395,7 +395,7 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   // -- fill data to send
   // Content info field
   // note : direct usage?
-  send_data[0] = pack_data_info_field(data_info_field);
+  pack_data_info_field(&data_info_field, send_data[0]);
   data_temperature.index++;
   send_data[1] = 255; // todo : receiver address
   data_temperature.index++;
@@ -558,8 +558,26 @@ static void convert_temperature_to_byte(
   print_bits_of_byte(data_16LE_byte[0], true);
 }
 
-static uint8_t pack_data_info_field(data_info_field_t data_info_field) {
-  return (data_info_field.protocol_version | data_info_field.data_content << 3);
+static void pack_data_info_field(data_info_field_t *field_src,
+                                 uint8_t data_info_field) {
+  data_info_field =
+      (field_src->protocol_version | field_src->data_content << 3);
+  RADIO_LOG_OUTPUT("[hdlc] ==> Pack data info field \n");
+  RADIO_LOG_OUTPUT("[hdlc]  -> protocol version: %d\n",
+                   field_src->protocol_version);
+  RADIO_LOG_OUTPUT("[hdlc]  -> data content: %d\n", field_src->data_content);
+  RADIO_LOG_OUTPUT("[hdlc]  -> packed: %d\n", data_info_field);
+}
+
+static void unpack_data_info_field(data_info_field_t *field_dest,
+                                   uint8_t data_info_field) {
+  field_dest->data_content = data_info_field & 0x07;
+  field_dest->protocol_version = data_info_field >> 3;
+  RADIO_LOG_OUTPUT("[hdlc] ==> Unpack data info field \n");
+  RADIO_LOG_OUTPUT("[hdlc]  -> packed: %d\n", data_info_field);
+  RADIO_LOG_OUTPUT("[hdlc]  -> protocol version: %d\n",
+                   field_dest->protocol_version);
+  RADIO_LOG_OUTPUT("[hdlc]  -> data content: %d\n", field_dest->data_content);
 }
 
 /**
