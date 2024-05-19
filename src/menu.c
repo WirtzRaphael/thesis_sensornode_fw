@@ -21,8 +21,12 @@
   #define dimof(X) (sizeof(X) / sizeof((X)[0]))
 #endif
 
-DATEREC date_menu;
-TIMEREC time_menu;
+// DATEREC date_rtc_menu;
+// TIMEREC time_rtc_menu;
+DATEREC date_rtc_ext_menu;
+DATEREC date_rtc_ext_default_menu;
+TIMEREC time_rtc_ext_menu;
+TIMEREC time_rtc_ext_default_menu;
 
 /**
  * @brief Task for the menu
@@ -30,6 +34,16 @@ TIMEREC time_menu;
  * @param pvParameters
  */
 static void vMenuTask(void *pvParameters) {
+  // date - example
+  date_rtc_ext_default_menu.Day = 19;
+  date_rtc_ext_default_menu.Month = 5;
+  date_rtc_ext_default_menu.Year = 2024;
+  // time - example
+  time_rtc_ext_default_menu.Hour = 6;
+  time_rtc_ext_default_menu.Min = 12;
+  time_rtc_ext_default_menu.Sec = 24;
+  time_rtc_ext_default_menu.Sec100 = 1;
+
   for (;;) {
     menu_handler_main();
   }
@@ -263,23 +277,51 @@ void menu_handler_sensors(void) {
 }
 
 void menu_handler_time(void) {
-  const char *timeOptions[] = {"rtc get [d]ate", "rtc get [t]ime"};
+  const char *timeOptions[] = {"rtc get [d]ate", "rtc get [t]ime",
+                               "[1] rtc set time info",
+                               "[2] rtc set date info"};
   menu_display(timeOptions, dimof(timeOptions));
+
+  uint8_t ret_time = 0;
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
   case 'd':
-    ExtRTC_GetDate(&date_menu);
+    ret_time = ExtRTC_GetDate(&date_rtc_ext_menu);
     // McuExtRTC_GetDate(&date_menu)
-    printf("Date: %d.%d.%d\n", date_menu.Day, date_menu.Month, date_menu.Year);
+    // McuExtRTC_GetRTCDate(McuExtRTC_TDATE *date)
+    printf("Date: %d.%d.%d\n", date_rtc_ext_menu.Day, date_rtc_ext_menu.Month,
+           date_rtc_ext_menu.Year);
     break;
   case 't':
-    ExtRTC_GetTime(&time_menu);
+    // fixme : time does not increase
+    ret_time = ExtRTC_GetTime(&time_rtc_ext_menu);
     // McuExtRTC_GetTime(&time_menu)
-    printf("Time: %d:%d:%d\n", time_menu.Hour, time_menu.Min, time_menu.Sec);
+    // McuExtRTC_GetRTCTime(McuExtRTC_TTIME * time)
+    printf("Time: %d:%d:%d\n", time_rtc_ext_menu.Hour, time_rtc_ext_menu.Min,
+           time_rtc_ext_menu.Sec);
+    break;
+  case '1':
+    ret_time = ExtRTC_SetTimeInfo(
+        time_rtc_ext_default_menu.Hour, time_rtc_ext_default_menu.Min,
+        time_rtc_ext_default_menu.Sec, time_rtc_ext_default_menu.Sec100);
+    // McuExtRTC_SetTime(uint8_t Hour, uint8_t Min, uint8_t Sec, uint8_t Sec100)
+    // McuExtRTC_SetRTCTime(&time_rtc_ext_default_menu);
+    printf("Set time: %d:%d:%d\n", time_rtc_ext_default_menu.Hour,
+           time_rtc_ext_default_menu.Min, time_rtc_ext_default_menu.Sec);
+    break;
+  case '2':
+    ret_time = ExtRTC_SetDateInfo(date_rtc_ext_default_menu.Year,
+                                  date_rtc_ext_default_menu.Month,
+                                  date_rtc_ext_default_menu.Day);
+    // McuExtRTC_SetDate(uint16_t Year, uint8_t Month, uint8_t Day) break;
+    // McuExtRTC_SetRTCDate(McuExtRTC_TDATE *date);
+    printf("Set date: %d.%d.%d\n", date_rtc_ext_default_menu.Day,
+           date_rtc_ext_default_menu.Month, date_rtc_ext_default_menu.Year);
     break;
   default:
     printf("Invalid option\n");
     break;
   }
+  printf("return time: %d\n", ret_time);
 }
