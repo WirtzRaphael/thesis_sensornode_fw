@@ -15,6 +15,7 @@
 #include "stdio.h"
 #include <stdint.h>
 
+#include "McuLog.h"
 #include "McuPCF85063A.h"
 
 #include "pico/stdlib.h"
@@ -30,21 +31,39 @@ DATEREC date_rtc_ext_default_menu;
 TIMEREC time_rtc_ext_menu;
 TIMEREC time_rtc_ext_default_menu;
 
+void menu_reset_time(void) {
+  time_rtc_ext_default_menu.Hour = 1;
+  time_rtc_ext_default_menu.Min = 0;
+  time_rtc_ext_default_menu.Sec = 0;
+  time_rtc_ext_default_menu.Sec100 = 0;
+}
+
+void menu_set_time_default(void) {
+  time_rtc_ext_default_menu.Hour = 6;
+  time_rtc_ext_default_menu.Min = 12;
+  time_rtc_ext_default_menu.Sec = 24;
+  time_rtc_ext_default_menu.Sec100 = 1;
+}
+
+void menu_reset_time_date(void) {
+  // date - example
+  date_rtc_ext_default_menu.Day = 1;
+  date_rtc_ext_default_menu.Month = 1;
+  date_rtc_ext_default_menu.Year = 2000;
+}
+
+void menu_set_date_default(void) {
+  date_rtc_ext_default_menu.Day = 19;
+  date_rtc_ext_default_menu.Month = 5;
+  date_rtc_ext_default_menu.Year = 2024;
+}
+
 /**
  * @brief Task for the menu
  *
  * @param pvParameters
  */
 static void vMenuTask(void *pvParameters) {
-  // date - example
-  date_rtc_ext_default_menu.Day = 19;
-  date_rtc_ext_default_menu.Month = 5;
-  date_rtc_ext_default_menu.Year = 2024;
-  // time - example
-  time_rtc_ext_default_menu.Hour = 6;
-  time_rtc_ext_default_menu.Min = 12;
-  time_rtc_ext_default_menu.Sec = 24;
-  time_rtc_ext_default_menu.Sec100 = 1;
 
   for (;;) {
     menu_handler_main();
@@ -278,15 +297,20 @@ void menu_handler_sensors(void) {
   }
 }
 
+// todo : refactor / order
+// todo : check alarm flag (https://tronixstuff.com/2013/08/13/tutorial-arduino-and-pcf8563-real-time-clock-ic/)
+// todo : turn on int pin
 void menu_handler_time(void) {
   const char *timeOptions[] = {
-      "rtc [a]larm",           "rtc get [d]ate",
-      "rtc [r]eset alarm",
-      "rtc get [t]ime",        "[1] rtc set time info",
-      "[2] rtc set date info", "[3] rtc set alarm time"};
+      "rtc [a]larm enable",     "rtc get [d]ate",
+      "rtc alarm [r]eset",      "rtc get [t]ime",
+      "[1] rtc set time info",  "[2] rtc set date info",
+      "[3] rtc set alarm time", "[4] rtc read alarm times",
+      "rtc clock [o]utput frequency (xof)"};
   menu_display(timeOptions, dimof(timeOptions));
 
   bool enable = true;
+  bool disabled = false;
   uint8_t ret_time = 0;
   uint8_t val = 0;
   uint8_t alarm_s = 2;
@@ -299,11 +323,13 @@ void menu_handler_time(void) {
   switch (userCmd) {
   case 'a':
     ret_time = McuPCF85063A_WriteAlarmInterrupt(enable);
-    printf("Alarm interrupt enabled\n";)
+    printf("Alarm interrupt enabled.\n");
+    printf("Set alarm interrupt (AIE) bit\n");
     break;
   case 'r':
     ret_time = McuPCF85063A_WriteResetAlarmInterrupt();
     printf("Reset alarm interrupt\n");
+    printf("Reset alarm flag (AF) bit\n");
     break;
   case '3':
     // Set alarm time
@@ -317,16 +343,28 @@ void menu_handler_time(void) {
       printf("Error reading alarm minute\n");
       break;
     }
-    McuPCF85063A_WriteAlarmMinute(alarm_m, enable);
+    McuPCF85063A_WriteAlarmMinute(alarm_m, disabled);
     printf("Alarm min : %d\n", alarm_m);
     if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) != ERR_OK) {
       printf("Error reading alarm hour\n");
       break;
     }
-    McuPCF85063A_WriteAlarmHour(alarm_h, enable, is24h, isAM);
+    McuPCF85063A_WriteAlarmHour(alarm_h, disabled, is24h, isAM);
     printf("Alarm hour : %d\n", alarm_h);
     break;
+  case '4':
+    if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) == ERR_OK) {
+      printf("Alarm sec : %d\n", val);
+    }
+    if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) == ERR_OK) {
+      printf("Alarm min : %d\n", val);
+    }
+    if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) == ERR_OK) {
+      printf("Alarm hour : %d\n", val);
+    }
+    break;
   case 'd':
+    menu_reset_time_date();
     ret_time = ExtRTC_GetDate(&date_rtc_ext_menu);
     // McuExtRTC_GetDate(&date_menu)
     // McuExtRTC_GetRTCDate(McuExtRTC_TDATE *date)
@@ -335,6 +373,7 @@ void menu_handler_time(void) {
     break;
   case 't':
     // fixme : time does not increase
+    menu_reset_time();
     ret_time = ExtRTC_GetTime(&time_rtc_ext_menu);
     // McuExtRTC_GetTime(&time_menu)
     // McuExtRTC_GetRTCTime(McuExtRTC_TTIME * time)
@@ -342,6 +381,7 @@ void menu_handler_time(void) {
            time_rtc_ext_menu.Sec);
     break;
   case '1':
+    menu_set_time_default();
     ret_time = ExtRTC_SetTimeInfo(
         time_rtc_ext_default_menu.Hour, time_rtc_ext_default_menu.Min,
         time_rtc_ext_default_menu.Sec, time_rtc_ext_default_menu.Sec100);
@@ -351,6 +391,7 @@ void menu_handler_time(void) {
            time_rtc_ext_default_menu.Min, time_rtc_ext_default_menu.Sec);
     break;
   case '2':
+    menu_set_date_default();
     ret_time = ExtRTC_SetDateInfo(date_rtc_ext_default_menu.Year,
                                   date_rtc_ext_default_menu.Month,
                                   date_rtc_ext_default_menu.Day);
@@ -358,6 +399,13 @@ void menu_handler_time(void) {
     // McuExtRTC_SetRTCDate(McuExtRTC_TDATE *date);
     printf("Set date: %d.%d.%d\n", date_rtc_ext_default_menu.Day,
            date_rtc_ext_default_menu.Month, date_rtc_ext_default_menu.Year);
+    break;
+  case 'o':
+    printf("Clock output frequency (not used) \n");
+    if (McuPCF85063A_WriteClockOutputFrequency(McuPCF85063A_COF_FREQ_OFF) !=
+        ERR_OK) {
+      McuLog_fatal("failed writing COF");
+    }
     break;
   default:
     printf("Invalid option\n");
