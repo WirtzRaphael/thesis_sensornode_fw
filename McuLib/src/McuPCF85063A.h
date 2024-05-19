@@ -26,6 +26,8 @@ uint8_t McuPCF85063A_WriteAlarmMinute(uint8_t minute, bool enable);
 uint8_t McuPCF85063A_ReadAlarmHour(uint8_t *hour, bool *enabled, bool *is24h, bool *isAM);
 uint8_t McuPCF85063A_WriteAlarmHour(uint8_t hour, bool enable, bool is24h, bool isAM);
 
+uint8_t McuPCF85063A_WriteSoftwareReset(void);
+
 uint8_t McuPCF85063A_WriteAlarmInterrupt(bool enable);
 uint8_t McuPCF85063A_WriteResetAlarmInterrupt(void);
 

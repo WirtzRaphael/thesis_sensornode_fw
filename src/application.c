@@ -24,6 +24,9 @@
 #if PL_CONFIG_USE_RTT
   #include "McuRTT.h"
 #endif
+#if PL_CONFIG_USE_PCF85063A
+  #include "McuPCF85063A.h"
+#endif
 #if PL_CONFIG_USE_LITTLE_FS
   #include "littleFS/McuLittleFS.h"
 #endif
@@ -157,8 +160,26 @@ static void AppTask(void *pv) {
   }
   McuLog_trace("McuW25_ReadID returned: %d", buffer_mcuw25[0]);
 
+#if PL_CONFIG_USE_PCF85063A
+  if (McuPCF85063A_WriteClockOutputFrequency(McuPCF85063A_COF_FREQ_OFF) !=
+      ERR_OK) {
+    McuLog_fatal("failed writing COF");
+  }
+#endif
+
   TIMEREC time;
   DATEREC date;
+
+  if (McuTimeDate_Init() != ERR_OK) { /* do it inside task, as needs to talk
+                                         over I2C to the external RTC */
+    McuLog_fatal("failed initializing McuTimeDate");
+  }
+#if PL_CONFIG_USE_PCF85063A
+  // todo : required ? periodic sync
+  if (McuTimeDate_SyncWithExternalRTC() != ERR_OK) {
+    McuLog_fatal("failed sync with external RTC");
+  }
+#endif
 
   for (;;) {
 #if APP_HAS_ONBOARD_GREEN_LED
@@ -231,8 +252,8 @@ void APP_Run(void) {
   rc232_init();
   radio_init(); // --> Radio Task
 #endif
-  ExtRTC_Init(); // --> Timer Service Task
-  menu_init(); // --> Menu Task
+  //ExtRTC_Init(); // --> Timer Service Task, already in app platform)
+  menu_init();   // --> Menu Task
 
 #if PL_CONFIG_USE_BUTTONS
   xButtonASemaphore = xSemaphoreCreateBinary();
