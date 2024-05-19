@@ -68,7 +68,6 @@
 /* -------------------------------------------------*/
 /* Time/Date */
 #define McuTimeDate_CONFIG_USE_SOFTWARE_RTC                        (1) /* enable software RTC */
-//#define McuTimeDate_CONFIG_USE_EXTERNAL_HW_RTC                     (LIB_CONFIG_HW_VERSION==PL_CONFIG_HW_VERSION_0_7) /* enable external I2C RTC, only for DSxxx RTC */
 #define McuTimeDate_CONFIG_USE_EXTERNAL_HW_RTC                     (1)
 #define McuTimeDate_CONFIG_USE_INTERNAL_HW_RTC                     (0) /* no internal RTC */
 
@@ -83,6 +82,7 @@
   #define McuTimeDate_CONFIG_INIT_SOFTWARE_RTC_METHOD                (McuTimeDate_INIT_SOFTWARE_RTC_FROM_DEFAULTS)
 #endif
 #define McuTimeDate_CONFIG_USE_GET_TIME_DATE_METHOD                (McuTimeDate_GET_TIME_DATE_METHOD_SOFTWARE_RTC)
+//#define McuTimeDate_CONFIG_USE_GET_TIME_DATE_METHOD                (McuTimeDate_GET_TIME_DATE_METHOD_EXTERNAL_RTC) // problem, i2c sensor stops. cyw43 load
 #define McuTimeDate_CONFIG_SET_TIME_DATE_METHOD_USES_SOFTWARE_RTC  (1) /* if using software RTC */
 #define McuTimeDate_CONFIG_SET_TIME_DATE_METHOD_USES_EXTERNAL_RTC  (McuTimeDate_CONFIG_USE_EXTERNAL_HW_RTC) /* if using external I2C RTC */
 #define McuTimeDate_CONFIG_SET_TIME_DATE_METHOD_USES_INTERNAL_RTC  (0) /* if using internal HW RTC */
