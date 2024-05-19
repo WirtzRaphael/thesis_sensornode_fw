@@ -297,6 +297,7 @@ void menu_handler_sensors(void) {
   }
 }
 
+// todo : capacitor configuration
 // todo : turn on int pin
 // todo : time not running / stop bit ?
 // todo : check alarm flag (https://tronixstuff.com/2013/08/13/tutorial-arduino-and-pcf8563-real-time-clock-ic/)
