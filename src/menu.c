@@ -15,6 +15,8 @@
 #include "stdio.h"
 #include <stdint.h>
 
+#include "McuPCF85063A.h"
+
 #include "pico/stdlib.h"
 
 #ifndef dimof
@@ -277,15 +279,53 @@ void menu_handler_sensors(void) {
 }
 
 void menu_handler_time(void) {
-  const char *timeOptions[] = {"rtc get [d]ate", "rtc get [t]ime",
-                               "[1] rtc set time info",
-                               "[2] rtc set date info"};
+  const char *timeOptions[] = {
+      "rtc [a]larm",           "rtc get [d]ate",
+      "rtc [r]eset alarm",
+      "rtc get [t]ime",        "[1] rtc set time info",
+      "[2] rtc set date info", "[3] rtc set alarm time"};
   menu_display(timeOptions, dimof(timeOptions));
 
+  bool enable = true;
   uint8_t ret_time = 0;
+  uint8_t val = 0;
+  uint8_t alarm_s = 2;
+  uint8_t alarm_m = 0;
+  uint8_t alarm_h = 0;
+  bool dummy;
+  bool is24h, isAM;
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
+  case 'a':
+    ret_time = McuPCF85063A_WriteAlarmInterrupt(enable);
+    printf("Alarm interrupt enabled\n";)
+    break;
+  case 'r':
+    ret_time = McuPCF85063A_WriteResetAlarmInterrupt();
+    printf("Reset alarm interrupt\n");
+    break;
+  case '3':
+    // Set alarm time
+    if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) != ERR_OK) {
+      printf("Error reading alarm second\n");
+      break;
+    }
+    McuPCF85063A_WriteAlarmSecond(alarm_s, enable);
+    printf("Alarm sec : %d\n", alarm_s);
+    if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) != ERR_OK) {
+      printf("Error reading alarm minute\n");
+      break;
+    }
+    McuPCF85063A_WriteAlarmMinute(alarm_m, enable);
+    printf("Alarm min : %d\n", alarm_m);
+    if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) != ERR_OK) {
+      printf("Error reading alarm hour\n");
+      break;
+    }
+    McuPCF85063A_WriteAlarmHour(alarm_h, enable, is24h, isAM);
+    printf("Alarm hour : %d\n", alarm_h);
+    break;
   case 'd':
     ret_time = ExtRTC_GetDate(&date_rtc_ext_menu);
     // McuExtRTC_GetDate(&date_menu)
@@ -323,5 +363,5 @@ void menu_handler_time(void) {
     printf("Invalid option\n");
     break;
   }
-  printf("return time: %d\n", ret_time);
+  printf("return of time functions: %d\n", ret_time);
 }
