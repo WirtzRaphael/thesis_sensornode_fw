@@ -306,6 +306,7 @@ void menu_handler_time(void) {
       "rtc alarm [r]eset",      "rtc get [t]ime",
       "[1] rtc set time info",  "[2] rtc set date info",
       "[3] rtc set alarm time", "[4] rtc read alarm times",
+      "[9] software reset",
       "rtc clock [o]utput frequency (xof)"};
   menu_display(timeOptions, dimof(timeOptions));
 
@@ -406,6 +407,10 @@ void menu_handler_time(void) {
         ERR_OK) {
       McuLog_fatal("failed writing COF");
     }
+    break;
+    case '9':
+    McuPCF85063A_WriteSoftwareReset();
+    printf("Software reset\n");
     break;
   default:
     printf("Invalid option\n");
