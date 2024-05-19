@@ -297,9 +297,10 @@ void menu_handler_sensors(void) {
   }
 }
 
-// todo : refactor / order
-// todo : check alarm flag (https://tronixstuff.com/2013/08/13/tutorial-arduino-and-pcf8563-real-time-clock-ic/)
 // todo : turn on int pin
+// todo : time not running / stop bit ?
+// todo : check alarm flag (https://tronixstuff.com/2013/08/13/tutorial-arduino-and-pcf8563-real-time-clock-ic/)
+// todo : refactor / order
 void menu_handler_time(void) {
   const char *timeOptions[] = {
       "rtc [a]larm enable",     "rtc get [d]ate",
@@ -334,6 +335,8 @@ void menu_handler_time(void) {
     break;
   case '3':
     // Set alarm time
+    // todo : refactor : get enabled state (read) and use this
+    // todo see : CmdAlarmEnable
     if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) != ERR_OK) {
       printf("Error reading alarm second\n");
       break;
@@ -344,13 +347,13 @@ void menu_handler_time(void) {
       printf("Error reading alarm minute\n");
       break;
     }
-    McuPCF85063A_WriteAlarmMinute(alarm_m, disabled);
+    McuPCF85063A_WriteAlarmMinute(alarm_m, enable);
     printf("Alarm min : %d\n", alarm_m);
     if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) != ERR_OK) {
       printf("Error reading alarm hour\n");
       break;
     }
-    McuPCF85063A_WriteAlarmHour(alarm_h, disabled, is24h, isAM);
+    McuPCF85063A_WriteAlarmHour(alarm_h, enable, is24h, isAM);
     printf("Alarm hour : %d\n", alarm_h);
     break;
   case '4':
