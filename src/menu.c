@@ -369,12 +369,18 @@ void menu_handler_sensors(void) {
 // todo : check alarm flag
 // (https://tronixstuff.com/2013/08/13/tutorial-arduino-and-pcf8563-real-time-clock-ic/)
 void menu_handler_time(void) {
-  const char *timeOptions[] = {
-      "rtc [a]larm enable",     "rtc get [d]ate",
-      "rtc alarm [r]eset",      "rtc get [t]ime",
-      "[1] rtc set time info",  "[2] rtc set date info",
-      "[3] rtc set alarm time", "[4] rtc read alarm times",
-      "[9] software reset",     "rtc clock [o]utput frequency (xof)"};
+  const char *timeOptions[] = {"rtc time : Get [t]ime",
+                               "rtc time : Get [d]ate",
+                               "rtc time : [1] Set time",
+                               "rtc time : [2] Set date",
+                               "\n",
+                               "rtc alarm : Enable [a]larm interrupt",
+                               "rtc alarm : [r]eset alarm interrupt",
+                               "rtc alarm : [3] Set alarm time",
+                               "rtc alarm : [4] Get alarm time",
+                               "\n",
+                               "rtc : [9] Software Reset",
+                               "rtc : Clock [o]utput frequency"};
   menu_display(timeOptions, dimof(timeOptions));
 
   uint8_t ret_time = 0;
