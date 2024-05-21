@@ -62,6 +62,10 @@ void menu_set_date_default(void) {
 }
 
 // todo : move function into another file like time/power/...
+// todo : extend to wakeup for measurement time
+// i.e. wakeup every 10 seconds (10:00:00, 10:00:10,...)
+// note: alarm time means not exactly time X from now, because of the current time accuracy.
+// e.g. wakeup 5 seconds from now -> 10:00:04:500 -> (+4.5) -> 10:00:09:000
 static void menu_alarm_set_time(void) {
   uint8_t ret_time = 0;
   uint8_t val = 0;
