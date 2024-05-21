@@ -24,6 +24,9 @@
   #define dimof(X) (sizeof(X) / sizeof((X)[0]))
 #endif
 
+bool enable = true;
+bool disabled = false;
+
 // DATEREC date_rtc_menu;
 // TIMEREC time_rtc_menu;
 DATEREC date_rtc_ext_menu;
@@ -40,9 +43,9 @@ void menu_reset_time(void) {
 
 void menu_set_time_default(void) {
   time_rtc_ext_default_menu.Hour = 6;
-  time_rtc_ext_default_menu.Min = 12;
-  time_rtc_ext_default_menu.Sec = 24;
-  time_rtc_ext_default_menu.Sec100 = 1;
+  time_rtc_ext_default_menu.Min = 10;
+  time_rtc_ext_default_menu.Sec = 0;
+  time_rtc_ext_default_menu.Sec100 = 0;
 }
 
 void menu_reset_time_date(void) {
@@ -56,6 +59,63 @@ void menu_set_date_default(void) {
   date_rtc_ext_default_menu.Day = 19;
   date_rtc_ext_default_menu.Month = 5;
   date_rtc_ext_default_menu.Year = 2024;
+}
+
+static void menu_alarm_set_time(void) {
+  // todo : refactor : get enabled state (read) and use this
+  // todo see : CmdAlarmEnable
+  uint8_t val = 0;
+  bool dummy;
+  uint8_t alarm_h = 6;
+  uint8_t alarm_m = 10;
+  uint8_t alarm_s = 10;
+  bool is24h, isAM;
+
+  if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) != ERR_OK) {
+    printf("Error reading alarm second\n");
+    return;
+  }
+  McuPCF85063A_WriteAlarmSecond(alarm_s, enable);
+  printf("Alarm sec : %d\n", alarm_s);
+  if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) != ERR_OK) {
+    printf("Error reading alarm minute\n");
+    return;
+  }
+  McuPCF85063A_WriteAlarmMinute(alarm_m, enable);
+  printf("Alarm min : %d\n", alarm_m);
+  if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) != ERR_OK) {
+    printf("Error reading alarm hour\n");
+    return;
+  }
+  McuPCF85063A_WriteAlarmHour(alarm_h, enable, is24h, isAM);
+  printf("Alarm hour : %d\n", alarm_h);
+}
+
+void menu_read_alarm(void) {
+  uint8_t val = 0;
+  bool dummy;
+  bool is24h, isAM;
+
+  if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) == ERR_OK) {
+    printf("Alarm sec : %d\n", val);
+    printf("- Enabled : %d\n", dummy);
+  }
+  if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) == ERR_OK) {
+    printf("Alarm min : %d\n", val);
+    printf("- Enabled : %d\n", dummy);
+  }
+  if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) == ERR_OK) {
+    printf("Alarm hour : %d\n", val);
+    printf("- Enabled : %d\n", dummy);
+  }
+  if (McuPCF85063A_ReadAlarmDay(&val, &dummy) == ERR_OK) {
+    printf("Alarm day : %d\n", val);
+    printf("- Enabled : %d\n", dummy);
+  }
+  if ( McuPCF85063A_ReadAlarmWeekday(&val, &dummy) == ERR_OK) {
+    printf("Alarm weekday : %d\n", val);
+    printf("- Enabled : %d\n", dummy);
+  }
 }
 
 /**
@@ -297,30 +357,20 @@ void menu_handler_sensors(void) {
   }
 }
 
-// todo : capacitor configuration
+// todo : capacitor configuration (7pF)
 // todo : turn on int pin
-// todo : time not running / stop bit ?
-// todo : check alarm flag (https://tronixstuff.com/2013/08/13/tutorial-arduino-and-pcf8563-real-time-clock-ic/)
-// todo : refactor / order
+// todo : check alarm flag
+// (https://tronixstuff.com/2013/08/13/tutorial-arduino-and-pcf8563-real-time-clock-ic/)
 void menu_handler_time(void) {
   const char *timeOptions[] = {
       "rtc [a]larm enable",     "rtc get [d]ate",
       "rtc alarm [r]eset",      "rtc get [t]ime",
       "[1] rtc set time info",  "[2] rtc set date info",
       "[3] rtc set alarm time", "[4] rtc read alarm times",
-      "[9] software reset",
-      "rtc clock [o]utput frequency (xof)"};
+      "[9] software reset",     "rtc clock [o]utput frequency (xof)"};
   menu_display(timeOptions, dimof(timeOptions));
 
-  bool enable = true;
-  bool disabled = false;
   uint8_t ret_time = 0;
-  uint8_t val = 0;
-  uint8_t alarm_s = 2;
-  uint8_t alarm_m = 0;
-  uint8_t alarm_h = 0;
-  bool dummy;
-  bool is24h, isAM;
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
@@ -335,38 +385,10 @@ void menu_handler_time(void) {
     printf("Reset alarm flag (AF) bit\n");
     break;
   case '3':
-    // Set alarm time
-    // todo : refactor : get enabled state (read) and use this
-    // todo see : CmdAlarmEnable
-    if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) != ERR_OK) {
-      printf("Error reading alarm second\n");
-      break;
-    }
-    McuPCF85063A_WriteAlarmSecond(alarm_s, enable);
-    printf("Alarm sec : %d\n", alarm_s);
-    if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) != ERR_OK) {
-      printf("Error reading alarm minute\n");
-      break;
-    }
-    McuPCF85063A_WriteAlarmMinute(alarm_m, enable);
-    printf("Alarm min : %d\n", alarm_m);
-    if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) != ERR_OK) {
-      printf("Error reading alarm hour\n");
-      break;
-    }
-    McuPCF85063A_WriteAlarmHour(alarm_h, enable, is24h, isAM);
-    printf("Alarm hour : %d\n", alarm_h);
+    menu_alarm_set_time();
     break;
   case '4':
-    if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) == ERR_OK) {
-      printf("Alarm sec : %d\n", val);
-    }
-    if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) == ERR_OK) {
-      printf("Alarm min : %d\n", val);
-    }
-    if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) == ERR_OK) {
-      printf("Alarm hour : %d\n", val);
-    }
+    menu_read_alarm();
     break;
   case 'd':
     menu_reset_time_date();
@@ -411,7 +433,7 @@ void menu_handler_time(void) {
       McuLog_fatal("failed writing COF");
     }
     break;
-    case '9':
+  case '9':
     McuPCF85063A_WriteSoftwareReset();
     printf("Software reset\n");
     break;
