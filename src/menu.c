@@ -61,36 +61,43 @@ void menu_set_date_default(void) {
   date_rtc_ext_default_menu.Year = 2024;
 }
 
+// todo : move function into another file like time/power/...
 static void menu_alarm_set_time(void) {
-  // todo : refactor : get enabled state (read) and use this
-  // todo see : CmdAlarmEnable
+  uint8_t ret_time = 0;
   uint8_t val = 0;
   bool dummy;
-  uint8_t alarm_h = 6;
-  uint8_t alarm_m = 10;
-  uint8_t alarm_s = 10;
   bool is24h, isAM;
+
+  // alarm time from current time
+  uint8_t alarm_h = 0;
+  uint8_t alarm_m = 0;
+  uint8_t alarm_s = 5;
+
+  // Get current time
+  ret_time = ExtRTC_GetTime(&time_rtc_ext_menu);
 
   if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) != ERR_OK) {
     printf("Error reading alarm second\n");
     return;
   }
-  McuPCF85063A_WriteAlarmSecond(alarm_s, enable);
+  McuPCF85063A_WriteAlarmSecond((time_rtc_ext_menu.Sec + alarm_s), enable);
   printf("Alarm sec : %d\n", alarm_s);
   if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) != ERR_OK) {
     printf("Error reading alarm minute\n");
     return;
   }
-  McuPCF85063A_WriteAlarmMinute(alarm_m, enable);
+  McuPCF85063A_WriteAlarmMinute((time_rtc_ext_menu.Min + alarm_m), enable);
   printf("Alarm min : %d\n", alarm_m);
   if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) != ERR_OK) {
     printf("Error reading alarm hour\n");
     return;
   }
-  McuPCF85063A_WriteAlarmHour(alarm_h, enable, is24h, isAM);
+  McuPCF85063A_WriteAlarmHour((time_rtc_ext_menu.Hour + alarm_h), enable, is24h,
+                              isAM);
   printf("Alarm hour : %d\n", alarm_h);
 }
 
+// todo : move function into another file like time/power/...
 void menu_read_alarm(void) {
   uint8_t val = 0;
   bool dummy;
@@ -112,7 +119,7 @@ void menu_read_alarm(void) {
     printf("Alarm day : %d\n", val);
     printf("- Enabled : %d\n", dummy);
   }
-  if ( McuPCF85063A_ReadAlarmWeekday(&val, &dummy) == ERR_OK) {
+  if (McuPCF85063A_ReadAlarmWeekday(&val, &dummy) == ERR_OK) {
     printf("Alarm weekday : %d\n", val);
     printf("- Enabled : %d\n", dummy);
   }
