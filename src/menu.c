@@ -377,7 +377,6 @@ void menu_handler_time(void) {
            date_rtc_ext_menu.Year);
     break;
   case 't':
-    // fixme : time does not increase
     menu_reset_time();
     ret_time = ExtRTC_GetTime(&time_rtc_ext_menu);
     // McuExtRTC_GetTime(&time_menu)
