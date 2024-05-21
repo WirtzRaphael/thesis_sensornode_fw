@@ -6,17 +6,18 @@
 extern uint32_t SystemCoreClock;
 
 #define MODEL_PICO   (0)
-#define MODEL_PICO_W (1)
-#define MODEL_RP2040 (0)
+#define MODEL_PICO_W (0)
+#define MODEL_RP2040 (1)
 
-#define HW_PLATFORM (PL_CONFIG_HW_VERSION_1_0)
+// #define HW_PLATFORM (PL_CONFIG_HW_VERSION_1_0)
+#define HW_PLATFORM (PL_CONFIG_HW_VERSION_2_0)
 
 /* UART
  */
 #define UART0_ID        uart0
 #define UART0_BAUD_RATE 19200
-#define UART0_CTS      1
-#define UART0_RTS      0
+#define UART0_CTS       1
+#define UART0_RTS       0
 
 #define UART1_ID        uart1
 #define UART1_BAUD_RATE 19200
@@ -32,11 +33,21 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 
 /* Features
  */
-#define PICO_CONFIG_USE_TMP117    (1)
+// todo : rename general
+#define PICO_CONFIG_USE_TMP117    (0)
 #define PICO_CONFIG_USE_SLEEP     (0)
-#define PICO_CONFIG_USE_DISPLAY   (1)
-#define PICO_CONFIG_USE_RADIO     (1)
-#define PICO_CONFIG_USE_HEARTBEAT (1)
+#define PICO_CONFIG_USE_DISPLAY   (0)
+#define PICO_CONFIG_USE_RADIO     (0)
+#define PICO_CONFIG_USE_HEARTBEAT (0)
+// hw v2
+#define PICO_CONFIG_USE_RTC     (0)
+#define PICO_CONFIG_USE_MENU    (0)
+#define PICO_CONFIG_USE_BUTTONS (0)
+#define PICO_CONFIG_USE_SENSORS (0)
+
+#if MODEL_RP2040 && HW_PLATFORM == PL_CONFIG_HW_VERSION_2_0
+
+#endif
 
 /* PL : sensornode v1 - rp2040 pico w
  */
@@ -49,8 +60,8 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_PINS_I2C1_SDA 6
   #define PICO_PINS_I2C1_SCL 7
   // UART 0 : Radio
-  #define PICO_PINS_UART0_TX 16
-  #define PICO_PINS_UART0_RX 17
+  #define PICO_PINS_UART0_TX  16
+  #define PICO_PINS_UART0_RX  17
   #define PICO_PINS_UART0_RTS 18
   #define PICO_PINS_UART0_CTS 19
   // #define PICO_PINS_UART1_TX 4
@@ -70,7 +81,7 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PL_AEMBS_SWITCH_LEFT        17
   #define PL_AEMBS_SWITCH_DOWN        19
   #define PL_AEMBS_SWITCH_UP          20
-  #define LED_PIN (25) /* GPIO 25 */
+  #define LED_PIN                     (25) /* GPIO 25 */
 
   #define PL_AEMBS_LED_BLUE  18
   #define PL_AEMBS_LED_GREEN 19

@@ -10,13 +10,23 @@
 #include "pico_config.h"
 // tasks and dependencies
 #include "application.h"
-#include "extRTC.h"
-#include "menu.h"
-#include "radio.h"
-#include "rc232.h"
-#include "sensors.h"
+#if PICO_CONFIG_USE_RTC
+  #include "extRTC.h"
+#endif
+#if PICO_CONFIG_USE_MENU
+  #include "menu.h"
+#endif
+#if PICO_CONFIG_USE_RADIO
+  #include "radio.h"
+  #include "rc232.h"
+#endif
+#if PICO_CONFIG_USE_SENSORS
+  #include "sensors.h"
+#endif
 // McuLib
-#include "McuButton.h"
+#if PL_CONFIG_USE_BUTTONS
+  #include "McuButton.h"
+#endif
 #include "McuRTOS.h"
 // #include "McuLED.h"
 #include "McuLog.h"
@@ -113,7 +123,7 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
  */
 static void AppTask(void *pv) {
 /* -- TASK INIT -- */
-#define APP_HAS_ONBOARD_GREEN_LED (!PL_CONFIG_USE_PICO_W)
+#define APP_HAS_ONBOARD_GREEN_LED (0)
 #if !PL_CONFIG_USE_WIFI && PL_CONFIG_USE_PICO_W
   if (cyw43_arch_init() ==
       0) { /* need to init for accessing LEDs and other pins */
@@ -167,6 +177,7 @@ static void AppTask(void *pv) {
   }
 #endif
 
+#if PL_CONFIG_USE_RTC
   TIMEREC time;
   DATEREC date;
 
@@ -174,6 +185,8 @@ static void AppTask(void *pv) {
                                          over I2C to the external RTC */
     McuLog_fatal("failed initializing McuTimeDate");
   }
+#endif
+
 #if PL_CONFIG_USE_PCF85063A
   // todo : required ? periodic sync
   if (McuTimeDate_SyncWithExternalRTC() != ERR_OK) {
@@ -245,15 +258,17 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
  * \brief Appplication main function.
  */
 void APP_Run(void) {
+  /*
   PL_Init();
   McuBtn_Init();
   sensors_init(); // --> Sensor Task
+  */
 #if PICO_CONFIG_USE_RADIO
   rc232_init();
   radio_init(); // --> Radio Task
 #endif
-  //ExtRTC_Init(); // --> Timer Service Task, already in app platform)
-  menu_init();   // --> Menu Task
+  // ExtRTC_Init(); // --> Timer Service Task, already in app platform)
+  // menu_init();   // --> Menu Task
 
 #if PL_CONFIG_USE_BUTTONS
   xButtonASemaphore = xSemaphoreCreateBinary();
