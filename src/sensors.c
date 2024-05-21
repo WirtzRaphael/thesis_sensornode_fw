@@ -21,6 +21,10 @@
 #include <errno.h>
 #include <stdint.h>
 
+// fixme : cmake build errors
+#if HW_PLATFORM != PL_CONFIG_HW_VERSION_2_0
+
+
 // note hw v1 : i2c0, i2c1 pins of plugs not the same
 // note hw v1 : i2c1 x14 floating
 #define I2Cx           i2c0
@@ -312,3 +316,5 @@ static void print_temperature_queue_peak(queue_t *temperature_sensor_queue) {
   }
 }
 */
+
+#endif

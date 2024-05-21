@@ -27,6 +27,9 @@
 #include <string.h>
 #include <sys/_types.h>
 
+// fixme : cmake build errors
+#if HW_PLATFORM == PL_CONFIG_HW_VERSION_2_0
+
 //
 #include "application.h"
 #include "rc232.h"
@@ -678,3 +681,4 @@ static void test_data_encoded(char *frame_data, uint8_t option_length) {
                          25, 134, 0,  16, 165, 165, 165, 165};
                          */
 }
+#endif

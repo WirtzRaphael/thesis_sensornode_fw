@@ -26,6 +26,9 @@
 #include <errno.h>
 #include <stdint.h>
 
+// fixme : cmake build errors
+#if HW_PLATFORM != PL_CONFIG_HW_VERSION_2_0
+
 #define RADIO_PIN_TX                     PICO_PINS_UART0_TX
 #define RADIO_PIN_RX                     PICO_PINS_UART0_RX
 #define RADIO_PIN_CTS                    PICO_PINS_UART0_CTS
@@ -753,3 +756,5 @@ void rc232_memory_write_configuration(void) {
   exit_config_state();
   McuLog_trace("[rc232] Exit memory configuration state !");
 }
+
+#endif
