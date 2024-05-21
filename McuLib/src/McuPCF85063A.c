@@ -249,7 +249,34 @@ uint8_t McuPCF85063A_WriteAlarmHour(uint8_t hour, bool enable, bool is24h, bool 
   return McuPCF85063A_WriteByte(McuPCF85063A_ADDRESS_ALARM_HOUR, data);
 }
 
-uint8_t McuPCF85063A_ReadTimeDate(McuPCF85063A_TTIME *time, McuPCF85063A_TDATE *date) {
+uint8_t McuPCF85063A_ReadAlarmDay(uint8_t *day, bool *enabled) {
+  uint8_t data, res;
+
+  res = McuPCF85063A_ReadByte(McuPCF85063A_ADDRESS_ALARM_DAY, &data);
+  if (res != ERR_OK) {
+    return ERR_FAILED;
+  }
+  *enabled = (data & (1 << 7)) == 0; /* 1: disabled (default), 0: enabled */
+  *day = ((data & 0x70) >> 4) * 10 + (data & 0x0F); /* BCD encoded */
+
+  return ERR_OK;
+}
+
+uint8_t McuPCF85063A_ReadAlarmWeekday(uint8_t *weekday, bool *enabled) {
+  uint8_t data, res;
+
+  res = McuPCF85063A_ReadByte(McuPCF85063A_ADDRESS_ALARM_DAY, &data);
+  if (res != ERR_OK) {
+    return ERR_FAILED;
+  }
+  *enabled = (data & (1 << 7)) == 0; /* 1: disabled (default), 0: enabled */
+  *weekday = ((data & 0x70) >> 4) * 10 + (data & 0x0F); /* BCD encoded */
+
+  return ERR_OK;
+}
+
+uint8_t McuPCF85063A_ReadTimeDate(McuPCF85063A_TTIME *time,
+                                  McuPCF85063A_TDATE *date) {
   uint8_t buf[McuPCF85063A_MEMORY_TIME_DATE_SIZE];
   bool is24hMode;
 
