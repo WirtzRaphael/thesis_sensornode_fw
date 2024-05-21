@@ -28,7 +28,7 @@
   #include "McuButton.h"
 #endif
 #include "McuRTOS.h"
-// #include "McuLED.h"
+#include "McuLED.h"
 #include "McuLog.h"
 #include "McuUtility.h"
 #if PL_CONFIG_USE_RTT
@@ -123,7 +123,7 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
  */
 static void AppTask(void *pv) {
 /* -- TASK INIT -- */
-#define APP_HAS_ONBOARD_GREEN_LED (0)
+#define APP_HAS_ONBOARD_GREEN_LED (1)
 #if !PL_CONFIG_USE_WIFI && PL_CONFIG_USE_PICO_W
   if (cyw43_arch_init() ==
       0) { /* need to init for accessing LEDs and other pins */
@@ -141,7 +141,7 @@ static void AppTask(void *pv) {
   McuLED_Handle_t led;
 
   McuLED_GetDefaultConfig(&config);
-  config.hw.pin = LED_PIN;
+  config.hw.pin = 17;
   config.isLowActive = false;
   led = McuLED_InitLed(&config);
   if (led == NULL) {
@@ -160,6 +160,7 @@ static void AppTask(void *pv) {
 #endif
   /* Test McuW25Q128 communication
    */
+   /*
   uint8_t buffer_mcuw25[3];
   uint8_t errorCode = McuW25_ReadID(buffer_mcuw25, 3);
   if (errorCode != ERR_OK) {
@@ -169,6 +170,7 @@ static void AppTask(void *pv) {
                  buffer_mcuw25[1], buffer_mcuw25[2]);
   }
   McuLog_trace("McuW25_ReadID returned: %d", buffer_mcuw25[0]);
+  */
 
 #if PL_CONFIG_USE_PCF85063A
   if (McuPCF85063A_WriteClockOutputFrequency(McuPCF85063A_COF_FREQ_OFF) !=
