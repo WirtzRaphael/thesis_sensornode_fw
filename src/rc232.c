@@ -95,7 +95,7 @@ void rc232_init() {
   /* UART configuration
    */
   // todo : activate RTS, configure nvm new and check
-  uart_init(UART_RADIO_ID, 19200);
+  uart_init(UART_RADIO_ID, UART_RADIO_BAUD_RATE);
   uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS,
                    UART_HW_FLOW_CONTROL_RTS);
   // uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS, 0);
