@@ -10,6 +10,7 @@
 #include "menu.h"
 #include "extRTC.h"
 #include "pico_config.h"
+#include "power.h"
 #include "radio.h"
 #include "rc232.h"
 #include "sensors.h"
@@ -192,7 +193,8 @@ char menu_get_user_input() {
  */
 void menu_handler_main(void) {
   const char *mainMenuOptions[] = {
-      "[r]adio", "rc[2]32", "rc232 [c]onfiguration", "[s]ensors", "[t]ime"};
+      "[r]adio", "rc[2]32",   "rc232 [c]onfiguration",
+      "[o]ower", "[s]ensors", "[t]ime"};
   menu_display(mainMenuOptions, dimof(mainMenuOptions));
 
   char userCmd = menu_get_user_input();
@@ -220,6 +222,11 @@ void menu_handler_main(void) {
   case 't':
 #if PICO_CONFIG_USE_RTC
     menu_handler_time();
+#endif
+    break;
+  case 'p':
+#if PICO_CONFIG_USE_POWER
+    menu_handler_power();
 #endif
     break;
   default:
@@ -478,5 +485,22 @@ void menu_handler_time(void) {
     break;
   }
   printf("return of time functions: %d\n", ret_time);
+}
+#endif
+
+#if PICO_CONFIG_USE_POWER
+void menu_handler_power(void) {
+  const char *sensorsOptions[] = {"[s]htudown VCC-1", "[p]ower mode"};
+  menu_display(sensorsOptions, dimof(sensorsOptions));
+
+  char userCmd = menu_get_user_input();
+  switch (userCmd) {
+  case 's':
+    // todo
+    break;
+  default:
+    printf("Invalid option\n");
+    break;
+  }
 }
 #endif
