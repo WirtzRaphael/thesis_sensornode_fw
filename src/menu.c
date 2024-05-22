@@ -27,6 +27,7 @@
 bool enable = true;
 bool disabled = false;
 
+#if PICO_CONFIG_USE_RTC
 // DATEREC date_rtc_menu;
 // TIMEREC time_rtc_menu;
 DATEREC date_rtc_ext_menu;
@@ -64,8 +65,9 @@ void menu_set_date_default(void) {
 // todo : move function into another file like time/power/...
 // todo : extend to wakeup for measurement time
 // i.e. wakeup every 10 seconds (10:00:00, 10:00:10,...)
-// note: alarm time means not exactly time X from now, because of the current time accuracy.
-// e.g. wakeup 5 seconds from now -> 10:00:04:500 -> (+4.5) -> 10:00:09:000
+// note: alarm time means not exactly time X from now, because of the current
+// time accuracy. e.g. wakeup 5 seconds from now -> 10:00:04:500 -> (+4.5) ->
+// 10:00:09:000
 static void menu_alarm_set_time(void) {
   uint8_t ret_time = 0;
   uint8_t val = 0;
@@ -128,6 +130,7 @@ void menu_read_alarm(void) {
     printf("- Enabled : %d\n", dummy);
   }
 }
+#endif
 
 /**
  * @brief Task for the menu
@@ -194,19 +197,29 @@ void menu_handler_main(void) {
   char userCmd = menu_get_user_input();
   switch (userCmd) {
   case 'r':
+#if PICO_CONFIG_USE_RADIO
     menu_handler_radio();
+#endif
     break;
   case '2':
+#if PICO_CONFIG_USE_RADIO
     menu_handler_rc232();
+#endif
     break;
   case 'c':
+#if PICO_CONFIG_USE_RADIO
     menu_handler_rc232_config();
+#endif
     break;
   case 's':
+#if PICO_CONFIG_USE_SENSORS
     menu_handler_sensors();
+#endif
     break;
   case 't':
+#if PICO_CONFIG_USE_RTC
     menu_handler_time();
+#endif
     break;
   default:
     printf("Invalid option\n");
@@ -214,6 +227,7 @@ void menu_handler_main(void) {
   }
 }
 
+#if PICO_CONFIG_USE_RADIO
 /**
  * @brief menu for radio features
  *
@@ -350,7 +364,9 @@ void menu_handler_rc232_config(void) {
     break;
   }
 }
+#endif
 
+#if PICO_CONFIG_USE_SENSORS
 void menu_handler_sensors(void) {
   const char *sensorsOptions[] = {"[r]ead temperature (queue latest)"};
   menu_display(sensorsOptions, dimof(sensorsOptions));
@@ -367,7 +383,9 @@ void menu_handler_sensors(void) {
     break;
   }
 }
+#endif
 
+#if PICO_CONFIG_USE_RTC
 // todo : capacitor configuration (7pF)
 // todo : turn on int pin
 // todo : check alarm flag
@@ -460,3 +478,4 @@ void menu_handler_time(void) {
   }
   printf("return of time functions: %d\n", ret_time);
 }
+#endif
