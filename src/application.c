@@ -255,6 +255,7 @@ void APP_Run(void) {
   //ExtRTC_Init(); // --> Timer Service Task, already in app platform)
   menu_init();   // --> Menu Task
 
+// fixme : if semaphore null also check/deactivate later or stop here
 #if PL_CONFIG_USE_BUTTONS
   xButtonASemaphore = xSemaphoreCreateBinary();
   if (xButtonASemaphore == NULL) {

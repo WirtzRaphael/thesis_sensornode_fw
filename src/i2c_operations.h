@@ -8,6 +8,7 @@ void i2c_operations_test(void);
 
 void i2c_operations_init(uint sda_pin, uint scl_pin);
 
+// fixme : size_t for nbytes length
 int i2c_reg_write(i2c_inst_t *i2c, 
                 const uint addr, 
                 const uint8_t reg, 

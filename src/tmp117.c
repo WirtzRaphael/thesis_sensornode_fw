@@ -3,6 +3,10 @@
 #include "i2c_operations.h"
 #include <stdint.h>
 
+// todo : fix magic number
+// todo : swap bits macro (<< 8)
+// todo : error code handling
+
 /* 
  * Read the temperature from the TMP117 sensor
  * 
@@ -11,7 +15,7 @@
  * @return temperature in bit with a resolution of 0.0078125 degrees Celsius
  */
 uint16_t tmp117_read_temperature_in_bits(i2c_inst_t *i2c, const uint addr) {
-    static uint8_t buf[2];
+    uint8_t buf[2];
     i2c_reg_read(i2c, addr, TMP117_TEMP_RESULT, buf, 2);
     return((buf[0] << 8) | buf[1]); 
 }
