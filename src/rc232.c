@@ -28,18 +28,18 @@
 
 #if PICO_CONFIG_USE_RADIO
 
-#define RADIO_PIN_TX                     PICO_PINS_UART0_TX
-#define RADIO_PIN_RX                     PICO_PINS_UART0_RX
-#define RADIO_PIN_CTS                    PICO_PINS_UART0_CTS
-#define RADIO_PIN_RTS                    PICO_PINS_UART0_RTS
+#define RADIO_PIN_TX                     PICO_PINS_UART1_TX
+#define RADIO_PIN_RX                     PICO_PINS_UART1_RX
+#define RADIO_PIN_CTS                    PICO_PINS_UART1_CTS
+#define RADIO_PIN_RTS                    PICO_PINS_UART1_RTS
 #define RADIO_PIN_CONFIG                 PL_GPIO_RADIO_CONFIG
 #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
 
 // note : maybe configure flow control in radio NVM, before activating
-#define UART_RADIO_ID            UART0_ID
-#define UART_RADIO_BAUD_RATE     UART0_BAUD_RATE
-#define UART_HW_FLOW_CONTROL_CTS UART0_CTS
-#define UART_HW_FLOW_CONTROL_RTS UART0_RTS
+#define UART_RADIO_ID            UART1_ID
+#define UART_RADIO_BAUD_RATE     UART1_BAUD_RATE
+#define UART_HW_FLOW_CONTROL_CTS UART1_CTS
+#define UART_HW_FLOW_CONTROL_RTS UART1_RTS
 
 #define UART_RADIO_DATA_BITS 8
 #define UART_RADIO_STOP_BITS 1

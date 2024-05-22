@@ -17,11 +17,13 @@ extern uint32_t SystemCoreClock;
  */
 #define UART0_ID        uart0
 #define UART0_BAUD_RATE 19200
-#define UART0_CTS       1
+#define UART0_CTS       0
 #define UART0_RTS       0
 
 #define UART1_ID        uart1
 #define UART1_BAUD_RATE 19200
+#define UART1_CTS       0
+#define UART1_RTS       0
 
 /* Pins
  */
@@ -62,10 +64,10 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PL_GPIO_RADIO_RESET   20u
   #define PL_GPIO_RADIO_CONFIG  21u
   // UART 0 : Radio
-  #define PICO_PINS_UART0_RX  25u
-  #define PICO_PINS_UART0_TX  24u
-  #define PICO_PINS_UART0_CTS 22u
-  #define PICO_PINS_UART0_RTS 23u
+  #define PICO_PINS_UART1_RX  25u
+  #define PICO_PINS_UART1_TX  24u
+  #define PICO_PINS_UART1_CTS 22u
+  #define PICO_PINS_UART1_RTS 23u
   // todo : rs232
   // todo : LED's
   // todo : gpio power -> Fix connection
