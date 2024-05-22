@@ -34,14 +34,6 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   // static const uint LED_PIN = CYW43_WL_GPIO_LED_PIN
 #endif
 
-/* Features
- */
-// todo : rename general
-// #define PICO_CONFIG_USE_TMP117    (0)
-#define PICO_CONFIG_USE_SLEEP     (0)
-#define PICO_CONFIG_USE_DISPLAY   (0)
-#define PICO_CONFIG_USE_HEARTBEAT (0)
-
 #if MODEL_RP2040 && HW_PLATFORM == PL_CONFIG_HW_VERSION_2_0
   /* Features
    */
@@ -49,7 +41,7 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_CONFIG_USE_MENU    (1)
   #define PICO_CONFIG_USE_BUTTONS (1)
   #define PICO_CONFIG_USE_RADIO   (1)
-  #define PICO_CONFIG_USE_SENSORS (1)
+  #define PICO_CONFIG_USE_SENSORS (0)
   // todo : energy/power
 
   /* GPIO
@@ -83,17 +75,18 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_CONFIG_USE_DISPLAY   (0)
   #define PICO_CONFIG_USE_RADIO     (0)
   #define PICO_CONFIG_USE_HEARTBEAT (0)
+  #define PICO_CONFIG_USE_SLEEP     (0)
 
   /* GPIO
    */
-  #define PICO_PINS_BUTTON_A 0u
-  #define PICO_PINS_BUTTON_B 1u
-  #define PICO_PINS_BUTTON_C 2u
-  #define PICO_PINS_I2C0_SDA 8
-  #define PICO_PINS_I2C0_SCL 9
-  #define PICO_PINS_I2C1_SDA 6
-  #define PICO_PINS_I2C1_SCL 7
-  #define PL_GPIO_RADIO_CONFIG  20
+  #define PICO_PINS_BUTTON_A   0u
+  #define PICO_PINS_BUTTON_B   1u
+  #define PICO_PINS_BUTTON_C   2u
+  #define PICO_PINS_I2C0_SDA   8
+  #define PICO_PINS_I2C0_SCL   9
+  #define PICO_PINS_I2C1_SDA   6
+  #define PICO_PINS_I2C1_SCL   7
+  #define PL_GPIO_RADIO_CONFIG 20
   // UART 0 : Radio
   #define PICO_PINS_UART0_RX  17
   #define PICO_PINS_UART0_TX  16
@@ -119,6 +112,7 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_CONFIG_USE_DISPLAY   (0)
   #define PICO_CONFIG_USE_RADIO     (0)
   #define PICO_CONFIG_USE_HEARTBEAT (0)
+  #define PICO_CONFIG_USE_SLEEP     (0)
 
   /* GPIO
    */
