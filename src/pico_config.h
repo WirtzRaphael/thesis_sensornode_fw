@@ -41,8 +41,8 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_CONFIG_USE_MENU    (1)
   #define PICO_CONFIG_USE_BUTTONS (1)
   #define PICO_CONFIG_USE_RADIO   (1)
-  #define PICO_CONFIG_USE_SENSORS (0)
-  // todo : energy/power
+  #define PICO_CONFIG_USE_SENSORS (1)
+  // todo : energy / power
 
   /* GPIO
    */
@@ -60,7 +60,7 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_PINS_UART1_TX  24u
   #define PICO_PINS_UART1_CTS 22u
   #define PICO_PINS_UART1_RTS 23u
-  // todo : rs232
+  // todo : rs232 : uart0
   // todo : LED's
   // todo : gpio power -> Fix connection
 #endif
