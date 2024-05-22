@@ -113,6 +113,7 @@ void rc232_init() {
   gpio_set_function(RADIO_PIN_RTS, GPIO_FUNC_UART);
 #endif
 
+  // todo : move central
   /* Pin configuration
    */
   // Reset Pin

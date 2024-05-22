@@ -10,6 +10,9 @@
 #include "pico_config.h"
 // tasks and dependencies
 #include "application.h"
+#if PICO_CONFIG_USE_POWER
+  #include "power.h"
+#endif
 #if PICO_CONFIG_USE_RTC
   #include "extRTC.h"
 #endif
@@ -116,7 +119,6 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
  */
 static void AppTask(void *pv) {
 /* -- TASK INIT -- */
-#define APP_HAS_ONBOARD_GREEN_LED (1)
 #if !PL_CONFIG_USE_WIFI && PL_CONFIG_USE_PICO_W
   if (cyw43_arch_init() ==
       0) { /* need to init for accessing LEDs and other pins */
@@ -254,6 +256,9 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
  */
 void APP_Run(void) {
   PL_Init();
+#if PICO_CONFIG_USE_POWER
+  power_init();
+#endif
 #if PL_CONFIG_USE_BUTTONS
   McuBtn_Init();
 #endif
