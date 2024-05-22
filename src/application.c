@@ -264,8 +264,16 @@ void APP_Run(void) {
   rc232_init();
   radio_init(); // --> Radio Task
 #endif
-  // ExtRTC_Init(); // --> Timer Service Task, already in app platform)
-  menu_init();   // --> Menu Task
+#if PICO_CONFIG_USE_RTC
+  // todo : move
+  gpio_init(PICO_PINS_I2C0_ENABLE);
+  gpio_set_dir(PICO_PINS_I2C0_ENABLE, GPIO_OUT);
+  gpio_put(PICO_PINS_I2C0_ENABLE, 1);
+  ExtRTC_Init(); // --> Timer Service Task, already in app platform)
+#endif
+#if PICO_CONFIG_USE_MENU
+  menu_init(); // --> Menu Task
+#endif
 
 #if PL_CONFIG_USE_BUTTONS
   xButtonASemaphore = xSemaphoreCreateBinary();

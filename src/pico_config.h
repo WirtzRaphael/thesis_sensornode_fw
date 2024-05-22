@@ -40,16 +40,19 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 #define PICO_CONFIG_USE_RADIO     (0)
 #define PICO_CONFIG_USE_HEARTBEAT (0)
 // hw v2
-#define PICO_CONFIG_USE_RTC     (0)
+#define PICO_CONFIG_USE_RTC     (1)
 #define PICO_CONFIG_USE_MENU    (1)
 #define PICO_CONFIG_USE_BUTTONS (1)
 #define PICO_CONFIG_USE_SENSORS (1)
 
 #if MODEL_RP2040 && HW_PLATFORM == PL_CONFIG_HW_VERSION_2_0
-  #define PICO_PINS_BUTTON_A 14u
-  #define PICO_PINS_BUTTON_B 15u
-  #define PICO_PINS_I2C1_SDA 18u
-  #define PICO_PINS_I2C1_SCL 19u
+  #define PICO_PINS_BUTTON_A    14u
+  #define PICO_PINS_BUTTON_B    15u
+  #define PICO_PINS_I2C0_SDA    0u
+  #define PICO_PINS_I2C0_SCL    1u
+  #define PICO_PINS_I2C0_ENABLE 2u
+  #define PICO_PINS_I2C1_SDA    18u
+  #define PICO_PINS_I2C1_SCL    19u
 #endif
 
 /* PL : sensornode v1 - rp2040 pico w
