@@ -265,7 +265,7 @@ void APP_Run(void) {
   radio_init(); // --> Radio Task
 #endif
   // ExtRTC_Init(); // --> Timer Service Task, already in app platform)
-  // menu_init();   // --> Menu Task
+  menu_init();   // --> Menu Task
 
 #if PL_CONFIG_USE_BUTTONS
   xButtonASemaphore = xSemaphoreCreateBinary();
