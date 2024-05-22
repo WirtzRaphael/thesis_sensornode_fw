@@ -9,6 +9,7 @@
  */
 #include "menu.h"
 #include "extRTC.h"
+#include "pico_config.h"
 #include "radio.h"
 #include "rc232.h"
 #include "sensors.h"
