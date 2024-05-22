@@ -14,13 +14,13 @@
  */
 #define PL_CONFIG_HW_ACTIVE_HW_VERSION  (LIB_CONFIG_HW_VERSION)
 
-#define PL_CONFIG_USE_UNIT_TESTS        (1 && defined(ENABLE_UNIT_TESTS) && ENABLE_UNIT_TESTS==1) /* if using unit tests. ENABLE_UNIT_TESTS is set by the CMake file */
+#define PL_CONFIG_USE_UNIT_TESTS        (0 && defined(ENABLE_UNIT_TESTS) && ENABLE_UNIT_TESTS==1) /* if using unit tests. ENABLE_UNIT_TESTS is set by the CMake file */
 #if PL_CONFIG_USE_UNIT_TESTS && !defined(UNITY_OUTPUT_CHAR)
    #error "needs to be defined in IncludeMcuLibConfig.h!"
 #endif
 
 // fixme : not required for rp2040 only
-#define PL_CONFIG_USE_PICO_W          (1) /* if using Pico W board */
+#define PL_CONFIG_USE_PICO_W          (0) /* if using Pico W board */
   /* Note:
    * if using Pico-W:
    * a) enable 'library pico_cyw43_arch_lwip_sys_freertos' in CMakeLists.txt of src folder
@@ -43,12 +43,12 @@
 #define PL_CONFIG_USE_USB_CDC           (1) /* caution, because issues while debugging! In Termite, need to connect with RTS/CTS! Putty works fine */
 #define PL_CONFIG_USE_RTT               (1 || PL_CONFIG_USE_UNIT_TESTS) /* if using SEGGER RTT */
 #define PL_CONFIG_USE_MCUFLASH          (0) /* if using NVMC in Flash, needs to be turned on too */
-#define PL_CONFIG_USE_MINI              (1 && PL_CONFIG_USE_MCUFLASH)
-#define PL_CONFIG_USE_RS485             (1 && (PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_6))
+#define PL_CONFIG_USE_MINI              (0 && PL_CONFIG_USE_MCUFLASH)
+#define PL_CONFIG_USE_RS485             (0 && (PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_6))
 
-#define PL_CONFIG_USE_EXT_FLASH         (1) /* if using externals SPI flash */
-#define PL_CONFIG_USE_LITTLE_FS         (1 && PL_CONFIG_USE_EXT_FLASH) /* if using littleFS as file system, not supported yet! */
-#define PL_CONFIG_USE_SHELL             (1)
+#define PL_CONFIG_USE_EXT_FLASH         (0) /* if using externals SPI flash */
+#define PL_CONFIG_USE_LITTLE_FS         (0 && PL_CONFIG_USE_EXT_FLASH) /* if using littleFS as file system, not supported yet! */
+#define PL_CONFIG_USE_SHELL             (0)
 #define PL_CONFIG_USE_SHELL_UART        (0 && PL_CONFIG_USE_SHELL) /* NYI, using an extra physical UART */
 
 #define PL_CONFIG_USE_NEO_PIXEL_HW      (0 && (PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_1 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_2 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_3 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_4 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_6)) /* using WS2812B */
@@ -71,15 +71,6 @@
 #define PL_CONFIG_USE_GPROF     (0)
 #define PL_CONFIG_USE_UART      (0)
 
-
-/* application modes: only one should be activated */
-#define PL_CONFIG_IS_APP_EVCC           (1 && (PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_6)) /* electric vehicle charging app */
-#define PL_CONFIG_IS_APP_LED_COUNTER    (0 && (PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_4)) /* application as LED count-down/counter app */
-#define PL_CONFIG_IS_APP_NAME_PLATE     (1 && PL_CONFIG_IS_APP_LED_COUNTER) /* name plate app with just 2 LEDs, depends on PL_CONFIG_IS_APP_LED_COUNTER */
-#define PL_CONFIG_IS_APP_VHS            (1 && !PL_CONFIG_IS_APP_EVCC && !PL_CONFIG_IS_APP_LED_COUNTER)    /* Verkehrshaus application */
-#if (PL_CONFIG_IS_APP_EVCC+PL_CONFIG_IS_APP_LED_COUNTER+PL_CONFIG_IS_APP_VHS)!=1
-  #error "only one application shall be active"
-#endif
 
 void PL_Init(void);
 

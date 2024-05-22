@@ -10,16 +10,26 @@
 #include "pico_config.h"
 // tasks and dependencies
 #include "application.h"
-#include "extRTC.h"
-#include "menu.h"
-#include "radio.h"
-#include "rc232.h"
-#include "sensors.h"
+#if PICO_CONFIG_USE_RTC
+  #include "extRTC.h"
+#endif
+#if PICO_CONFIG_USE_MENU
+  #include "menu.h"
+#endif
+#if PICO_CONFIG_USE_RADIO
+  #include "radio.h"
+  #include "rc232.h"
+#endif
+#if PICO_CONFIG_USE_SENSORS
+  #include "sensors.h"
+#endif
 // McuLib
-#include "McuButton.h"
-#include "McuRTOS.h"
-// #include "McuLED.h"
+#if PL_CONFIG_USE_BUTTONS
+  #include "McuButton.h"
+#endif
+#include "McuLED.h"
 #include "McuLog.h"
+#include "McuRTOS.h"
 #include "McuUtility.h"
 #if PL_CONFIG_USE_RTT
   #include "McuRTT.h"
@@ -54,9 +64,6 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
     break;
   case BTN_B:
     McuUtility_strcat(buf, sizeof(buf), "B");
-    break;
-  case BTN_C:
-    McuUtility_strcat(buf, sizeof(buf), "C");
     break;
   default:
     McuUtility_strcat(buf, sizeof(buf), "???");
@@ -99,10 +106,6 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
     printf("[app] Semaphore give B\n");
     McuLog_info("[app] Semaphore give Button B");
     xSemaphoreGive(xButtonBSemaphore);
-  } else if (button == BTN_C && kind == MCUDBNC_EVENT_PRESSED) {
-    printf("[app] Semaphore give C\n");
-    McuLog_info("[app] Semaphore give Button C");
-    xSemaphoreGive(xButtonCSemaphore);
   }
 }
 #endif
@@ -113,7 +116,7 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
  */
 static void AppTask(void *pv) {
 /* -- TASK INIT -- */
-#define APP_HAS_ONBOARD_GREEN_LED (!PL_CONFIG_USE_PICO_W)
+#define APP_HAS_ONBOARD_GREEN_LED (1)
 #if !PL_CONFIG_USE_WIFI && PL_CONFIG_USE_PICO_W
   if (cyw43_arch_init() ==
       0) { /* need to init for accessing LEDs and other pins */
@@ -131,7 +134,7 @@ static void AppTask(void *pv) {
   McuLED_Handle_t led;
 
   McuLED_GetDefaultConfig(&config);
-  config.hw.pin = LED_PIN;
+  config.hw.pin = 17;
   config.isLowActive = false;
   led = McuLED_InitLed(&config);
   if (led == NULL) {
@@ -150,15 +153,17 @@ static void AppTask(void *pv) {
 #endif
   /* Test McuW25Q128 communication
    */
-  uint8_t buffer_mcuw25[3];
-  uint8_t errorCode = McuW25_ReadID(buffer_mcuw25, 3);
-  if (errorCode != ERR_OK) {
-    McuLog_trace("McuW25_ReadID error code: %d", errorCode);
-  } else {
-    McuLog_trace("McuW25_ReadID returned ID: %d %d %d", buffer_mcuw25[0],
-                 buffer_mcuw25[1], buffer_mcuw25[2]);
-  }
-  McuLog_trace("McuW25_ReadID returned: %d", buffer_mcuw25[0]);
+  /*
+ uint8_t buffer_mcuw25[3];
+ uint8_t errorCode = McuW25_ReadID(buffer_mcuw25, 3);
+ if (errorCode != ERR_OK) {
+   McuLog_trace("McuW25_ReadID error code: %d", errorCode);
+ } else {
+   McuLog_trace("McuW25_ReadID returned ID: %d %d %d", buffer_mcuw25[0],
+                buffer_mcuw25[1], buffer_mcuw25[2]);
+ }
+ McuLog_trace("McuW25_ReadID returned: %d", buffer_mcuw25[0]);
+ */
 
 #if PL_CONFIG_USE_PCF85063A
   if (McuPCF85063A_WriteClockOutputFrequency(McuPCF85063A_COF_FREQ_OFF) !=
@@ -167,6 +172,7 @@ static void AppTask(void *pv) {
   }
 #endif
 
+#if PL_CONFIG_USE_RTC
   TIMEREC time;
   DATEREC date;
 
@@ -174,6 +180,8 @@ static void AppTask(void *pv) {
                                          over I2C to the external RTC */
     McuLog_fatal("failed initializing McuTimeDate");
   }
+#endif
+
 #if PL_CONFIG_USE_PCF85063A
   // todo : required ? periodic sync
   if (McuTimeDate_SyncWithExternalRTC() != ERR_OK) {
@@ -246,14 +254,26 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
  */
 void APP_Run(void) {
   PL_Init();
+#if PL_CONFIG_USE_BUTTONS
   McuBtn_Init();
+#endif
+#if PICO_CONFIG_USE_SENSORS
   sensors_init(); // --> Sensor Task
+#endif
 #if PICO_CONFIG_USE_RADIO
   rc232_init();
   radio_init(); // --> Radio Task
 #endif
-  //ExtRTC_Init(); // --> Timer Service Task, already in app platform)
-  menu_init();   // --> Menu Task
+#if PICO_CONFIG_USE_RTC
+  // todo : move
+  gpio_init(PICO_PINS_I2C0_ENABLE);
+  gpio_set_dir(PICO_PINS_I2C0_ENABLE, GPIO_OUT);
+  gpio_put(PICO_PINS_I2C0_ENABLE, 1);
+  ExtRTC_Init(); // --> Timer Service Task, already in app platform)
+#endif
+#if PICO_CONFIG_USE_MENU
+  menu_init(); // --> Menu Task
+#endif
 
 // fixme : if semaphore null also check/deactivate later or stop here
 #if PL_CONFIG_USE_BUTTONS

@@ -23,9 +23,11 @@
 
 // note hw v1 : i2c0, i2c1 pins of plugs not the same
 // note hw v1 : i2c1 x14 floating
-#define I2Cx           i2c0
-#define PRINTF_SENSORS (0)
-#define LOG_SENSORS    (0)
+#define I2Cx             i2c1
+#define SENSORS_I2Cx_SCL PICO_PINS_I2C1_SCL
+#define SENSORS_I2Cx_SDA PICO_PINS_I2C1_SDA
+#define PRINTF_SENSORS   (0)
+#define LOG_SENSORS      (0)
 
 static error_t error;
 static uint16_t id;
@@ -105,7 +107,7 @@ static void vSensorsTask(void *pvParameters) {
 void sensors_init(void) {
   /* I2C
    */
-  i2c_operations_init(PICO_PINS_I2C0_SDA, PICO_PINS_I2C0_SCL);
+  i2c_operations_init(SENSORS_I2Cx_SDA, SENSORS_I2Cx_SCL);
   i2c_init(I2Cx, 400 * 1000); // 400 kHz
 
   // Queue of sensor values

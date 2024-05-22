@@ -10,44 +10,46 @@
  * todo : buffer handling (?) -> rc232
  * todo : crc (-> fcs ?)
  */
- // todo : cleanup / duplicated includes (eg semaphore in mcurtos)
-#include "radio.h"
-#include "McuLib.h"
-#include "McuLog.h"
-#include "McuRTOS.h"
-#include "McuUtility.h"
-#include "pico/time.h"
-#include "pico/types.h"
-#include "pico/unique_id.h"
-#include "semphr.h"
-#include "yahdlc.h"
-#include <errno.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/_types.h>
+#include "pico_config.h"
 
-//
-#include "application.h"
-#include "rc232.h"
-#include "sensors.h"
+#if PICO_CONFIG_USE_RADIO
+  #include "McuLib.h"
+  #include "McuLog.h"
+  #include "McuRTOS.h"
+  #include "McuUtility.h"
+  #include "pico/time.h"
+  #include "pico/types.h"
+  #include "pico/unique_id.h"
+  #include "radio.h"
+  #include "semphr.h"
+  #include "yahdlc.h"
+  #include <errno.h>
+  #include <stdint.h>
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include <sys/_types.h>
 
-#define PROTOCOL_VERSION         (1)
-#define PROTOCOL_AUTH_SIZE_BYTES (10)
-#define RF_CHANNEL_DEFAULT       (1)
+  //
+  #include "application.h"
+  #include "rc232.h"
+  #include "sensors.h"
 
-// Use fix channel or scan channels
-#define SCAN_CHANNELS_FOR_CONNECTION (0)
-#define TRANSMISSION_IN_BYTES        (0)
-#define DEACTIVATE_RF                (1)
+  #define PROTOCOL_VERSION         (1)
+  #define PROTOCOL_AUTH_SIZE_BYTES (10)
+  #define RF_CHANNEL_DEFAULT       (1)
 
-#define RADIO_LOG_OUTPUT printf
+  // Use fix channel or scan channels
+  #define SCAN_CHANNELS_FOR_CONNECTION (0)
+  #define TRANSMISSION_IN_BYTES        (0)
+  #define DEACTIVATE_RF                (1)
+
+  #define RADIO_LOG_OUTPUT printf
 // #define RADIO_LOG_OUTPUT McuLog_trace // fixme : some values missing
 
-#ifndef dimof
-  #define dimof(X) (sizeof(X) / sizeof((X)[0]))
-#endif
+  #ifndef dimof
+    #define dimof(X) (sizeof(X) / sizeof((X)[0]))
+  #endif
 
 // todo refactor (get set ?, no define) / Init ?
 static rf_settings_t rf_settings = {
@@ -160,13 +162,13 @@ void radio_authentication(void) {
   rc232_rx_read_buffer_full(); // empty buffer
 
   RADIO_LOG_OUTPUT("[radio] ==> Scan authentication\n");
-#if SCAN_CHANNELS_FOR_CONNECTION
+  #if SCAN_CHANNELS_FOR_CONNECTION
   rf_settings.channel_start = RC1701_RF_CHANNEL_MIN;
   rf_settings.channel_end = RC1701_RF_CHANNEL_MAX;
-#else // only default channel
+  #else // only default channel
   rf_settings.channel_start = rf_settings.channel_default;
   rf_settings.channel_end = rf_settings.channel_default;
-#endif
+  #endif
   // check channel range
   if (!(rf_settings.channel_start >= 1 && rf_settings.channel_end <= 10)) {
     McuLog_error("radio : invalid channel range\n");
@@ -231,13 +233,13 @@ static error_t radio_authentication_request(void) {
   }
   log_hdlc_encoded(frame_data, frame_length);
 
-#if RADIO_DEBUG_DECODE
+  #if RADIO_DEBUG_DECODE
   RADIO_LOG_OUTPUT("[auth] hdlc decode frame data\n");
   char recv_data[24];
   unsigned int recv_length = 0;
   decode_hdlc_frame(&control, frame_data, frame_length, recv_data,
                     &recv_length);
-#endif
+  #endif
 
   rc232_tx_packet_bytes(send_data, sizeof(send_data), DEACTIVATE_RF);
   return ERR_OK;
@@ -410,13 +412,13 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   }
   log_hdlc_encoded(frame_data, frame_length);
 
-#if RADIO_DEBUG_DECODE
+  #if RADIO_DEBUG_DECODE
   // -- decode
   char recv_data[24];
   unsigned int recv_length = 0;
   decode_hdlc_frame(&control, frame_data, frame_length, recv_data,
                     &recv_length);
-#endif
+  #endif
 
   rc232_tx_packet_bytes(send_data, sizeof(send_data), DEACTIVATE_RF);
   return ERR_OK;
@@ -687,3 +689,4 @@ static void test_data_encoded(char *frame_data, uint8_t option_length) {
                          25, 134, 0,  16, 165, 165, 165, 165};
                          */
 }
+#endif /* CONFIG_USE_RADIO */
