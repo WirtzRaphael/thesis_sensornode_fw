@@ -31,7 +31,7 @@
 #endif
 
 #if PL_CONFIG_USE_BUTTONS
-#include "semphr.h"
+  #include "semphr.h"
 // todo review : extern definition in header and here
 SemaphoreHandle_t xButtonASemaphore;
 SemaphoreHandle_t xButtonBSemaphore;
@@ -229,19 +229,20 @@ void APP_Run(void) {
 #endif
   menu_init();
 
+// fixme : if semaphore null also check/deactivate later or stop here
 #if PL_CONFIG_USE_BUTTONS
-xButtonASemaphore = xSemaphoreCreateBinary();
-if (xButtonASemaphore == NULL) {
-  McuLog_fatal("failed creating semaphore");
-}
-xButtonBSemaphore = xSemaphoreCreateBinary();
-if (xButtonBSemaphore == NULL) {
-  McuLog_fatal("failed creating semaphore");
-}
-xButtonCSemaphore = xSemaphoreCreateBinary();
-if (xButtonCSemaphore == NULL) {
-  McuLog_fatal("failed creating semaphore");
-}
+  xButtonASemaphore = xSemaphoreCreateBinary();
+  if (xButtonASemaphore == NULL) {
+    McuLog_fatal("failed creating semaphore");
+  }
+  xButtonBSemaphore = xSemaphoreCreateBinary();
+  if (xButtonBSemaphore == NULL) {
+    McuLog_fatal("failed creating semaphore");
+  }
+  xButtonCSemaphore = xSemaphoreCreateBinary();
+  if (xButtonCSemaphore == NULL) {
+    McuLog_fatal("failed creating semaphore");
+  }
 #endif
 
   McuLog_info("Create task 'App' ... ");

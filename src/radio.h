@@ -1,3 +1,4 @@
+// todo : move static functions, no in header
 #ifndef RADIO_H_
 #define RADIO_H_
 
@@ -39,10 +40,10 @@ typedef struct {
 } radio_data_temperature_t;
 
 typedef struct {
-  // volatile
+  //
   uint8_t destination_address;
   uint8_t source_address;
-  // fix values
+  //
   uint8_t channel_id;
   uint8_t channel_default;
   uint8_t channel_start;
