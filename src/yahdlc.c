@@ -1,3 +1,4 @@
+// todo source
 #include "yahdlc.h"
 
 // HDLC Control field bit positions
@@ -103,7 +104,7 @@ unsigned char yahdlc_frame_control_type(yahdlc_control_t *control) {
   return value;
 }
 
-void yahdlc_get_data_reset() {
+void yahdlc_get_data_reset(void) {
   yahdlc_get_data_reset_with_state(&yahdlc_state);
 }
 

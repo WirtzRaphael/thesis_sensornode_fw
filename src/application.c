@@ -275,6 +275,7 @@ void APP_Run(void) {
   menu_init(); // --> Menu Task
 #endif
 
+// fixme : if semaphore null also check/deactivate later or stop here
 #if PL_CONFIG_USE_BUTTONS
   xButtonASemaphore = xSemaphoreCreateBinary();
   if (xButtonASemaphore == NULL) {

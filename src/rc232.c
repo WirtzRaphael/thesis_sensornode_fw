@@ -9,6 +9,7 @@
  * @copyright Copyright (c) 2024
  *
  * todo : rtos delay instead sleep
+ * todo : replace magic delays
  */
 #include "rc232.h"
 #include "pico/time.h"

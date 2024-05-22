@@ -69,12 +69,12 @@ static radio_data_temperature_t data_temperature = {
 
 static uint16_t radio_time_intervals_ms = 500;
 
-pico_unique_board_id_t pico_uid = {0};
+static pico_unique_board_id_t pico_uid = {0};
 
 static void vRadioTask(void *pvParameters) {
   TickType_t xLastWakeTime = xTaskGetTickCount();
   const TickType_t xDelay_radio_task = pdMS_TO_TICKS(radio_time_intervals_ms);
-  const TickType_t xButtonSemaphore = portTICK_PERIOD_MS * 50;
+  const TickType_t xButtonSemaphoreTimeout = portTICK_PERIOD_MS * 50;
 
   for (;;) {
     // periodic task
@@ -85,12 +85,12 @@ static void vRadioTask(void *pvParameters) {
     // todo : receive fw file (download) (block resource, write to flash, signal
     // for update)
 
-    if (xSemaphoreTake(xButtonASemaphore, xButtonSemaphore) == pdTRUE) {
+    if (xSemaphoreTake(xButtonASemaphore, xButtonSemaphoreTimeout) == pdTRUE) {
       printf("[radio] Semaphore take Button A\n");
       printf("[radio] Synchronize / Authentication");
       radio_authentication();
     }
-    if (xSemaphoreTake(xButtonBSemaphore, xButtonSemaphore) == pdTRUE) {
+    if (xSemaphoreTake(xButtonBSemaphore, xButtonSemaphoreTimeout) == pdTRUE) {
       printf("[radio] Semaphore take Button B\n");
       printf("[radio] Send Temperature 1 \n");
       // fixme : send all values and empty values otherwise
@@ -98,13 +98,14 @@ static void vRadioTask(void *pvParameters) {
                                                    DATA_SENSORS_TEMPERATURE_1};
       // todo : refactor : readout temperatures into array and pass to radio
       // send fixme : interface readout queue and send values here !
-      radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
+      // todo : error handling
+      (void) radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
                                       data_info_temperature_1, false);
 
       printf("[radio] Send Temperature 2 \n");
       data_info_field_t data_info_temperature_2 = {PROTOCOL_VERSION,
                                                    DATA_SENSORS_TEMPERATURE_2};
-      radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
+      (void) radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
                                       data_info_temperature_2, false);
     }
 
@@ -204,12 +205,15 @@ static error_t radio_authentication_request(void) {
   char send_data[16];
   char frame_data[24];
   unsigned int frame_length = 0;
+  // todo : size_t
   uint8_t index = 0;
 
   // Payload content info
   data_info_field_t data_info_field = {PROTOCOL_VERSION,
                                        DATA_AUTHENTICATION_REQUEST};
   // todo : index refactor
+  // todo : get uid rp2040 here?
+  // todo : pass send_data as pointer
   pack_data_info_field(&data_info_field, send_data[0]);
   index++;
   send_data[1] = 255; // todo : receiver address
@@ -349,6 +353,8 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   yahdlc_control_t control;
   control.frame = YAHDLC_FRAME_DATA;
   // control.seq_no = 0;
+  // todo : info for size values
+  // todo : cast when use for library hdlc
   char send_data[16];
   char frame_data[24];
   unsigned int frame_length = 0;
@@ -363,6 +369,7 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   // Measurement values
   // reads multiple values from queue until buffer full or queue empty
   // note : number of values multiplied by the size
+  // todo : magic number temperature byte length
   for (data_temperature.index;
        data_temperature.index <= 2 * RADIO_TEMPERATURE_VALUES;
        data_temperature.index += 2) {
@@ -373,7 +380,7 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
     }
     error_resp = sensors_temperature_xQueue_receive(
         xQueue_temperature, &data_temperature.measurement);
-    if (!(error_resp == ERR_OK)) {
+    if (error_resp != ERR_OK) {
       printf("[radio] No new temperature value received\n");
       // fill values
       send_data[data_temperature.index] = 0;
@@ -478,7 +485,7 @@ static void print_bits_of_byte(uint8_t byte, bool print) {
     if (print) {
       printf("%c", (byte & (1 << i)) ? '1' : '0');
     }
-    printf("%c", (byte & (1 << i)) ? '1' : '0');
+    McuLog_trace("%c", (byte & (1 << i)) ? '1' : '0');
   }
   if (print) {
     printf("\n");
@@ -553,6 +560,7 @@ static void unpack_data_info_field(data_info_field_t *field_dest,
  * @param recv_length
  * @return int : error code hdlc
  */
+ // todo : check buffer size (recv_data)
 error_t decode_hdlc_frame(yahdlc_control_t *control, char *frame_data,
                           size_t frame_length, char *recv_data,
                           size_t *recv_length) {
