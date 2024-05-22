@@ -39,9 +39,7 @@ static void OnDebounceEvent(McuDbnc_EventKinds event, uint32_t buttons) {
     button = BTN_A;
   } else if (buttons&BTN_BIT_B) {
     button = BTN_B;
-  } else if (buttons&BTN_BIT_C) {
-    button = BTN_C;
-  }
+  } 
 
   switch(event) {
     case MCUDBNC_EVENT_PRESSED:

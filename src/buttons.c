@@ -42,9 +42,6 @@ uint32_t BTN_GetButtons(void) {
   if (BTN_IsPressed(BTN_B)) {
     val |= BTN_BIT_B;
   }
-  if (BTN_IsPressed(BTN_C)) {
-    val |= BTN_BIT_C;
-  }
   return val;
 }
 
@@ -74,9 +71,6 @@ static void gpio_IsrCallback(uint gpio, uint32_t events) {
       break;
     case BUTTONS_B_PIN:
       button = BTN_BIT_B;
-      break;
-    case BUTTONS_C_PIN:
-      button = BTN_BIT_C;
       break;
     default:
       button = 0;
@@ -108,13 +102,8 @@ void BTN_Init(void) {
   btnConfig.hw.pull = McuGPIO_PULL_UP;
   BTN_Infos[BTN_B].handle = McuBtn_InitButton(&btnConfig);
 
-  btnConfig.hw.pin = BUTTONS_C_PIN;
-  btnConfig.hw.pull = McuGPIO_PULL_UP;
-  BTN_Infos[BTN_C].handle = McuBtn_InitButton(&btnConfig);
-
   gpio_set_irq_enabled_with_callback(BUTTONS_A_PIN, GPIO_IRQ_EDGE_FALL, true, &gpio_IsrCallback);
   gpio_set_irq_enabled_with_callback(BUTTONS_B_PIN,     GPIO_IRQ_EDGE_FALL, true, &gpio_IsrCallback);
-  gpio_set_irq_enabled_with_callback(BUTTONS_C_PIN,   GPIO_IRQ_EDGE_FALL, true, &gpio_IsrCallback);
 }
 
 #endif /* #if PL_CONFIG_USE_BUTTONS */

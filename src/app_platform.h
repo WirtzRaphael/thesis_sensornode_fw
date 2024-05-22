@@ -34,7 +34,7 @@
 #define PL_CONFIG_USE_TCP_SERVER      (0 && PL_CONFIG_USE_WIFI)   /* if running TCP server */
 #define PL_CONFIG_USE_MQTT_CLIENT     (0 && PL_CONFIG_USE_WIFI)   /* if running MQTT client */
 
-#define PL_CONFIG_USE_BUTTONS           (0) /* if using push button/navigation switch */
+#define PL_CONFIG_USE_BUTTONS           (1) /* if using push button/navigation switch */
 #define PL_CONFIG_USE_BUTTON_NEXT_PREV  (0 && (PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_1 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_5 || PL_CONFIG_HW_ACTIVE_HW_VERSION==PL_CONFIG_HW_VERSION_0_7)) /* if having 'next' and 'previous' buttons */
 #define PL_CONFIG_USE_I2C               (0) /* if using I2C */
 #define PL_CONFIG_USE_GUI               (0 && PL_CONFIG_USE_I2C) /* if using lvgl GUI or not */
