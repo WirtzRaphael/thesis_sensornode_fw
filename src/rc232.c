@@ -26,14 +26,13 @@
 #include <errno.h>
 #include <stdint.h>
 
-// fixme : cmake build errors
-#if HW_PLATFORM != PL_CONFIG_HW_VERSION_2_0
+#if PICO_CONFIG_USE_RADIO
 
 #define RADIO_PIN_TX                     PICO_PINS_UART0_TX
 #define RADIO_PIN_RX                     PICO_PINS_UART0_RX
 #define RADIO_PIN_CTS                    PICO_PINS_UART0_CTS
 #define RADIO_PIN_RTS                    PICO_PINS_UART0_RTS
-#define RADIO_PIN_CONFIG                 (20)
+#define RADIO_PIN_CONFIG                 PL_GPIO_RADIO_CONFIG
 #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
 
 // note : maybe configure flow control in radio NVM, before activating
@@ -115,11 +114,6 @@ void rc232_init() {
 
   /* Pin configuration
    */
-  // Enable VCC_RF
-  gpio_init(PL_GPIO_ENABLE_VCC_RF);
-  gpio_set_dir(PL_GPIO_ENABLE_VCC_RF, GPIO_OUT);
-  gpio_put(PL_GPIO_ENABLE_VCC_RF, true);
-
   // Reset Pin
   gpio_init(PL_GPIO_RADIO_RESET);
   gpio_set_dir(PL_GPIO_RADIO_RESET, GPIO_OUT);
@@ -757,4 +751,4 @@ void rc232_memory_write_configuration(void) {
   McuLog_trace("[rc232] Exit memory configuration state !");
 }
 
-#endif
+#endif /* CONFIG_USE_RADIO */
