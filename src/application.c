@@ -234,8 +234,12 @@ static void AppTask(void *pv) {
 
     gpio_put(PICO_PINS_LED_2, false);
   #if APP_SHUTDOWN_POWER
+    /* Deinit
+    */
+    printf("[App] Deinit\n");
+    sensors_deinit();
 
-    McuLog_info("[App] Shutdown system voltage 3V3");
+
     /* SHUTDOWN : 3V3
      */
     printf("[App] Power off\n");
