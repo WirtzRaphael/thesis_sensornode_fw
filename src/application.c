@@ -211,9 +211,6 @@ static void AppTask(void *pv) {
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, ledIsOn);
     ledIsOn = !ledIsOn;
 #endif
-    // todo : power cycle : task processing (sensor, radio)
-    // todo : sleep components (radio)
-    // todo : deinit sensors etc.
     // - recheck alert settings (?)
     // wait until other tasks done
     // todo : use semaphore for task sync (?)
@@ -225,12 +222,14 @@ static void AppTask(void *pv) {
     gpio_put(PICO_PINS_LED_2, true);
     vTaskDelay(pdMS_TO_TICKS(500));
 
-    // todo : define range
-    // wakekup
+    // todo : sleep components (radio)
+
     /* Wakeup alert
      */
     time_rtc_alarm_reset_flag(); // be sure that the flag is reset
-    // todo : avoid time shiff -> pass time and check or at beginning of task
+    // fixme : avoid time shiff -> pass time and check or at beginning of task
+    // todo : get time rtc at start of task, alert based on this -> time sync rtc
+    // todo : check if alert in the future or already passed -> time sync rtc
     time_rtc_alarm_from_now(&time_alert);
     time_rtc_alarm_enable();
 
@@ -249,7 +248,6 @@ static void AppTask(void *pv) {
     power_3v3_1_enable(false);
     vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
     McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_ms);
-    McuLog_info("[App] Reiterate Applikation\n");
     // fallback shutdown
     // - avoid deadlock and to re-initialize system
     McuArmTools_SoftwareReset(); /* restart */
