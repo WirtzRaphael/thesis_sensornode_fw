@@ -1,15 +1,15 @@
 #include "pico_config.h"
 
 #if PICO_CONFIG_USE_RTC
-  #include "time_operations.h"
   #include "McuLib.h"
   #include "McuLog.h"
   #include "McuTimeDate.h"
   #include "stdio.h"
+  #include "time_operations.h"
   #include <errno.h>
 
-  #include "extRTC.h"
   #include "McuPCF85063A.h"
+  #include "extRTC.h"
 
 DATEREC date;
 TIMEREC time;
@@ -35,6 +35,33 @@ error_t time_rtc_get_time(TIMEREC *time) {
 
 error_t time_rtc_software_reset(void) {
   return McuPCF85063A_WriteSoftwareReset();
+}
+
+error_t time_rtc_alarm_from_now(TIMEREC *t_from_now) {
+  uint8_t val = 0;
+  bool dummy;
+  bool is24h, isAM;
+
+  time_rtc_get_time(&time);
+
+  if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) != ERR_OK) {
+    McuLog_error("Error reading alarm second\n");
+    return ERR_FAILED;
+  }
+  McuPCF85063A_WriteAlarmSecond((time.Sec + t_from_now->Sec), enable);
+  McuLog_trace("Alarm sec : %d\n", t_from_now->Sec);
+  if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) != ERR_OK) {
+    McuLog_error("Error reading alarm minute\n");
+    return ERR_FAILED;
+  }
+  McuPCF85063A_WriteAlarmMinute((time.Min + t_from_now->Min), enable);
+  McuLog_trace("Alarm min : %d\n", t_from_now->Min);
+  if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) != ERR_OK) {
+    McuLog_error("Error reading alarm hour\n");
+    return ERR_FAILED;
+  }
+  McuPCF85063A_WriteAlarmHour((time.Hour + t_from_now->Hour), enable, is24h, isAM);
+  McuLog_trace("Alarm hour : %d\n", t_from_now->Hour);
 }
 
 void time_rtc_alarm_set_time(void) {
