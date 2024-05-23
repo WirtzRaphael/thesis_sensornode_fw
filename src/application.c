@@ -1,6 +1,7 @@
+#include "application.h"
 #include "app_platform.h"
 #include "pico_config.h"
-#include "application.h"
+#include "time_operations.h"
 /*
 #include <stdio.h>
 */
@@ -175,8 +176,9 @@ static void AppTask(void *pv) {
   }
 #endif
 
-#if PL_CONFIG_USE_RTC
+#if PICO_CONFIG_USE_RTC
   TIMEREC time;
+  TIMEREC time_alert = {0, 0, 5, 0};
   DATEREC date;
 
   if (McuTimeDate_Init() != ERR_OK) { /* do it inside task, as needs to talk
@@ -192,7 +194,12 @@ static void AppTask(void *pv) {
   }
 #endif
 
+  gpio_init(PICO_PINS_LED_2);
+  gpio_set_dir(PICO_PINS_LED_2, GPIO_OUT);
+  gpio_put(PICO_PINS_LED_2, false);
+
   for (;;) {
+    printf("AppTask Start\n");
 #if APP_HAS_ONBOARD_GREEN_LED
     McuLED_Toggle(led);
 #elif PL_CONFIG_USE_PICO_W && !PL_CONFIG_USE_WIFI
@@ -202,10 +209,29 @@ static void AppTask(void *pv) {
     // todo : turn off after condition/time
     // - recheck alert settings (?)
 
-    //vTaskDelay(pdMS_TO_TICKS(3 * 1000));
+    vTaskDelay(pdMS_TO_TICKS(5 * 1000));
+    printf("AppTask Power\n");
+
 #if PICO_CONFIG_USE_POWER
+    time_rtc_alarm_reset_flag(); // be sure that the flag is reset
+    time_rtc_alarm_from_now(&time_alert);
+    time_rtc_alarm_enable();
+
+    gpio_put(PICO_PINS_LED_2, true);
+    vTaskDelay(pdMS_TO_TICKS(500));
+    // POWER OFF - 3.3V
     power_3v3_1_enable(false);
+    gpio_put(PICO_PINS_LED_2, false);
 #endif
+
+    // wait forever - restart
+    for (;;) {
+      printf("AppTask End\n");
+      vTaskDelay(pdMS_TO_TICKS(1000));
+      // reset alarm flag for power cycle and restart program
+      // avoid deadlock
+      time_rtc_alarm_reset_flag(); // be sure that the flag is reset
+    }
   }
 } /* AppTask */
 
