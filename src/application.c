@@ -32,6 +32,7 @@
 #if PL_CONFIG_USE_BUTTONS
   #include "McuButton.h"
 #endif
+#include "McuArmTools.h"
 #include "McuLED.h"
 #include "McuLog.h"
 #include "McuRTOS.h"
@@ -235,10 +236,10 @@ static void AppTask(void *pv) {
     gpio_put(PICO_PINS_LED_2, false);
   #if APP_SHUTDOWN_POWER
     /* Deinit
-    */
-    printf("[App] Deinit\n");
-    sensors_deinit();
-
+     */
+    printf("[App] Deinit / Suspend\n");
+    sensors_deinit(); // deinit I2C
+    vTaskSuspendAll();
 
     /* SHUTDOWN : 3V3
      */
@@ -247,6 +248,9 @@ static void AppTask(void *pv) {
     vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
     McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_ms);
     McuLog_info("[App] Reiterate Applikation\n");
+    // fallback shutdown
+    // - avoid deadlock and to re-initialize system
+    McuArmTools_SoftwareReset(); /* restart */
   #else
     // fixme : no sync with rtc time (!), periodic call by rtos
     printf("[App] Delay wakeup\n");
