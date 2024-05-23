@@ -1,12 +1,15 @@
-#include "time.h"
-#include "McuLib.h"
-#include "McuLog.h"
-#include "McuTimeDate.h"
-#include "stdio.h"
-#include <errno.h>
+#include "pico_config.h"
 
-//#include "McuPCF85063A.h"
-#include "extRTC.h"
+#if PICO_CONFIG_USE_RTC
+  #include "time_operations.h"
+  #include "McuLib.h"
+  #include "McuLog.h"
+  #include "McuTimeDate.h"
+  #include "stdio.h"
+  #include <errno.h>
+
+  #include "extRTC.h"
+  #include "McuPCF85063A.h"
 
 DATEREC date;
 TIMEREC time;
@@ -103,3 +106,5 @@ error_t time_rtc_alarm_enable(void) {
 error_t time_rtc_alarm_reset_flag(void) {
   return McuPCF85063A_WriteResetAlarmInterrupt();
 }
+
+#endif

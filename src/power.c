@@ -7,17 +7,20 @@
  * @copyright Copyright (c) 2024
  */
 
-#include "power.h"
-#include "McuLog.h"
-#include "pico/stdlib.h"
 #include "pico_config.h"
-#include "stdio.h"
-#include <errno.h>
-
-//#include "extRTC.h"
-#include "McuPCF85063A.h"
 
 #if PICO_CONFIG_USE_POWER
+  #include "McuLog.h"
+  #include "pico/stdlib.h"
+  #include "pico_config.h"
+  #include "power.h"
+  #include "stdio.h"
+  #include <errno.h>
+
+  #if PICO_CONFIG_USE_RTC
+  // #include "extRTC.h"
+    #include "McuPCF85063A.h"
+  #endif
 
 void power_init(void) {
   /* Pin : 3V3 Power enable
@@ -41,59 +44,59 @@ void power_init(void) {
 void power_init_at_runtime(void) {
   /* RTC
    */
-   // todo : move ?
+  // todo : move ?
   if (McuPCF85063A_WriteClockOutputFrequency(McuPCF85063A_COF_FREQ_OFF) !=
       ERR_OK) {
     McuLog_fatal("failed writing COF");
   }
 }
 
-  /**
-   * @brief Enable or disable 3V3-1 power supply
-   *
-   * @param enable true to enable, false to disable
-   *
-   * fix : use led pin
-   */
-  void power_3v3_1_enable(bool enable) {
-    if (enable) {
-      gpio_put(PICO_PINS_LED_1, true);
-    } else {
-      gpio_put(PICO_PINS_LED_1, false);
-    }
+/**
+ * @brief Enable or disable 3V3-1 power supply
+ *
+ * @param enable true to enable, false to disable
+ *
+ * fix : use led pin
+ */
+void power_3v3_1_enable(bool enable) {
+  if (enable) {
+    gpio_put(PICO_PINS_LED_1, true);
+  } else {
+    gpio_put(PICO_PINS_LED_1, false);
   }
+}
 
-  /**
-   * @brief Enable or disable 3V3-2 power supply
-   *
-   * @param enable true to enable, false to disable
-   */
-  void power_3v3_2_enable(bool enable) {
-    // Component not present
-    McuLog_error("Not implemented.");
+/**
+ * @brief Enable or disable 3V3-2 power supply
+ *
+ * @param enable true to enable, false to disable
+ */
+void power_3v3_2_enable(bool enable) {
+  // Component not present
+  McuLog_error("Not implemented.");
+}
+
+/**
+ * @brief Set power mode
+ *
+ * @param mode power mode
+ * @return error_t
+ *
+ * fix : use rs232 enable pin
+ */
+error_t power_mode(power_mode_t mode) {
+  switch (mode) {
+  case POWER_MODE_LIGHT:
+    gpio_put(PICO_PINS_RS232_FORCEOFF_N, false);
+    break;
+  case POWER_MODE_HEAVY:
+    gpio_put(PICO_PINS_RS232_FORCEOFF_N, true);
+    break;
+  default:
+    McuLog_error("Invalid power mode.");
   }
+}
 
-  /**
-   * @brief Set power mode
-   *
-   * @param mode power mode
-   * @return error_t
-   *
-   * fix : use rs232 enable pin
-   */
-  error_t power_mode(power_mode_t mode) {
-    switch (mode) {
-    case POWER_MODE_LIGHT:
-      gpio_put(PICO_PINS_RS232_FORCEOFF_N, false);
-      break;
-    case POWER_MODE_HEAVY:
-      gpio_put(PICO_PINS_RS232_FORCEOFF_N, true);
-      break;
-    default:
-      McuLog_error("Invalid power mode.");
-    }
-  }
-
-  // todo : rtc wakeup
+// todo : rtc wakeup
 
 #endif /* PICO_CONFIG_USE_POWER */
