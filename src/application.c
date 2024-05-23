@@ -1,15 +1,16 @@
 #include "app_platform.h"
+#include "pico_config.h"
+#include "application.h"
+/*
 #include <stdio.h>
+*/
 #if PL_CONFIG_USE_PICO_W
   #include "pico/cyw43_arch.h" // before PicoWiFi.h
 #endif
 #if PL_CONFIG_USE_PICO_W
   #include "PicoWiFi.h"
 #endif
-
-#include "pico_config.h"
 // tasks and dependencies
-#include "application.h"
 #if PICO_CONFIG_USE_POWER
   #include "power.h"
 #endif
@@ -200,9 +201,11 @@ static void AppTask(void *pv) {
 #endif
     // todo : turn off after condition/time
     // - recheck alert settings (?)
-    
-    vTaskDelay(pdMS_TO_TICKS(3 * 1000));
+
+    //vTaskDelay(pdMS_TO_TICKS(3 * 1000));
+#if PICO_CONFIG_USE_POWER
     power_3v3_1_enable(false);
+#endif
   }
 } /* AppTask */
 
