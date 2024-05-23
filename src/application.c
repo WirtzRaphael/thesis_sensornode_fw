@@ -198,7 +198,9 @@ static void AppTask(void *pv) {
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, ledIsOn);
     ledIsOn = !ledIsOn;
 #endif
-    vTaskDelay(pdMS_TO_TICKS(5 * 100));
+    // todo : turn off after condition/time
+    vTaskDelay(pdMS_TO_TICKS(3 * 1000));
+    power_3v3_1_enable(false);
   }
 } /* AppTask */
 
