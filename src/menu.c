@@ -8,18 +8,28 @@
  *
  */
 #include "menu.h"
-#include "extRTC.h"
 #include "pico_config.h"
-#include "power.h"
-#include "radio.h"
-#include "rc232.h"
-#include "sensors.h"
-#include "time.h"
-#include "stdio.h"
-#include <stdint.h>
+#if PICO_CONFIG_USE_POWER
+#include "extRTC.h"
+#endif
+#if PICO_CONFIG_USE_POWER
+  #include "power.h"
+#endif
+#if PICO_CONFIG_USE_RADIO
+  #include "radio.h"
+  #include "rc232.h"
+#endif
+#if PICO_CONFIG_USE_SENSORS
+  #include "sensors.h"
+#endif
+#if PICO_CONFIG_USE_RTC
+  #include "time_operations.h"
+#endif
 
 #include "McuLog.h"
-
+#include "stdio.h"
+#include <stdint.h>
+#include "McuTimeDate.h"
 #include "pico/stdlib.h"
 // todo : remove
 
@@ -68,14 +78,10 @@ void menu_set_date_default(void) {
 // note: alarm time means not exactly time X from now, because of the current
 // time accuracy. e.g. wakeup 5 seconds from now -> 10:00:04:500 -> (+4.5) ->
 // 10:00:09:000
-static void menu_alarm_set_time(void) {
-  time_rtc_alarm_set_time();
-}
+static void menu_alarm_set_time(void) { time_rtc_alarm_set_time(); }
 
 // todo : move function into another file like time/power/...
-void menu_read_alarm(void) {
-  time_rtc_alarm_get_time();
-}
+void menu_read_alarm(void) { time_rtc_alarm_get_time(); }
 #endif
 
 /**
