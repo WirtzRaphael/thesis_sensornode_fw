@@ -32,7 +32,7 @@
 /* I2C */
 #define CONFIG_USE_HW_I2C                           (1) /* if using HW I2C, otherwise use software bit banging */
 #define MCUI2CLIB_CONFIG_I2C_DEVICE                 i2c0
-// fixme : includes
+// fixme : includes (circular dependencies)
 //#define MCUI2CLIB_CONFIG_SDA_GPIO_PIN               (PICO_PINS_I2C0_SDA)
 //#define MCUI2CLIB_CONFIG_SCL_GPIO_PIN               (PICO_PINS_I2C0_SCL)
 #define MCUI2CLIB_CONFIG_SDA_GPIO_PIN               0u
