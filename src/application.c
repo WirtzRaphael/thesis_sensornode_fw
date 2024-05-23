@@ -186,6 +186,9 @@ static void AppTask(void *pv) {
     McuLog_fatal("failed initializing McuTimeDate");
   }
 #endif
+  static uint16_t xDelay_wakeup_ms = 4500;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xDelay_wakeup = pdMS_TO_TICKS(xDelay_wakeup_ms);
 
 #if PL_CONFIG_USE_PCF85063A
   // todo : required ? periodic sync
@@ -206,32 +209,50 @@ static void AppTask(void *pv) {
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, ledIsOn);
     ledIsOn = !ledIsOn;
 #endif
-    // todo : turn off after condition/time
+    // todo : power cycle : task processing (sensor, radio)
+    // todo : sleep components (radio)
+    // todo : deinit sensors etc.
     // - recheck alert settings (?)
+    // wait until other tasks done
+    // todo : use semaphore for task sync (?)
+    vTaskDelay(pdMS_TO_TICKS(500));
 
-    vTaskDelay(pdMS_TO_TICKS(5 * 1000));
-    printf("AppTask Power\n");
-
+    printf("[App] Power\n");
 #if PICO_CONFIG_USE_POWER
+    // indicate shutdown
+    gpio_put(PICO_PINS_LED_2, true);
+    vTaskDelay(pdMS_TO_TICKS(500));
+
+    // todo : define range
+    // wakekup
+    /* Wakeup alert
+     */
     time_rtc_alarm_reset_flag(); // be sure that the flag is reset
+    // todo : avoid time shiff -> pass time and check or at beginning of task
     time_rtc_alarm_from_now(&time_alert);
     time_rtc_alarm_enable();
 
-    gpio_put(PICO_PINS_LED_2, true);
-    vTaskDelay(pdMS_TO_TICKS(500));
-    // POWER OFF - 3.3V
-    power_3v3_1_enable(false);
     gpio_put(PICO_PINS_LED_2, false);
+  #if APP_SHUTDOWN_POWER
+
+    McuLog_info("[App] Shutdown system voltage 3V3");
+    /* SHUTDOWN : 3V3
+     */
+    printf("[App] Power off\n");
+    power_3v3_1_enable(false);
+    vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
+    McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_ms);
+    McuLog_info("[App] Reiterate Applikation\n");
+  #else
+    // fixme : no sync with rtc time (!), periodic call by rtos
+    printf("[App] Delay wakeup\n");
+    vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
+  #endif
+    /* NO CODE HERE*/
 #endif
 
-    // wait forever - restart
-    for (;;) {
-      printf("AppTask End\n");
-      vTaskDelay(pdMS_TO_TICKS(1000));
-      // reset alarm flag for power cycle and restart program
-      // avoid deadlock
-      time_rtc_alarm_reset_flag(); // be sure that the flag is reset
-    }
+    // reset alarm flag for power cycle and restart program
+    // avoid deadlock
   }
 } /* AppTask */
 

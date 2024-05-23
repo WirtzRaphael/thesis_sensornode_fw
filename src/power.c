@@ -14,6 +14,7 @@
   #include "pico/stdlib.h"
   #include "pico_config.h"
   #include "power.h"
+  #include "time_operations.h"
   #include "stdio.h"
   #include <errno.h>
 
@@ -44,6 +45,8 @@ void power_init(void) {
 void power_init_at_runtime(void) {
   /* RTC
    */
+  time_rtc_alarm_reset_flag(); // be sure that the flag is reset
+
   // todo : move ?
   if (McuPCF85063A_WriteClockOutputFrequency(McuPCF85063A_COF_FREQ_OFF) !=
       ERR_OK) {
