@@ -194,7 +194,7 @@ char menu_get_user_input() {
 void menu_handler_main(void) {
   const char *mainMenuOptions[] = {
       "[r]adio", "rc[2]32",   "rc232 [c]onfiguration",
-      "[o]ower", "[s]ensors", "[t]ime"};
+      "[p]ower", "[s]ensors", "[t]ime"};
   menu_display(mainMenuOptions, dimof(mainMenuOptions));
 
   char userCmd = menu_get_user_input();
@@ -490,13 +490,23 @@ void menu_handler_time(void) {
 
 #if PICO_CONFIG_USE_POWER
 void menu_handler_power(void) {
-  const char *sensorsOptions[] = {"[s]htudown VCC-1", "[p]ower mode"};
+  const char *sensorsOptions[] = {"[1] start VCC-1", "[2] shtudown VCC-1",
+                                  "power mode [l]ight", "power mode [h]eavy"};
   menu_display(sensorsOptions, dimof(sensorsOptions));
 
   char userCmd = menu_get_user_input();
   switch (userCmd) {
-  case 's':
-    // todo
+  case '1':
+    power_3v3_1_enable(true);
+    break;
+  case '2':
+    power_3v3_1_enable(false);
+    break;
+  case 'l':
+    power_mode(POWER_MODE_LIGHT);
+    break;
+  case 'h':
+    power_mode(POWER_MODE_HEAVY);
     break;
   default:
     printf("Invalid option\n");
