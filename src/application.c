@@ -33,6 +33,7 @@
   #include "McuButton.h"
 #endif
 #include "McuArmTools.h"
+#include "McuGenericI2C.h"
 #include "McuLED.h"
 #include "McuLog.h"
 #include "McuRTOS.h"
@@ -238,8 +239,9 @@ static void AppTask(void *pv) {
     /* Deinit
      */
     printf("[App] Deinit / Suspend\n");
-    sensors_deinit(); // deinit I2C
     vTaskSuspendAll();
+    sensors_deinit(); // deinit I2C
+    McuGenericI2C_Deinit();
 
     /* SHUTDOWN : 3V3
      */
