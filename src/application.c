@@ -199,6 +199,8 @@ static void AppTask(void *pv) {
     ledIsOn = !ledIsOn;
 #endif
     // todo : turn off after condition/time
+    // - recheck alert settings (?)
+    
     vTaskDelay(pdMS_TO_TICKS(3 * 1000));
     power_3v3_1_enable(false);
   }
