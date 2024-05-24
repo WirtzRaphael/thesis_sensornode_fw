@@ -1,5 +1,6 @@
 #include "application.h"
 #include "app_platform.h"
+#include "pico/time.h"
 #include "pico_config.h"
 #include "time_operations.h"
 /*
@@ -220,9 +221,12 @@ static void AppTask(void *pv) {
 #if PICO_CONFIG_USE_POWER
     // indicate shutdown
     gpio_put(PICO_PINS_LED_2, true);
-    vTaskDelay(pdMS_TO_TICKS(500));
+    vTaskDelay(pdMS_TO_TICKS(1000));
 
     // todo : sleep components (radio)
+    /* Components sleep
+    */
+    rc232_sleep();
 
     /* Wakeup alert
      */
@@ -239,22 +243,28 @@ static void AppTask(void *pv) {
      */
     printf("[App] Deinit / Suspend\n");
     vTaskSuspendAll();
-    sensors_deinit(); // deinit I2C
-    McuGenericI2C_Deinit();
+    sensors_deinit(); // -> I2C
+    rc232_deinit(); // -> UART
+    McuGenericI2C_Deinit(); // -> I2C
 
     /* SHUTDOWN : 3V3
      */
     printf("[App] Power off\n");
     power_3v3_1_enable(false);
-    vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
+    // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
+    sleep_ms(xDelay_wakeup_ms); // tasks supsended
     McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_ms);
+    McuArmTools_SoftwareReset(); /* restart */
     // fallback shutdown
     // - avoid deadlock and to re-initialize system
-    McuArmTools_SoftwareReset(); /* restart */
   #else
     // fixme : no sync with rtc time (!), periodic call by rtos
     printf("[App] Delay wakeup\n");
     vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
+    
+    /* Wakeup 
+    */
+    rc232_wakeup();
   #endif
     /* NO CODE HERE*/
 #endif
