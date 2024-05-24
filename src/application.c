@@ -248,6 +248,8 @@ static void AppTask(void *pv) {
     McuGenericI2C_Deinit(); // -> I2C
 
     /* SHUTDOWN : 3V3
+     * fixme : high current consumption from 3V3, when 3V3_RF ON and 3V3-1 OFF
+     * -> Replace digital isolator
      */
     printf("[App] Power off\n");
     power_3v3_1_enable(false);
