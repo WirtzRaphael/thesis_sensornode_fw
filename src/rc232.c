@@ -240,7 +240,6 @@ void rc232_tx_packet_bytes(uint8_t *bytes, size_t length, bool dryrun) {
  * @brief Readout all data from the radio buffer
  *
  * todo : function to only flush/clear buffer (?)
- * todo : cobs protocol
  */
 void rc232_rx_read_buffer_full(void) {
   uint8_t rec_buffer[1];
