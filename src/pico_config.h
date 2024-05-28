@@ -40,7 +40,7 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_CONFIG_USE_RTC     (1)
   #define PICO_CONFIG_USE_MENU    (1)
   #define PICO_CONFIG_USE_BUTTONS (1)
-  #define PICO_CONFIG_USE_RADIO   (1)
+  #define PICO_CONFIG_USE_RADIO   (0)
   #define PICO_CONFIG_USE_SENSORS (1)
   #define PICO_CONFIG_USE_POWER   (1)
   //

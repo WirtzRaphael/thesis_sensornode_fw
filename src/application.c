@@ -200,6 +200,7 @@ static void AppTask(void *pv) {
 
 #if PICO_CONFIG_USE_RTC
   TIMEREC time;
+  // todo : magic number -> periodic start time
   TIMEREC time_alert = {0, 0, 5, 0};
   DATEREC date;
 
@@ -219,7 +220,7 @@ static void AppTask(void *pv) {
   }
 #endif
 
-#if APP_POWER_RADIO_DEFAULT_SLEEP
+#if APP_POWER_RADIO_DEFAULT_SLEEP && PICO_CONFIG_USE_RADIO
   // note : menu cmds for serial communiction effected, require wakeup
   rc232_rx_read_buffer_full();
   rc232_sleep();
@@ -266,12 +267,14 @@ static void AppTask(void *pv) {
        */
       printf("[App] Deinit / Suspend\n");
 
-      // todo : move power
+      // todo : move power & config defines
       ExtRTC_Deinit(); // -> I2C
       vTaskSuspendAll();
-      sensors_deinit();              // -> I2C
+      //sensors_deinit();              // -> I2C
+      #if PICO_CONFIG_USE_RADIO
       rc232_deinit();                // -> UART
-      McuGenericI2C_Deinit();        // -> I2C
+      #endif
+      //McuGenericI2C_Deinit();        // -> I2C
       sleep_ms(APP_POWER_DEINIT_MS); // tasks supsended
 
       /* SHUTDOWN : 3V3
@@ -286,7 +289,7 @@ static void AppTask(void *pv) {
       //  fallback shutdown
       // - WARNING : check if system can hang up!
       //  - avoid deadlock and to re-initialize system
-      // McuArmTools_SoftwareReset(); /* restart */
+      McuArmTools_SoftwareReset(); /* restart */
     } else {
       // fixme : no sync with rtc time (!), periodic call by rtos
       McuLog_info("[App] Delay wakeup\n");
