@@ -116,6 +116,7 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
     xSemaphoreGive(xButtonAHoldSemaphore);
   } else if (button == BTN_B && kind == MCUDBNC_EVENT_PRESSED) {
     McuLog_info("[app] Semaphore give Button B");
+
     printf("button b \n");
     /*
     power_toggle_periodic_shutdown();
@@ -207,9 +208,9 @@ static void AppTask(void *pv) {
     McuLog_fatal("failed initializing McuTimeDate");
   }
 #endif
-  static uint16_t xDelay_wakeup_ms = 4500;
+  static uint16_t xDelay_wakeup_fallback_ms = APP_POWER_WAKEUP_FALLBACK_MS;
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xDelay_wakeup = pdMS_TO_TICKS(xDelay_wakeup_ms);
+  const TickType_t xDelay_wakeup = pdMS_TO_TICKS(xDelay_wakeup_fallback_ms);
 
 #if PL_CONFIG_USE_PCF85063A
   // todo : required ? periodic sync
@@ -218,8 +219,9 @@ static void AppTask(void *pv) {
   }
 #endif
 
-#if APP_POWER_RADIO_SLEEP
-  rc232_wakeup();
+#if APP_POWER_RADIO_DEFAULT_SLEEP
+  // note : menu cmds for serial communiction effected, require wakeup
+  rc232_sleep();
 #endif
 
   gpio_init(PICO_PINS_LED_2);
@@ -237,17 +239,13 @@ static void AppTask(void *pv) {
     // - recheck alert settings (?)
     // wait until other tasks done
     // todo : use semaphore for task sync (?)
-    vTaskDelay(pdMS_TO_TICKS(500));
+    vTaskDelay(pdMS_TO_TICKS(APP_POWER_APP_TASK_MS));
 
     McuLog_info("[App] Power\n");
 #if PICO_CONFIG_USE_POWER
     // indicate shutdown
     gpio_put(PICO_PINS_LED_2, true);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
-    /* Components sleep
-     * note : menu cmds for serial communiction effected
-     */
+    //vTaskDelay(pdMS_TO_TICKS(50));
 
     /* Wakeup alert
      */
@@ -261,31 +259,29 @@ static void AppTask(void *pv) {
 
     gpio_put(PICO_PINS_LED_2, false);
 
+
+
     // note : button to switch mode
     if (power_get_periodic_shutdown() == TRUE) {
       /* Deinit
        */
       printf("[App] Deinit / Suspend\n");
-  #if APP_POWER_RADIO_SLEEP
-      rc232_sleep();
-  #endif
+
+      // todo : move power  
       ExtRTC_Deinit();        // -> I2C
       vTaskSuspendAll();
       sensors_deinit();       // -> I2C
       rc232_deinit();         // -> UART
       McuGenericI2C_Deinit(); // -> I2C
-      // fixme : delay i2c deinit
-      sleep_ms(100); // tasks supsended
+      sleep_ms(APP_POWER_DEINIT_MS); // tasks supsended
 
       /* SHUTDOWN : 3V3
-       * fixme : high current consumption from 3V3, when 3V3_RF ON and 3V3-1 OFF
-       * -> Replace digital isolator
        */
       printf("[App] Power off\n");
       power_3v3_1_enable(false);
       // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
-      sleep_ms(xDelay_wakeup_ms); // tasks supsended
-      McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_ms);
+      sleep_ms(xDelay_wakeup_fallback_ms); // tasks supsended
+      McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_fallback_ms);
       // fixme : fallback
       //  fallback shutdown
       // - WARNING : check if system can hang up!
@@ -295,11 +291,6 @@ static void AppTask(void *pv) {
       // fixme : no sync with rtc time (!), periodic call by rtos
       McuLog_info("[App] Delay wakeup\n");
       vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
-      /* Wakeup
-       */
-  #if APP_POWER_RADIO_SLEEP
-      rc232_wakeup();
-  #endif
     }
 #endif /* PICO_CONFIG_USE_POWER */
     /* NO CODE HERE*/

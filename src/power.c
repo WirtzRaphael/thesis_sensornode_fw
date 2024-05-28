@@ -24,8 +24,8 @@
     #include "McuPCF85063A.h"
   #endif
 
-// static bool periodic_shutdown = APP_POWER_AUTO_SHUTDOWN;
-static bool periodic_shutdown = true;
+static bool periodic_shutdown = APP_POWER_AUTO_SHUTDOWN;
+//static bool periodic_shutdown = true;
 
 void power_init(void) {
   /* Pin : 3V3 Power enable
