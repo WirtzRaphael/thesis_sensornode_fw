@@ -1,5 +1,6 @@
 #include "application.h"
 #include "app_platform.h"
+#include "hardware/rtc.h"
 #include "pico/time.h"
 #include "pico_config.h"
 #include "time_operations.h"
@@ -225,26 +226,30 @@ static void AppTask(void *pv) {
 
     // todo : sleep components (radio)
     /* Components sleep
-    */
-    rc232_sleep();
+     * note : menu cmds for serial communiction effected
+     */
+    // todo : config condition
+    //rc232_sleep();
 
     /* Wakeup alert
      */
     time_rtc_alarm_reset_flag(); // be sure that the flag is reset
     // fixme : avoid time shiff -> pass time and check or at beginning of task
-    // todo : get time rtc at start of task, alert based on this -> time sync rtc
-    // todo : check if alert in the future or already passed -> time sync rtc
+    // todo : get time rtc at start of task, alert based on this -> time sync
+    // rtc todo : check if alert in the future or already passed -> time sync
+    // rtc
     time_rtc_alarm_from_now(&time_alert);
     time_rtc_alarm_enable();
 
     gpio_put(PICO_PINS_LED_2, false);
+    // todo : hold button(s) to switch on/off restart -> maintenance mode
   #if APP_SHUTDOWN_POWER
     /* Deinit
      */
     printf("[App] Deinit / Suspend\n");
     vTaskSuspendAll();
-    sensors_deinit(); // -> I2C
-    rc232_deinit(); // -> UART
+    sensors_deinit();       // -> I2C
+    rc232_deinit();         // -> UART
     McuGenericI2C_Deinit(); // -> I2C
 
     /* SHUTDOWN : 3V3
@@ -256,17 +261,18 @@ static void AppTask(void *pv) {
     // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
     sleep_ms(xDelay_wakeup_ms); // tasks supsended
     McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_ms);
-    McuArmTools_SoftwareReset(); /* restart */
-    // fallback shutdown
-    // - avoid deadlock and to re-initialize system
+      // McuArmTools_SoftwareReset(); /* restart */
+      //  fallback shutdown
+      //  - avoid deadlock and to re-initialize system
   #else
     // fixme : no sync with rtc time (!), periodic call by rtos
     printf("[App] Delay wakeup\n");
     vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
-    
-    /* Wakeup 
-    */
-    rc232_wakeup();
+
+    /* Wakeup
+     */
+    // todo : config condition
+    //rc232_wakeup();
   #endif
     /* NO CODE HERE*/
 #endif
