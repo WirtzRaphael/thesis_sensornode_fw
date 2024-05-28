@@ -17,6 +17,7 @@
 extern SemaphoreHandle_t xButtonASemaphore;
 extern SemaphoreHandle_t xButtonAHoldSemaphore;
 extern SemaphoreHandle_t xButtonBSemaphore;
+extern SemaphoreHandle_t xButtonCSemaphore;
 
 void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind);
 #endif

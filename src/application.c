@@ -112,10 +112,26 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
     xSemaphoreGive(xButtonASemaphore);
   } else if (button == BTN_A && kind == MCUDBNC_EVENT_LONG_PRESSED) {
     McuLog_info("[app] Semaphore give Button A Hold");
+    printf("button a long \n");
     xSemaphoreGive(xButtonAHoldSemaphore);
   } else if (button == BTN_B && kind == MCUDBNC_EVENT_PRESSED) {
     McuLog_info("[app] Semaphore give Button B");
-    xSemaphoreGive(xButtonBSemaphore);
+    printf("button b \n");
+    /*
+    power_toggle_periodic_shutdown();
+    // indicate config change
+    gpio_put(PICO_PINS_LED_2, true);
+    vTaskDelay(pdMS_TO_TICKS(200));
+    gpio_put(PICO_PINS_LED_2, true);
+    vTaskDelay(pdMS_TO_TICKS(200));
+    gpio_put(PICO_PINS_LED_2, true);
+    vTaskDelay(pdMS_TO_TICKS(200));
+    gpio_put(PICO_PINS_LED_2, true);
+    vTaskDelay(pdMS_TO_TICKS(200));
+    */
+    // xSemaphoreGive(xButtonBSemaphore);
+  } else if (button == BTN_B && kind == MCUDBNC_EVENT_LONG_PRESSED) {
+    printf("button b long \n");
   }
 }
 #endif
