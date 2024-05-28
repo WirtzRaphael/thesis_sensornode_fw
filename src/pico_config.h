@@ -67,7 +67,11 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   // todo : rs232 : uart0
   #define PICO_PINS_RS232_FORCEOFF_N 9u
   #define PICO_PINS_RS232_FORCEON    10u
-  // todo : gpio power -> Fix connection
+  // todo : replace in code
+  // fix : hardware modification
+  //#define PICO_PINS_POWER_3V3_1_ENABLE NULL
+  //#define PICO_PINS_POWER_3V3_2_ENABLE NULL
+  //#define PICO_PINS_POWER_3V3_MODE NULL
 #endif
 
 /* PL : sensornode v1 - rp2040 pico w
