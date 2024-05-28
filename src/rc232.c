@@ -143,7 +143,6 @@ void rc232_deinit(void){
   // uart
   uart_deinit(UART_RADIO_ID);
 
-  // fixme : high current consumption from Battery, when 3V3_RF connected and 3V3-1 OFF
   // gpio
   gpio_set_dir(PL_GPIO_RADIO_RESET, GPIO_IN);
   gpio_set_dir(PL_GPIO_RADIO_CONFIG, GPIO_IN);
