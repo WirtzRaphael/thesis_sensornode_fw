@@ -44,8 +44,8 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_CONFIG_USE_SENSORS (1)
   #define PICO_CONFIG_USE_POWER   (1)
   //
-  #define APP_POWER_AUTO_SHUTDOWN (0)
-  // fixme
+  #define APP_POWER_AUTO_SHUTDOWN (1)
+  // fixme : working from menu. otherwise? Clear Buffer?
   #define APP_POWER_RADIO_DEFAULT_SLEEP (1)
   #define APP_HAS_ONBOARD_GREEN_LED     (0)
   #define APP_RADIO_DECTIVATE_RF        (0)
