@@ -43,8 +43,12 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_CONFIG_USE_RADIO   (1)
   #define PICO_CONFIG_USE_SENSORS (1)
   #define PICO_CONFIG_USE_POWER   (1)
-  // 
+  //
+  #define APP_POWER_AUTO_SHUTDOWN   (1)
+  #define APP_POWER_RADIO_SLEEP     (0)
   #define APP_HAS_ONBOARD_GREEN_LED (0)
+  #define APP_RADIO_DECTIVATE_RF    (1)
+  #define APP_RADIO_CHANNEL_SCAN    (0)
   /* GPIO
    */
   #define PICO_PINS_BUTTON_A    14u
@@ -68,9 +72,9 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_PINS_RS232_FORCEON    10u
   // todo : replace in code
   // fix : hardware modification
-  //#define PICO_PINS_POWER_3V3_1_ENABLE NULL
-  //#define PICO_PINS_POWER_3V3_2_ENABLE NULL
-  //#define PICO_PINS_POWER_3V3_MODE NULL
+  // #define PICO_PINS_POWER_3V3_1_ENABLE NULL
+  // #define PICO_PINS_POWER_3V3_2_ENABLE NULL
+  // #define PICO_PINS_POWER_3V3_MODE NULL
 #endif
 
 /* PL : sensornode v1 - rp2040 pico w

@@ -202,6 +202,10 @@ static void AppTask(void *pv) {
   }
 #endif
 
+#if APP_POWER_RADIO_SLEEP
+  rc232_wakeup();
+#endif
+
   gpio_init(PICO_PINS_LED_2);
   gpio_set_dir(PICO_PINS_LED_2, GPIO_OUT);
   gpio_put(PICO_PINS_LED_2, false);

@@ -38,11 +38,11 @@
   #define PROTOCOL_VERSION         (1)
   #define PROTOCOL_AUTH_SIZE_BYTES (10)
   #define RF_CHANNEL_DEFAULT       (1)
+  #define TRANSMISSION_IN_BYTES        (0)
 
   // Use fix channel or scan channels
-  #define SCAN_CHANNELS_FOR_CONNECTION (0)
-  #define TRANSMISSION_IN_BYTES        (0)
-  #define DEACTIVATE_RF                (1)
+  #define SCAN_CHANNELS_FOR_CONNECTION APP_RADIO_CHANNEL_SCAN
+  #define DEACTIVATE_RF                APP_RADIO_DECTIVATE_RF
 
   #define RADIO_LOG_OUTPUT printf
 // #define RADIO_LOG_OUTPUT McuLog_trace // fixme : some values missing
