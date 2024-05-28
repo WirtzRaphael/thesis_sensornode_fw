@@ -204,6 +204,7 @@ void menu_handler_radio(void) {
     radio_encoding_hdlc_example();
     break;
   case 's':
+    // use button
     // radio_send_temperature_as_string();
     break;
   case 't':

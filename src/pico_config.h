@@ -48,7 +48,7 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   // fixme
   #define APP_POWER_RADIO_DEFAULT_SLEEP (1)
   #define APP_HAS_ONBOARD_GREEN_LED     (0)
-  #define APP_RADIO_DECTIVATE_RF        (1)
+  #define APP_RADIO_DECTIVATE_RF        (0)
   #define APP_RADIO_CHANNEL_SCAN        (0)
   // MEASURE
   #define APP_POWER_APP_TASK_MS        (200)
