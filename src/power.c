@@ -12,6 +12,7 @@
 #if PICO_CONFIG_USE_POWER
   #include "McuLog.h"
   #include "pico/stdlib.h"
+  #include "pico/sleep.h"
   #include "pico_config.h"
   #include "power.h"
   #include "time_operations.h"
@@ -91,13 +92,20 @@ error_t power_mode(power_mode_t mode) {
   switch (mode) {
   case POWER_MODE_LIGHT:
     gpio_put(PICO_PINS_RS232_FORCEOFF_N, false);
+    return ERR_OK;
     break;
   case POWER_MODE_HEAVY:
     gpio_put(PICO_PINS_RS232_FORCEOFF_N, true);
+    return ERR_OK;
     break;
   default:
     McuLog_error("Invalid power mode.");
   }
+  return ERR_FAILED;
+}
+
+void power_sleep(void) {
+  sleep_ms(1000);
 }
 
 // todo : rtc wakeup
