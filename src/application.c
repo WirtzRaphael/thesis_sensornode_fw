@@ -57,6 +57,7 @@
   #include "semphr.h"
 // todo review : extern definition in header and here
 SemaphoreHandle_t xButtonASemaphore;
+SemaphoreHandle_t xButtonAHoldSemaphore;
 SemaphoreHandle_t xButtonBSemaphore;
 SemaphoreHandle_t xButtonCSemaphore;
 /**
@@ -106,13 +107,13 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
   McuRTT_printf(0, buf);
   #endif
 
-  // todo : refactor, remove printf
   if (button == BTN_A && kind == MCUDBNC_EVENT_RELEASED) {
-    printf("[app] Semaphore give A\n");
     McuLog_info("[app] Semaphore give Button A");
     xSemaphoreGive(xButtonASemaphore);
+  } else if (button == BTN_A && kind == MCUDBNC_EVENT_LONG_PRESSED) {
+    McuLog_info("[app] Semaphore give Button A Hold");
+    xSemaphoreGive(xButtonAHoldSemaphore);
   } else if (button == BTN_B && kind == MCUDBNC_EVENT_PRESSED) {
-    printf("[app] Semaphore give B\n");
     McuLog_info("[app] Semaphore give Button B");
     xSemaphoreGive(xButtonBSemaphore);
   }

@@ -86,11 +86,8 @@ static void vRadioTask(void *pvParameters) {
     // for update)
 
     if (xSemaphoreTake(xButtonASemaphore, xButtonSemaphoreTimeout) == pdTRUE) {
-      printf("[radio] Semaphore take Button A\n");
-      printf("[radio] Synchronize / Authentication");
-      radio_authentication();
-    }
-    if (xSemaphoreTake(xButtonBSemaphore, xButtonSemaphoreTimeout) == pdTRUE) {
+      /* Send measurement values
+       */
       printf("[radio] Semaphore take Button B\n");
       printf("[radio] Send Temperature 1 \n");
       // fixme : send all values and empty values otherwise
@@ -99,17 +96,23 @@ static void vRadioTask(void *pvParameters) {
       // todo : refactor : readout temperatures into array and pass to radio
       // send fixme : interface readout queue and send values here !
       // todo : error handling
-      (void) radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
-                                      data_info_temperature_1, false);
+      (void)radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
+                                            data_info_temperature_1, false);
 
       printf("[radio] Send Temperature 2 \n");
       data_info_field_t data_info_temperature_2 = {PROTOCOL_VERSION,
                                                    DATA_SENSORS_TEMPERATURE_2};
-      (void) radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
-                                      data_info_temperature_2, false);
+      (void)radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
+                                            data_info_temperature_2, false);
     }
-
-    //  printf("radio killed the video star.");
+  }
+  if (xSemaphoreTake(xButtonAHoldSemaphore, xButtonSemaphoreTimeout) ==
+      pdTRUE) {
+    /* Authenticate
+     */
+    printf("[radio] Semaphore take Button A\n");
+    printf("[radio] Synchronize / Authentication");
+    radio_authentication();
   }
 }
 
@@ -560,7 +563,7 @@ static void unpack_data_info_field(data_info_field_t *field_dest,
  * @param recv_length
  * @return int : error code hdlc
  */
- // todo : check buffer size (recv_data)
+// todo : check buffer size (recv_data)
 error_t decode_hdlc_frame(yahdlc_control_t *control, char *frame_data,
                           size_t frame_length, char *recv_data,
                           size_t *recv_length) {
