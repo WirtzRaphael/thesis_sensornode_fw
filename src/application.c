@@ -271,6 +271,7 @@ static void AppTask(void *pv) {
   #if APP_POWER_RADIO_SLEEP
       rc232_sleep();
   #endif
+      ExtRTC_Deinit();        // -> I2C
       vTaskSuspendAll();
       sensors_deinit();       // -> I2C
       rc232_deinit();         // -> UART
