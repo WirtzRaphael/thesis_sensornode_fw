@@ -252,6 +252,9 @@ static void AppTask(void *pv) {
       /* Deinit
        */
       printf("[App] Deinit / Suspend\n");
+  #if APP_POWER_RADIO_SLEEP
+      rc232_sleep();
+  #endif
       vTaskSuspendAll();
       sensors_deinit();       // -> I2C
       rc232_deinit();         // -> UART
@@ -273,13 +276,13 @@ static void AppTask(void *pv) {
       // fixme : no sync with rtc time (!), periodic call by rtos
       printf("[App] Delay wakeup\n");
       vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
+      /* Wakeup
+       */
+  #if APP_POWER_RADIO_SLEEP
+      rc232_wakeup();
+  #endif
     }
-
-    /* Wakeup
-     */
-    // todo : config condition
-    // rc232_wakeup();
-#endif
+#endif /* PICO_CONFIG_USE_POWER */
     /* NO CODE HERE*/
 
     // reset alarm flag for power cycle and restart program
