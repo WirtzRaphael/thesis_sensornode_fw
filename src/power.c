@@ -11,12 +11,12 @@
 
 #if PICO_CONFIG_USE_POWER
   #include "McuLog.h"
-  #include "pico/stdlib.h"
   #include "pico/sleep.h"
+  #include "pico/stdlib.h"
   #include "pico_config.h"
   #include "power.h"
-  #include "time_operations.h"
   #include "stdio.h"
+  #include "time_operations.h"
   #include <errno.h>
 
   #if PICO_CONFIG_USE_RTC
@@ -24,7 +24,8 @@
     #include "McuPCF85063A.h"
   #endif
 
-static bool periodic_shutdown = false;
+// static bool periodic_shutdown = APP_POWER_AUTO_SHUTDOWN;
+static bool periodic_shutdown = true;
 
 void power_init(void) {
   /* Pin : 3V3 Power enable
@@ -57,9 +58,15 @@ void power_init_at_runtime(void) {
   }
 }
 
-void power_set_periodic_shutdown(bool shutdown) { periodic_shutdown = shutdown; }
+void power_set_periodic_shutdown(bool shutdown) {
+  periodic_shutdown = shutdown;
+}
 
 bool power_get_periodic_shutdown(void) { return periodic_shutdown; }
+
+void power_toggle_periodic_shutdown() {
+  periodic_shutdown = !periodic_shutdown;
+}
 
 /**
  * @brief Enable or disable 3V3-1 power supply
@@ -94,7 +101,7 @@ void power_3v3_2_enable(bool enable) {
  *
  * fix : use rs232 enable pin
  */
-error_t power_mode(power_mode_t mode) {
+error_t power_3V3_mode(power_3V3_mode_t mode) {
   switch (mode) {
   case POWER_MODE_LIGHT:
     gpio_put(PICO_PINS_RS232_FORCEOFF_N, false);
@@ -111,9 +118,7 @@ error_t power_mode(power_mode_t mode) {
 }
 
 void power_sleep(void) {
-  sleep_ms(1000);
+  // todo
 }
-
-// todo : rtc wakeup
 
 #endif /* PICO_CONFIG_USE_POWER */

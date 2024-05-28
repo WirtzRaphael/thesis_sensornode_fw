@@ -446,10 +446,10 @@ void menu_handler_power(void) {
     power_3v3_1_enable(false);
     break;
   case 'l':
-    power_mode(POWER_MODE_LIGHT);
+    power_3V3_mode(POWER_MODE_LIGHT);
     break;
   case 'h':
-    power_mode(POWER_MODE_HEAVY);
+    power_3V3_mode(POWER_MODE_HEAVY);
     break;
   default:
     printf("Invalid option\n");
