@@ -110,10 +110,12 @@ void rc232_init() {
   #if UART_HW_FLOW_CONTROL_CTS
   gpio_set_function(RADIO_PIN_CTS, GPIO_FUNC_UART);
   #else
-  gpio_set_function(RADIO_PIN_CTS, GPIO_FUNC_UART);
+  gpio_set_function(RADIO_PIN_CTS, GPIO_IN);
   #endif
   #if UART_HW_FLOW_CONTROL_RTS
   gpio_set_function(RADIO_PIN_RTS, GPIO_FUNC_UART);
+  #else
+  gpio_set_function(RADIO_PIN_RTS, GPIO_IN);
   #endif
 
   // todo : move central
