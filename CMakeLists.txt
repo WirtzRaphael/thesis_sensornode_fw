@@ -11,6 +11,7 @@ set(
 
 # settings for the board and hardware used
 set(PICO_PLATFORM rp2040)
+# fixme : change
 set(PICO_BOARD pico_w) # pico or pico_w
 
 # set compiler flags and optimization level
