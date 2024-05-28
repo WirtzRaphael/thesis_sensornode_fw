@@ -91,6 +91,7 @@
 void exit_config_state(void);
 void rc232_reset(void);
 void rc232_init(void);
+void rc232_deinit(void);
 void rc232_config_destination_address(uint8_t address);
 void rc232_config_rf_channel_number(uint8_t channel);
 void rc232_config_rf_power(uint8_t power);

@@ -32,6 +32,9 @@ typedef struct {
 } time_series_sensor_t;
 
 void sensors_init(void);
+
+void sensors_deinit(void);
+
 error_t
 sensors_read_temperature(temperature_sensor_t *temperature_sensor,
                          temperature_measurement_t *temperature_measurement);

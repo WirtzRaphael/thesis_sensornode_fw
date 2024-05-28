@@ -12,6 +12,7 @@
  * todo : replace magic delays
  */
 #include "rc232.h"
+#include "hardware/gpio.h"
 #include "pico/time.h"
 #include "pico/types.h"
 #include "stdio.h"
@@ -113,6 +114,7 @@ void rc232_init() {
   gpio_set_function(RADIO_PIN_RTS, GPIO_FUNC_UART);
 #endif
 
+  // todo : move central
   /* Pin configuration
    */
   // Reset Pin
@@ -134,6 +136,21 @@ void rc232_init() {
   // rc232_config_rf_channel_number(1);
   // rc232_config_rf_power(1);
   // rc232_config_destination_address(20);
+}
+
+
+void rc232_deinit(void){
+  // uart
+  uart_deinit(UART_RADIO_ID);
+
+  // fixme : high current consumption from Battery, when 3V3_RF connected and 3V3-1 OFF
+  // gpio
+  gpio_set_dir(PL_GPIO_RADIO_RESET, GPIO_IN);
+  gpio_set_dir(PL_GPIO_RADIO_CONFIG, GPIO_IN);
+  //gpio_deinit(RADIO_PIN_RX);
+  gpio_set_dir(RADIO_PIN_RX, GPIO_IN);
+  //gpio_deinit(RADIO_PIN_TX);
+  gpio_set_dir(RADIO_PIN_TX, GPIO_IN);
 }
 
 /**

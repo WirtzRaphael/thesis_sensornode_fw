@@ -138,6 +138,12 @@ void sensors_init(void) {
 }
 
 /**
+ * @brief Deinitialize sensors
+ *
+ */
+void sensors_deinit(void) { i2c_deinit(I2Cx); }
+
+/**
  * @brief Get sampling time of sensor
  *
  * @return uint16_t

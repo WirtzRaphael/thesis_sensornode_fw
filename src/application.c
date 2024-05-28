@@ -1,15 +1,22 @@
+#include "application.h"
 #include "app_platform.h"
+#include "hardware/rtc.h"
+#include "pico/time.h"
+#include "pico_config.h"
+#include "time_operations.h"
+/*
 #include <stdio.h>
+*/
 #if PL_CONFIG_USE_PICO_W
   #include "pico/cyw43_arch.h" // before PicoWiFi.h
 #endif
 #if PL_CONFIG_USE_PICO_W
   #include "PicoWiFi.h"
 #endif
-
-#include "pico_config.h"
 // tasks and dependencies
-#include "application.h"
+#if PICO_CONFIG_USE_POWER
+  #include "power.h"
+#endif
 #if PICO_CONFIG_USE_RTC
   #include "extRTC.h"
 #endif
@@ -27,6 +34,8 @@
 #if PL_CONFIG_USE_BUTTONS
   #include "McuButton.h"
 #endif
+#include "McuArmTools.h"
+#include "McuGenericI2C.h"
 #include "McuLED.h"
 #include "McuLog.h"
 #include "McuRTOS.h"
@@ -116,7 +125,6 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
  */
 static void AppTask(void *pv) {
 /* -- TASK INIT -- */
-#define APP_HAS_ONBOARD_GREEN_LED (1)
 #if !PL_CONFIG_USE_WIFI && PL_CONFIG_USE_PICO_W
   if (cyw43_arch_init() ==
       0) { /* need to init for accessing LEDs and other pins */
@@ -172,8 +180,9 @@ static void AppTask(void *pv) {
   }
 #endif
 
-#if PL_CONFIG_USE_RTC
+#if PICO_CONFIG_USE_RTC
   TIMEREC time;
+  TIMEREC time_alert = {0, 0, 5, 0};
   DATEREC date;
 
   if (McuTimeDate_Init() != ERR_OK) { /* do it inside task, as needs to talk
@@ -181,6 +190,9 @@ static void AppTask(void *pv) {
     McuLog_fatal("failed initializing McuTimeDate");
   }
 #endif
+  static uint16_t xDelay_wakeup_ms = 4500;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xDelay_wakeup = pdMS_TO_TICKS(xDelay_wakeup_ms);
 
 #if PL_CONFIG_USE_PCF85063A
   // todo : required ? periodic sync
@@ -189,14 +201,84 @@ static void AppTask(void *pv) {
   }
 #endif
 
+  gpio_init(PICO_PINS_LED_2);
+  gpio_set_dir(PICO_PINS_LED_2, GPIO_OUT);
+  gpio_put(PICO_PINS_LED_2, false);
+
   for (;;) {
+    printf("AppTask Start\n");
 #if APP_HAS_ONBOARD_GREEN_LED
     McuLED_Toggle(led);
 #elif PL_CONFIG_USE_PICO_W && !PL_CONFIG_USE_WIFI
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, ledIsOn);
     ledIsOn = !ledIsOn;
 #endif
-    vTaskDelay(pdMS_TO_TICKS(5 * 100));
+    // - recheck alert settings (?)
+    // wait until other tasks done
+    // todo : use semaphore for task sync (?)
+    vTaskDelay(pdMS_TO_TICKS(500));
+
+    printf("[App] Power\n");
+#if PICO_CONFIG_USE_POWER
+    // indicate shutdown
+    gpio_put(PICO_PINS_LED_2, true);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
+    // todo : sleep components (radio)
+    /* Components sleep
+     * note : menu cmds for serial communiction effected
+     */
+    // todo : config condition
+    //rc232_sleep();
+
+    /* Wakeup alert
+     */
+    time_rtc_alarm_reset_flag(); // be sure that the flag is reset
+    // fixme : avoid time shiff -> pass time and check or at beginning of task
+    // todo : get time rtc at start of task, alert based on this -> time sync
+    // rtc todo : check if alert in the future or already passed -> time sync
+    // rtc
+    time_rtc_alarm_from_now(&time_alert);
+    time_rtc_alarm_enable();
+
+    gpio_put(PICO_PINS_LED_2, false);
+    // todo : hold button(s) to switch on/off restart -> maintenance mode
+  #if APP_SHUTDOWN_POWER
+    /* Deinit
+     */
+    printf("[App] Deinit / Suspend\n");
+    vTaskSuspendAll();
+    sensors_deinit();       // -> I2C
+    rc232_deinit();         // -> UART
+    McuGenericI2C_Deinit(); // -> I2C
+
+    /* SHUTDOWN : 3V3
+     * fixme : high current consumption from 3V3, when 3V3_RF ON and 3V3-1 OFF
+     * -> Replace digital isolator
+     */
+    printf("[App] Power off\n");
+    power_3v3_1_enable(false);
+    // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
+    sleep_ms(xDelay_wakeup_ms); // tasks supsended
+    McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_ms);
+      // McuArmTools_SoftwareReset(); /* restart */
+      //  fallback shutdown
+      //  - avoid deadlock and to re-initialize system
+  #else
+    // fixme : no sync with rtc time (!), periodic call by rtos
+    printf("[App] Delay wakeup\n");
+    vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
+
+    /* Wakeup
+     */
+    // todo : config condition
+    //rc232_wakeup();
+  #endif
+    /* NO CODE HERE*/
+#endif
+
+    // reset alarm flag for power cycle and restart program
+    // avoid deadlock
   }
 } /* AppTask */
 
@@ -254,6 +336,9 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
  */
 void APP_Run(void) {
   PL_Init();
+#if PICO_CONFIG_USE_POWER
+  power_init();
+#endif
 #if PL_CONFIG_USE_BUTTONS
   McuBtn_Init();
 #endif

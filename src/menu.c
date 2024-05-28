@@ -8,25 +8,34 @@
  *
  */
 #include "menu.h"
-#include "extRTC.h"
 #include "pico_config.h"
-#include "radio.h"
-#include "rc232.h"
-#include "sensors.h"
-#include "stdio.h"
-#include <stdint.h>
+#if PICO_CONFIG_USE_POWER
+#include "extRTC.h"
+#endif
+#if PICO_CONFIG_USE_POWER
+  #include "power.h"
+#endif
+#if PICO_CONFIG_USE_RADIO
+  #include "radio.h"
+  #include "rc232.h"
+#endif
+#if PICO_CONFIG_USE_SENSORS
+  #include "sensors.h"
+#endif
+#if PICO_CONFIG_USE_RTC
+  #include "time_operations.h"
+#endif
 
 #include "McuLog.h"
-#include "McuPCF85063A.h"
-
+#include "stdio.h"
+#include <stdint.h>
+#include "McuTimeDate.h"
 #include "pico/stdlib.h"
+// todo : remove
 
 #ifndef dimof
   #define dimof(X) (sizeof(X) / sizeof((X)[0]))
 #endif
-
-bool enable = true;
-bool disabled = false;
 
 #if PICO_CONFIG_USE_RTC
 // DATEREC date_rtc_menu;
@@ -69,68 +78,10 @@ void menu_set_date_default(void) {
 // note: alarm time means not exactly time X from now, because of the current
 // time accuracy. e.g. wakeup 5 seconds from now -> 10:00:04:500 -> (+4.5) ->
 // 10:00:09:000
-static void menu_alarm_set_time(void) {
-  uint8_t ret_time = 0;
-  uint8_t val = 0;
-  bool dummy;
-  bool is24h, isAM;
-
-  // alarm time from current time
-  uint8_t alarm_h = 0;
-  uint8_t alarm_m = 0;
-  uint8_t alarm_s = 5;
-
-  // Get current time
-  ret_time = ExtRTC_GetTime(&time_rtc_ext_menu);
-
-  if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) != ERR_OK) {
-    printf("Error reading alarm second\n");
-    return;
-  }
-  McuPCF85063A_WriteAlarmSecond((time_rtc_ext_menu.Sec + alarm_s), enable);
-  printf("Alarm sec : %d\n", alarm_s);
-  if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) != ERR_OK) {
-    printf("Error reading alarm minute\n");
-    return;
-  }
-  McuPCF85063A_WriteAlarmMinute((time_rtc_ext_menu.Min + alarm_m), enable);
-  printf("Alarm min : %d\n", alarm_m);
-  if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) != ERR_OK) {
-    printf("Error reading alarm hour\n");
-    return;
-  }
-  McuPCF85063A_WriteAlarmHour((time_rtc_ext_menu.Hour + alarm_h), enable, is24h,
-                              isAM);
-  printf("Alarm hour : %d\n", alarm_h);
-}
+static void menu_alarm_set_time(void) { time_rtc_alarm_set_time(); }
 
 // todo : move function into another file like time/power/...
-void menu_read_alarm(void) {
-  uint8_t val = 0;
-  bool dummy;
-  bool is24h, isAM;
-
-  if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) == ERR_OK) {
-    printf("Alarm sec : %d\n", val);
-    printf("- Enabled : %d\n", dummy);
-  }
-  if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) == ERR_OK) {
-    printf("Alarm min : %d\n", val);
-    printf("- Enabled : %d\n", dummy);
-  }
-  if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) == ERR_OK) {
-    printf("Alarm hour : %d\n", val);
-    printf("- Enabled : %d\n", dummy);
-  }
-  if (McuPCF85063A_ReadAlarmDay(&val, &dummy) == ERR_OK) {
-    printf("Alarm day : %d\n", val);
-    printf("- Enabled : %d\n", dummy);
-  }
-  if (McuPCF85063A_ReadAlarmWeekday(&val, &dummy) == ERR_OK) {
-    printf("Alarm weekday : %d\n", val);
-    printf("- Enabled : %d\n", dummy);
-  }
-}
+void menu_read_alarm(void) { time_rtc_alarm_get_time(); }
 #endif
 
 /**
@@ -192,7 +143,8 @@ char menu_get_user_input() {
  */
 void menu_handler_main(void) {
   const char *mainMenuOptions[] = {
-      "[r]adio", "rc[2]32", "rc232 [c]onfiguration", "[s]ensors", "[t]ime"};
+      "[r]adio", "rc[2]32",   "rc232 [c]onfiguration",
+      "[p]ower", "[s]ensors", "[t]ime"};
   menu_display(mainMenuOptions, dimof(mainMenuOptions));
 
   char userCmd = menu_get_user_input();
@@ -220,6 +172,11 @@ void menu_handler_main(void) {
   case 't':
 #if PICO_CONFIG_USE_RTC
     menu_handler_time();
+#endif
+    break;
+  case 'p':
+#if PICO_CONFIG_USE_POWER
+    menu_handler_power();
 #endif
     break;
   default:
@@ -411,12 +368,12 @@ void menu_handler_time(void) {
   char userCmd = menu_get_user_input();
   switch (userCmd) {
   case 'a':
-    ret_time = McuPCF85063A_WriteAlarmInterrupt(enable);
+    time_rtc_alarm_enable();
     printf("Alarm interrupt enabled.\n");
     printf("Set alarm interrupt (AIE) bit\n");
     break;
   case 'r':
-    ret_time = McuPCF85063A_WriteResetAlarmInterrupt();
+    time_rtc_alarm_reset_flag();
     printf("Reset alarm interrupt\n");
     printf("Reset alarm flag (AF) bit\n");
     break;
@@ -462,15 +419,8 @@ void menu_handler_time(void) {
     printf("Set date: %d.%d.%d\n", date_rtc_ext_default_menu.Day,
            date_rtc_ext_default_menu.Month, date_rtc_ext_default_menu.Year);
     break;
-  case 'o':
-    printf("Clock output frequency (not used) \n");
-    if (McuPCF85063A_WriteClockOutputFrequency(McuPCF85063A_COF_FREQ_OFF) !=
-        ERR_OK) {
-      McuLog_fatal("failed writing COF");
-    }
-    break;
   case '9':
-    McuPCF85063A_WriteSoftwareReset();
+    ret_time = time_rtc_software_reset();
     printf("Software reset\n");
     break;
   default:
@@ -478,5 +428,32 @@ void menu_handler_time(void) {
     break;
   }
   printf("return of time functions: %d\n", ret_time);
+}
+#endif
+
+#if PICO_CONFIG_USE_POWER
+void menu_handler_power(void) {
+  const char *sensorsOptions[] = {"[1] start VCC-1", "[2] shtudown VCC-1",
+                                  "power mode [l]ight", "power mode [h]eavy"};
+  menu_display(sensorsOptions, dimof(sensorsOptions));
+
+  char userCmd = menu_get_user_input();
+  switch (userCmd) {
+  case '1':
+    power_3v3_1_enable(true);
+    break;
+  case '2':
+    power_3v3_1_enable(false);
+    break;
+  case 'l':
+    power_mode(POWER_MODE_LIGHT);
+    break;
+  case 'h':
+    power_mode(POWER_MODE_HEAVY);
+    break;
+  default:
+    printf("Invalid option\n");
+    break;
+  }
 }
 #endif
