@@ -227,7 +227,7 @@ static void AppTask(void *pv) {
   gpio_put(PICO_PINS_LED_2, false);
 
   for (;;) {
-    printf("AppTask Start\n");
+    McuLog_info("AppTask Start\n");
 #if APP_HAS_ONBOARD_GREEN_LED
     McuLED_Toggle(led);
 #elif PL_CONFIG_USE_PICO_W && !PL_CONFIG_USE_WIFI
@@ -239,18 +239,15 @@ static void AppTask(void *pv) {
     // todo : use semaphore for task sync (?)
     vTaskDelay(pdMS_TO_TICKS(500));
 
-    printf("[App] Power\n");
+    McuLog_info("[App] Power\n");
 #if PICO_CONFIG_USE_POWER
     // indicate shutdown
     gpio_put(PICO_PINS_LED_2, true);
     vTaskDelay(pdMS_TO_TICKS(1000));
 
-    // todo : sleep components (radio)
     /* Components sleep
      * note : menu cmds for serial communiction effected
      */
-    // todo : config condition
-    // rc232_sleep();
 
     /* Wakeup alert
      */
@@ -263,7 +260,8 @@ static void AppTask(void *pv) {
     time_rtc_alarm_enable();
 
     gpio_put(PICO_PINS_LED_2, false);
-    // todo : hold button(s) to switch on/off restart -> maintenance mode
+
+    // note : button to switch mode
     if (power_get_periodic_shutdown() == TRUE) {
       /* Deinit
        */
@@ -276,6 +274,8 @@ static void AppTask(void *pv) {
       sensors_deinit();       // -> I2C
       rc232_deinit();         // -> UART
       McuGenericI2C_Deinit(); // -> I2C
+      // fixme : delay i2c deinit
+      sleep_ms(100); // tasks supsended
 
       /* SHUTDOWN : 3V3
        * fixme : high current consumption from 3V3, when 3V3_RF ON and 3V3-1 OFF
@@ -286,12 +286,14 @@ static void AppTask(void *pv) {
       // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
       sleep_ms(xDelay_wakeup_ms); // tasks supsended
       McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_ms);
-      // McuArmTools_SoftwareReset(); /* restart */
+      // fixme : fallback
       //  fallback shutdown
+      // - WARNING : check if system can hang up!
       //  - avoid deadlock and to re-initialize system
+      // McuArmTools_SoftwareReset(); /* restart */
     } else {
       // fixme : no sync with rtc time (!), periodic call by rtos
-      printf("[App] Delay wakeup\n");
+      McuLog_info("[App] Delay wakeup\n");
       vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
       /* Wakeup
        */
