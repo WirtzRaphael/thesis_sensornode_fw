@@ -12,6 +12,8 @@ typedef enum {
 void power_init(void);
 void power_3v3_1_enable(bool enable);
 void power_3v3_2_enable(bool enable);
-error_t power_mode(power_mode_t mode);
+
+bool power_get_periodic_shutdown(void);
+void power_set_periodic_shutdown(bool shutdown);
 
 #endif /* POWER_H_ */

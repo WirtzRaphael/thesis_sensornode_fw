@@ -44,7 +44,6 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PICO_CONFIG_USE_SENSORS (1)
   #define PICO_CONFIG_USE_POWER   (1)
   // 
-  #define APP_SHUTDOWN_POWER        (1)
   #define APP_HAS_ONBOARD_GREEN_LED (0)
   /* GPIO
    */

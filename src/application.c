@@ -230,7 +230,7 @@ static void AppTask(void *pv) {
      * note : menu cmds for serial communiction effected
      */
     // todo : config condition
-    //rc232_sleep();
+    // rc232_sleep();
 
     /* Wakeup alert
      */
@@ -244,39 +244,39 @@ static void AppTask(void *pv) {
 
     gpio_put(PICO_PINS_LED_2, false);
     // todo : hold button(s) to switch on/off restart -> maintenance mode
-  #if APP_SHUTDOWN_POWER
-    /* Deinit
-     */
-    printf("[App] Deinit / Suspend\n");
-    vTaskSuspendAll();
-    sensors_deinit();       // -> I2C
-    rc232_deinit();         // -> UART
-    McuGenericI2C_Deinit(); // -> I2C
+    if (power_get_periodic_shutdown() == TRUE) {
+      /* Deinit
+       */
+      printf("[App] Deinit / Suspend\n");
+      vTaskSuspendAll();
+      sensors_deinit();       // -> I2C
+      rc232_deinit();         // -> UART
+      McuGenericI2C_Deinit(); // -> I2C
 
-    /* SHUTDOWN : 3V3
-     * fixme : high current consumption from 3V3, when 3V3_RF ON and 3V3-1 OFF
-     * -> Replace digital isolator
-     */
-    printf("[App] Power off\n");
-    power_3v3_1_enable(false);
-    // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
-    sleep_ms(xDelay_wakeup_ms); // tasks supsended
-    McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_ms);
+      /* SHUTDOWN : 3V3
+       * fixme : high current consumption from 3V3, when 3V3_RF ON and 3V3-1 OFF
+       * -> Replace digital isolator
+       */
+      printf("[App] Power off\n");
+      power_3v3_1_enable(false);
+      // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
+      sleep_ms(xDelay_wakeup_ms); // tasks supsended
+      McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_ms);
       // McuArmTools_SoftwareReset(); /* restart */
       //  fallback shutdown
       //  - avoid deadlock and to re-initialize system
-  #else
-    // fixme : no sync with rtc time (!), periodic call by rtos
-    printf("[App] Delay wakeup\n");
-    vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
+    } else {
+      // fixme : no sync with rtc time (!), periodic call by rtos
+      printf("[App] Delay wakeup\n");
+      vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
+    }
 
     /* Wakeup
      */
     // todo : config condition
-    //rc232_wakeup();
-  #endif
-    /* NO CODE HERE*/
+    // rc232_wakeup();
 #endif
+    /* NO CODE HERE*/
 
     // reset alarm flag for power cycle and restart program
     // avoid deadlock

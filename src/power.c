@@ -24,6 +24,8 @@
     #include "McuPCF85063A.h"
   #endif
 
+static bool periodic_shutdown = false;
+
 void power_init(void) {
   /* Pin : 3V3 Power enable
    * note : HOLDS THE POWER SUPPLY
@@ -54,6 +56,10 @@ void power_init_at_runtime(void) {
     McuLog_fatal("failed writing COF");
   }
 }
+
+void power_set_periodic_shutdown(bool shutdown) { periodic_shutdown = shutdown; }
+
+bool power_get_periodic_shutdown(void) { return periodic_shutdown; }
 
 /**
  * @brief Enable or disable 3V3-1 power supply
