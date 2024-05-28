@@ -246,7 +246,7 @@ static void AppTask(void *pv) {
 #if PICO_CONFIG_USE_POWER
     // indicate shutdown
     gpio_put(PICO_PINS_LED_2, true);
-    //vTaskDelay(pdMS_TO_TICKS(50));
+    // vTaskDelay(pdMS_TO_TICKS(50));
 
     /* Wakeup alert
      */
@@ -260,20 +260,18 @@ static void AppTask(void *pv) {
 
     gpio_put(PICO_PINS_LED_2, false);
 
-
-
     // note : button to switch mode
     if (power_get_periodic_shutdown() == TRUE) {
       /* Deinit
        */
       printf("[App] Deinit / Suspend\n");
 
-      // todo : move power  
-      ExtRTC_Deinit();        // -> I2C
+      // todo : move power
+      ExtRTC_Deinit(); // -> I2C
       vTaskSuspendAll();
-      sensors_deinit();       // -> I2C
-      rc232_deinit();         // -> UART
-      McuGenericI2C_Deinit(); // -> I2C
+      sensors_deinit();              // -> I2C
+      rc232_deinit();                // -> UART
+      McuGenericI2C_Deinit();        // -> I2C
       sleep_ms(APP_POWER_DEINIT_MS); // tasks supsended
 
       /* SHUTDOWN : 3V3
@@ -282,7 +280,8 @@ static void AppTask(void *pv) {
       power_3v3_1_enable(false);
       // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
       sleep_ms(xDelay_wakeup_fallback_ms); // tasks supsended
-      McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_fallback_ms);
+      McuLog_error("[App] No power off after %d seconds\n",
+                   xDelay_wakeup_fallback_ms);
       // fixme : fallback
       //  fallback shutdown
       // - WARNING : check if system can hang up!
