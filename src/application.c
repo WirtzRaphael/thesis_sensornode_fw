@@ -221,6 +221,7 @@ static void AppTask(void *pv) {
 
 #if APP_POWER_RADIO_DEFAULT_SLEEP
   // note : menu cmds for serial communiction effected, require wakeup
+  rc232_rx_read_buffer_full();
   rc232_sleep();
 #endif
 
