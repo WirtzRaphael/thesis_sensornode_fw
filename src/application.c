@@ -245,6 +245,7 @@ static void AppTask(void *pv) {
 
     McuLog_info("[App] Power\n");
 #if PICO_CONFIG_USE_POWER
+    // todo : POWER OFF RS232 DRIVER -> INIT GPIO's OTHERWISE UNDEFINED
     // indicate shutdown
     gpio_put(PICO_PINS_LED_2, true);
     // vTaskDelay(pdMS_TO_TICKS(50));
