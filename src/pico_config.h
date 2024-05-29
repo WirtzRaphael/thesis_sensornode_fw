@@ -51,7 +51,7 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define APP_RADIO_DECTIVATE_RF        (0)
   #define APP_RADIO_CHANNEL_SCAN        (0)
   // MEASURE
-  #define APP_POWER_APP_TASK_MS        (200)
+  #define APP_POWER_APP_TASK_MS        (100)
   #define APP_POWER_WAKEUP_FALLBACK_MS (4000)
   // fixme : delay  deinit i2c etc.
   #define APP_POWER_DEINIT_MS (50)
