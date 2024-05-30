@@ -340,6 +340,7 @@ void radio_send_temperature_as_string(
  *
  * - use HDLC-Lite for encoding
  * -
+ * todo [A] : time information
  * todo : change, compress format / algorithm to reduce number of temperatures
  * todo : fill all buffer values / overwrite existing buffer values
  * reference :
