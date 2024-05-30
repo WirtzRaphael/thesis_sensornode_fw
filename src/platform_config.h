@@ -1,5 +1,5 @@
-#ifndef PICO_CONFIG_H_
-#define PICO_CONFIG_H_
+#ifndef PLATFORM_CONFIG_H_
+#define PLATFORM_CONFIG_H_
 #include "IncludeMcuLibConfig.h"
 
 #include "stdint.h"
@@ -37,20 +37,22 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 #if MODEL_RP2040 && HW_PLATFORM == PL_CONFIG_HW_VERSION_2_0
   /* Features
    */
-  #define PICO_CONFIG_USE_RTC     (1)
-  #define PICO_CONFIG_USE_MENU    (1)
-  #define PICO_CONFIG_USE_BUTTONS (1)
-  #define PICO_CONFIG_USE_RADIO   (0)
-  #define PICO_CONFIG_USE_SENSORS (1)
-  #define PICO_CONFIG_USE_POWER   (1)
+  #define PLATFORM_CONFIG_USE_RTC     (1)
+  #define PLATFORM_CONFIG_USE_MENU    (1)
+  #define PLATFORM_CONFIG_USE_BUTTONS (1)
+  #define PLATFORM_CONFIG_USE_RADIO   (1)
+  #define PLATFORM_CONFIG_USE_SENSORS (1)
+  #define PLATFORM_CONFIG_USE_POWER   (1)
   //
-  #define APP_POWER_AUTO_SHUTDOWN (1)
   // fixme : working from menu. otherwise? Clear Buffer?
-  #define APP_POWER_RADIO_DEFAULT_SLEEP (1)
   #define APP_HAS_ONBOARD_GREEN_LED     (0)
+  // RADIO
   #define APP_RADIO_DECTIVATE_RF        (0)
   #define APP_RADIO_CHANNEL_SCAN        (0)
-  // MEASURE
+  // POWER
+  #define APP_POWER_RADIO_DEFAULT_SLEEP (1)
+  #define APP_POWER_AUTO_SHUTDOWN (1)
+  // - MEASURE
   #define APP_POWER_APP_TASK_MS        (100)
   #define APP_POWER_WAKEUP_FALLBACK_MS (4000)
   // fixme : delay  deinit i2c etc.
@@ -88,12 +90,12 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 #if MODEL_PICO_W && HW_PLATFORM == PL_CONFIG_HW_VERSION_1_0
   /* Features
    */
-  #define PICO_CONFIG_USE_TMP117    (0)
-  #define PICO_CONFIG_USE_SLEEP     (0)
-  #define PICO_CONFIG_USE_DISPLAY   (0)
-  #define PICO_CONFIG_USE_RADIO     (0)
-  #define PICO_CONFIG_USE_HEARTBEAT (0)
-  #define PICO_CONFIG_USE_SLEEP     (0)
+  #define PLATFORM_CONFIG_USE_TMP117    (0)
+  #define PLATFORM_CONFIG_USE_SLEEP     (0)
+  #define PLATFORM_CONFIG_USE_DISPLAY   (0)
+  #define PLATFORM_CONFIG_USE_RADIO     (0)
+  #define PLATFORM_CONFIG_USE_HEARTBEAT (0)
+  #define PLATFORM_CONFIG_USE_SLEEP     (0)
 
   /* GPIO
    */
@@ -125,12 +127,12 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 #if MODEL_PICO && HW_PLATFORM == PL_CONFIG_HW_AEMBS_BOARD
   /* Features
    */
-  #define PICO_CONFIG_USE_TMP117    (0)
-  #define PICO_CONFIG_USE_SLEEP     (0)
-  #define PICO_CONFIG_USE_DISPLAY   (0)
-  #define PICO_CONFIG_USE_RADIO     (0)
-  #define PICO_CONFIG_USE_HEARTBEAT (0)
-  #define PICO_CONFIG_USE_SLEEP     (0)
+  #define PLATFORM_CONFIG_USE_TMP117    (0)
+  #define PLATFORM_CONFIG_USE_SLEEP     (0)
+  #define PLATFORM_CONFIG_USE_DISPLAY   (0)
+  #define PLATFORM_CONFIG_USE_RADIO     (0)
+  #define PLATFORM_CONFIG_USE_HEARTBEAT (0)
+  #define PLATFORM_CONFIG_USE_SLEEP     (0)
 
   /* GPIO
    */
@@ -147,4 +149,4 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PL_AEMBS_LED_RED   20
 #endif
 
-#endif /* PICO_CONFIG_H_ */
+#endif /* PLATFORM_CONFIG_H_ */

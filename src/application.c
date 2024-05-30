@@ -2,7 +2,7 @@
 #include "app_platform.h"
 #include "hardware/rtc.h"
 #include "pico/time.h"
-#include "pico_config.h"
+#include "platform_config.h"
 #include "time_operations.h"
 /*
 #include <stdio.h>
@@ -14,20 +14,20 @@
   #include "PicoWiFi.h"
 #endif
 // tasks and dependencies
-#if PICO_CONFIG_USE_POWER
+#if PLATFORM_CONFIG_USE_POWER
   #include "power.h"
 #endif
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
   #include "extRTC.h"
 #endif
-#if PICO_CONFIG_USE_MENU
+#if PLATFORM_CONFIG_USE_MENU
   #include "menu.h"
 #endif
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
   #include "radio.h"
   #include "rc232.h"
 #endif
-#if PICO_CONFIG_USE_SENSORS
+#if PLATFORM_CONFIG_USE_SENSORS
   #include "sensors.h"
 #endif
 // McuLib
@@ -198,7 +198,7 @@ static void AppTask(void *pv) {
   }
 #endif
 
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
   TIMEREC time;
   // todo : magic number -> periodic start time
   TIMEREC time_alert = {0, 0, 5, 0};
@@ -220,7 +220,7 @@ static void AppTask(void *pv) {
   }
 #endif
 
-#if APP_POWER_RADIO_DEFAULT_SLEEP && PICO_CONFIG_USE_RADIO
+#if APP_POWER_RADIO_DEFAULT_SLEEP && PLATFORM_CONFIG_USE_RADIO
   // note : menu cmds for serial communiction effected, require wakeup
   rc232_rx_read_buffer_full();
   rc232_sleep();
@@ -244,7 +244,7 @@ static void AppTask(void *pv) {
     vTaskDelay(pdMS_TO_TICKS(APP_POWER_APP_TASK_MS));
 
     McuLog_info("[App] Power\n");
-#if PICO_CONFIG_USE_POWER
+#if PLATFORM_CONFIG_USE_POWER
     // todo : POWER OFF RS232 DRIVER -> INIT GPIO's OTHERWISE UNDEFINED
     // indicate shutdown
     gpio_put(PICO_PINS_LED_2, true);
@@ -272,7 +272,7 @@ static void AppTask(void *pv) {
       ExtRTC_Deinit(); // -> I2C
       vTaskSuspendAll();
       //sensors_deinit();              // -> I2C
-      #if PICO_CONFIG_USE_RADIO
+      #if PLATFORM_CONFIG_USE_RADIO
       rc232_deinit();                // -> UART
       #endif
       //McuGenericI2C_Deinit();        // -> I2C
@@ -296,7 +296,7 @@ static void AppTask(void *pv) {
       McuLog_info("[App] Delay wakeup\n");
       vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
     }
-#endif /* PICO_CONFIG_USE_POWER */
+#endif /* PLATFORM_CONFIG_USE_POWER */
     /* NO CODE HERE*/
 
     // reset alarm flag for power cycle and restart program
@@ -358,27 +358,27 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
  */
 void APP_Run(void) {
   PL_Init();
-#if PICO_CONFIG_USE_POWER
+#if PLATFORM_CONFIG_USE_POWER
   power_init();
 #endif
 #if PL_CONFIG_USE_BUTTONS
   McuBtn_Init();
 #endif
-#if PICO_CONFIG_USE_SENSORS
+#if PLATFORM_CONFIG_USE_SENSORS
   sensors_init(); // --> Sensor Task
 #endif
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
   rc232_init();
   radio_init(); // --> Radio Task
 #endif
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
   // todo : move
   gpio_init(PICO_PINS_I2C0_ENABLE);
   gpio_set_dir(PICO_PINS_I2C0_ENABLE, GPIO_OUT);
   gpio_put(PICO_PINS_I2C0_ENABLE, 1);
   ExtRTC_Init(); // --> Timer Service Task, already in app platform)
 #endif
-#if PICO_CONFIG_USE_MENU
+#if PLATFORM_CONFIG_USE_MENU
   menu_init(); // --> Menu Task
 #endif
 

@@ -8,7 +8,7 @@
 #define BUTTONS_CONFIG_H_
 
 #include "app_platform.h"
-#include "pico_config.h"
+#include "platform_config.h"
 
 #if PL_CONFIG_USE_BUTTONS
 

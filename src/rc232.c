@@ -18,7 +18,7 @@
 #include "stdio.h"
 
 #include "pico/stdlib.h"
-#include "pico_config.h"
+#include "platform_config.h"
 
 #include "McuLog.h"
 #include "McuUtility.h"
@@ -28,7 +28,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
 
   #define RADIO_PIN_TX                     PICO_PINS_UART1_TX
   #define RADIO_PIN_RX                     PICO_PINS_UART1_RX

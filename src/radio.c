@@ -10,9 +10,9 @@
  * todo : buffer handling (?) -> rc232
  * todo : crc (-> fcs ?)
  */
-#include "pico_config.h"
+#include "platform_config.h"
 
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
   #include "McuLib.h"
   #include "McuLog.h"
   #include "McuRTOS.h"

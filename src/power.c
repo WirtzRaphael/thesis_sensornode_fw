@@ -7,19 +7,19 @@
  * @copyright Copyright (c) 2024
  */
 
-#include "pico_config.h"
+#include "platform_config.h"
 
-#if PICO_CONFIG_USE_POWER
+#if PLATFORM_CONFIG_USE_POWER
   #include "McuLog.h"
   #include "pico/sleep.h"
   #include "pico/stdlib.h"
-  #include "pico_config.h"
+  #include "platform_config.h"
   #include "power.h"
   #include "stdio.h"
   #include "time_operations.h"
   #include <errno.h>
 
-  #if PICO_CONFIG_USE_RTC
+  #if PLATFORM_CONFIG_USE_RTC
   // #include "extRTC.h"
     #include "McuPCF85063A.h"
   #endif
@@ -121,4 +121,4 @@ void power_sleep(void) {
   // todo
 }
 
-#endif /* PICO_CONFIG_USE_POWER */
+#endif /* PLATFORM_CONFIG_USE_POWER */
