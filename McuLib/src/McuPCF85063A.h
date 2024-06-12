@@ -19,6 +19,20 @@ uint8_t McuPCF85063A_SetTime(TIMEREC *time);
 uint8_t McuPCF85063A_SetDate(DATEREC *date);
 uint8_t McuPCF85063A_GetTimeDate(TIMEREC *time, DATEREC *date);
 
+uint8_t McuPCF85063A_ReadAlarmSecond(uint8_t *second, bool *enabled);
+uint8_t McuPCF85063A_WriteAlarmSecond(uint8_t second, bool enable);
+uint8_t McuPCF85063A_ReadAlarmMinute(uint8_t *minute, bool *enabled);
+uint8_t McuPCF85063A_WriteAlarmMinute(uint8_t minute, bool enable);
+uint8_t McuPCF85063A_ReadAlarmHour(uint8_t *hour, bool *enabled, bool *is24h, bool *isAM);
+uint8_t McuPCF85063A_WriteAlarmHour(uint8_t hour, bool enable, bool is24h, bool isAM);
+uint8_t McuPCF85063A_ReadAlarmDay(uint8_t *day, bool *enabled);
+uint8_t McuPCF85063A_ReadAlarmWeekday(uint8_t *weekday, bool *enabled);
+
+uint8_t McuPCF85063A_WriteSoftwareReset(void);
+
+uint8_t McuPCF85063A_WriteAlarmInterrupt(bool enable);
+uint8_t McuPCF85063A_WriteResetAlarmInterrupt(void);
+
 uint8_t McuPCF85063A_SetTimeInfo(uint8_t Hour, uint8_t Min, uint8_t Sec, uint8_t Sec100);
 uint8_t McuPCF85063A_SetDateInfo(uint16_t Year, uint8_t Month, uint8_t Day);
 

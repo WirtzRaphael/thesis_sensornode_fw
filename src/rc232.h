@@ -3,6 +3,7 @@
 // #define STRING_LENGTH_UINT8 ((CHAR_BIT * sizeof(uint8_t) - 1) / 3 + 2)
 #include "stdint.h"
 #include <errno.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 /* TIMING
@@ -88,7 +89,6 @@
 /*! Sends a message via radio
  */
 void exit_config_state(void);
-void rc232_tx_string(char *message);
 void rc232_reset(void);
 void rc232_init(void);
 void rc232_config_destination_address(uint8_t address);
@@ -102,7 +102,9 @@ void rc232_read_voltage(void);
 uint8_t rc232_signal_strength_indicator(void);
 void rc232_rx_read_buffer_full(void);
 // error_t rc232_uart_read_bytes(uint8_t *buffer, uint8_t buffer_size);
-error_t rc232_rx_read_byte(uint8_t *buffer);
+error_t rc232_rx_read_bytes(uint8_t *buffer, size_t buffer_size);
+void rc232_tx_packet_string(const uint8_t *message, bool dryrun);
+void rc232_tx_packet_bytes(uint8_t *bytes, size_t length, bool dryrun);
 void rc232_memory_read_one_byte(uint8_t address);
 void rc232_memory_write_configuration(void);
 void rc232_memory_read_configuration(void);

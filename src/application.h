@@ -7,21 +7,26 @@
 #ifndef __APPLICATION_H__
 #define __APPLICATION_H__
 
-#include "app_platform.h"
 #include "McuShell.h"
+#include "app_platform.h"
 
 #if PL_CONFIG_USE_BUTTONS
-  #include "buttons.h"
   #include "McuDebounce.h"
+  #include "buttons.h"
+  #include "semphr.h"
+extern SemaphoreHandle_t xButtonASemaphore;
+extern SemaphoreHandle_t xButtonBSemaphore;
+extern SemaphoreHandle_t xButtonCSemaphore;
 
-  void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind);
+void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind);
 #endif
 
-#define APP_VERSION_STR  "v1.0b"
+#define APP_VERSION_STR "v1.0b"
 
 uint8_t App_GetSensorValues(float *temperature, float *humidity);
 
-uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled, const McuShell_StdIOType *io);
+uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
+                         const McuShell_StdIOType *io);
 
 void APP_Run(void);
 

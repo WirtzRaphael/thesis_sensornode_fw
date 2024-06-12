@@ -32,8 +32,11 @@
 /* I2C */
 #define CONFIG_USE_HW_I2C                           (1) /* if using HW I2C, otherwise use software bit banging */
 #define MCUI2CLIB_CONFIG_I2C_DEVICE                 i2c0
-#define MCUI2CLIB_CONFIG_SDA_GPIO_PIN               16u
-#define MCUI2CLIB_CONFIG_SCL_GPIO_PIN               17u
+// fixme : includes
+//#define MCUI2CLIB_CONFIG_SDA_GPIO_PIN               (PICO_PINS_I2C0_SDA)
+//#define MCUI2CLIB_CONFIG_SCL_GPIO_PIN               (PICO_PINS_I2C0_SCL)
+#define MCUI2CLIB_CONFIG_SDA_GPIO_PIN               0u
+#define MCUI2CLIB_CONFIG_SCL_GPIO_PIN               1u
 #define MCUI2CLIB_CONFIG_ADD_DELAY_US               (0)
 #define MCUI2CLIB_CONFIG_TIMEOUT_BYTE_US            (1000)
 /* -------------------------------------------------*/
@@ -65,6 +68,35 @@
   #define McuGenericSWI2C_CONFIG_DO_YIELD (0 && McuLib_CONFIG_SDK_USE_FREERTOS) /* because of Yield in GenericSWI2C */
   #define McuGenericSWI2C_CONFIG_DELAY_NS (0)
 #endif
+/* -------------------------------------------------*/
+/* Time/Date */
+#define McuTimeDate_CONFIG_USE_SOFTWARE_RTC                        (1) /* enable software RTC */
+#define McuTimeDate_CONFIG_USE_EXTERNAL_HW_RTC                     (1)
+#define McuTimeDate_CONFIG_USE_INTERNAL_HW_RTC                     (0) /* no internal RTC */
+
+#if McuTimeDate_CONFIG_USE_EXTERNAL_HW_RTC
+  #define McuTimeDate_CONFIG_INIT_SOFTWARE_RTC_METHOD                (McuTimeDate_INIT_SOFTWARE_RTC_FROM_DEFAULTS) /* initialize first from software defaults, will update later from HW RTC */
+  #define McuTimeDate_CONFIG_EXT_RTC_HEADER_FILE_NAME                "../../src/extRTC.h"
+  #define McuTimeDate_CONFIG_EXT_RTC_GET_TIME_FCT                    ExtRTC_GetTime
+  #define McuTimeDate_CONFIG_EXT_RTC_SET_TIME_FCT                    ExtRTC_SetTimeInfo
+  #define McuTimeDate_CONFIG_EXT_RTC_GET_DATE_FCT                    ExtRTC_GetDate
+  #define McuTimeDate_CONFIG_EXT_RTC_SET_DATE_FCT                    ExtRTC_SetDateInfo
+#else
+  #define McuTimeDate_CONFIG_INIT_SOFTWARE_RTC_METHOD                (McuTimeDate_INIT_SOFTWARE_RTC_FROM_DEFAULTS)
+#endif
+#define McuTimeDate_CONFIG_USE_GET_TIME_DATE_METHOD                (McuTimeDate_GET_TIME_DATE_METHOD_SOFTWARE_RTC)
+//#define McuTimeDate_CONFIG_USE_GET_TIME_DATE_METHOD                (McuTimeDate_GET_TIME_DATE_METHOD_EXTERNAL_RTC) // problem, i2c sensor stops. cyw43 load
+#define McuTimeDate_CONFIG_SET_TIME_DATE_METHOD_USES_SOFTWARE_RTC  (1) /* if using software RTC */
+#define McuTimeDate_CONFIG_SET_TIME_DATE_METHOD_USES_EXTERNAL_RTC  (McuTimeDate_CONFIG_USE_EXTERNAL_HW_RTC) /* if using external I2C RTC */
+#define McuTimeDate_CONFIG_SET_TIME_DATE_METHOD_USES_INTERNAL_RTC  (0) /* if using internal HW RTC */
+
+/* start values */
+#define McuTimeDate_CONFIG_DEFAULT_INITIAL_TIME_HOUR  0
+#define McuTimeDate_CONFIG_DEFAULT_INITIAL_TIME_MIN   0
+#define McuTimeDate_CONFIG_DEFAULT_INITIAL_TIME_SEC   0
+#define McuTimeDate_CONFIG_DEFAULT_INITIAL_DATE_YEAR  2020
+#define McuTimeDate_CONFIG_DEFAULT_INITIAL_DATE_MONTH 1
+#define McuTimeDate_CONFIG_DEFAULT_INITIAL_DATE_DAY   1
 /* ---------------------------------------------------------------------------------------*/
 /* McuSSD1306 */
 #define McuSSD1306_CONFIG_SSD1306_DRIVER_TYPE           (1106)

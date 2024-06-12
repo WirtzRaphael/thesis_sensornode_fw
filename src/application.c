@@ -6,26 +6,36 @@
 #if PL_CONFIG_USE_PICO_W
   #include "PicoWiFi.h"
 #endif
-#include "pico/stdlib.h"
 
-#include "hardware/gpio.h"
-
-#include "application.h"
-#include "menu.h"
-#include "radio.h"
 #include "pico_config.h"
-
-#include "menu.h"
-#include "radio.h"
-#include "rc232.h"
-
-#include "pico/stdlib.h"
-#include "stdio.h"
-
-#include "McuRTOS.h"
+// tasks and dependencies
 #include "application.h"
+#if PICO_CONFIG_USE_RTC
+  #include "extRTC.h"
+#endif
+#if PICO_CONFIG_USE_MENU
+  #include "menu.h"
+#endif
+#if PICO_CONFIG_USE_RADIO
+  #include "radio.h"
+  #include "rc232.h"
+#endif
+#if PICO_CONFIG_USE_SENSORS
+  #include "sensors.h"
+#endif
+// McuLib
+#if PL_CONFIG_USE_BUTTONS
+  #include "McuButton.h"
+#endif
+#include "McuLED.h"
+#include "McuLog.h"
+#include "McuRTOS.h"
+#include "McuUtility.h"
 #if PL_CONFIG_USE_RTT
   #include "McuRTT.h"
+#endif
+#if PL_CONFIG_USE_PCF85063A
+  #include "McuPCF85063A.h"
 #endif
 #if PL_CONFIG_USE_LITTLE_FS
   #include "littleFS/McuLittleFS.h"
@@ -34,21 +44,79 @@
   #include "McuW25Q128.h"
 #endif
 
-#include "McuLED.h"
-#include "McuLog.h"
-#include "McuUtility.h"
-#include "hardware/gpio.h"
-
-/*
- * Application
+#if PL_CONFIG_USE_BUTTONS
+  #include "semphr.h"
+// todo review : extern definition in header and here
+SemaphoreHandle_t xButtonASemaphore;
+SemaphoreHandle_t xButtonBSemaphore;
+SemaphoreHandle_t xButtonCSemaphore;
+/**
+ * \brief Called by the button driver if a button event is detected.
+ * \param button Button for which the event is detected.
+ * \param kind Event kind.
  */
-#if !PL_CONFIG_USE_PICO_W
-  #define LED_PIN (25) /* GPIO 25 */
+void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
+  unsigned char buf[32];
+  buf[0] = '\0';
+  switch (button) {
+  case BTN_A:
+    McuUtility_strcat(buf, sizeof(buf), "A");
+    break;
+  case BTN_B:
+    McuUtility_strcat(buf, sizeof(buf), "B");
+    break;
+  default:
+    McuUtility_strcat(buf, sizeof(buf), "???");
+    break;
+  }
+  switch (kind) {
+  case MCUDBNC_EVENT_PRESSED:
+    McuUtility_strcat(buf, sizeof(buf), " pressed");
+    break;
+  case MCUDBNC_EVENT_PRESSED_REPEAT:
+    McuUtility_strcat(buf, sizeof(buf), " pressed-repeat");
+    break;
+  case MCUDBNC_EVENT_LONG_PRESSED:
+    McuUtility_strcat(buf, sizeof(buf), " pressed-long");
+    break;
+  case MCUDBNC_EVENT_LONG_PRESSED_REPEAT:
+    McuUtility_strcat(buf, sizeof(buf), " pressed-long-repeat");
+    break;
+  case MCUDBNC_EVENT_RELEASED:
+    McuUtility_strcat(buf, sizeof(buf), " released");
+    break;
+  case MCUDBNC_EVENT_LONG_RELEASED:
+    McuUtility_strcat(buf, sizeof(buf), " long released");
+    break;
+  default:
+    McuUtility_strcat(buf, sizeof(buf), "???");
+    break;
+  }
+  McuUtility_strcat(buf, sizeof(buf), "\n");
+  #if 0 && PL_CONFIG_USE_RTT /* debugging only */
+  McuRTT_printf(0, buf);
+  #endif
+
+  // todo : refactor, remove printf
+  if (button == BTN_A && kind == MCUDBNC_EVENT_RELEASED) {
+    printf("[app] Semaphore give A\n");
+    McuLog_info("[app] Semaphore give Button A");
+    xSemaphoreGive(xButtonASemaphore);
+  } else if (button == BTN_B && kind == MCUDBNC_EVENT_PRESSED) {
+    printf("[app] Semaphore give B\n");
+    McuLog_info("[app] Semaphore give Button B");
+    xSemaphoreGive(xButtonBSemaphore);
+  }
+}
 #endif
 
+/**
+ * \brief Application task.
+ * \param pv rtos parameter
+ */
 static void AppTask(void *pv) {
 /* -- TASK INIT -- */
-#define APP_HAS_ONBOARD_GREEN_LED (!PL_CONFIG_USE_PICO_W)
+#define APP_HAS_ONBOARD_GREEN_LED (1)
 #if !PL_CONFIG_USE_WIFI && PL_CONFIG_USE_PICO_W
   if (cyw43_arch_init() ==
       0) { /* need to init for accessing LEDs and other pins */
@@ -66,7 +134,7 @@ static void AppTask(void *pv) {
   McuLED_Handle_t led;
 
   McuLED_GetDefaultConfig(&config);
-  config.hw.pin = LED_PIN;
+  config.hw.pin = 17;
   config.isLowActive = false;
   led = McuLED_InitLed(&config);
   if (led == NULL) {
@@ -83,17 +151,43 @@ static void AppTask(void *pv) {
     McuLog_info("Mounting failed please format device first");
   }
 #endif
+  /* Test McuW25Q128 communication
+   */
+  /*
+ uint8_t buffer_mcuw25[3];
+ uint8_t errorCode = McuW25_ReadID(buffer_mcuw25, 3);
+ if (errorCode != ERR_OK) {
+   McuLog_trace("McuW25_ReadID error code: %d", errorCode);
+ } else {
+   McuLog_trace("McuW25_ReadID returned ID: %d %d %d", buffer_mcuw25[0],
+                buffer_mcuw25[1], buffer_mcuw25[2]);
+ }
+ McuLog_trace("McuW25_ReadID returned: %d", buffer_mcuw25[0]);
+ */
 
-  // Test McuW25Q128 communication
-  uint8_t buffer_mcuw25[3];
-  uint8_t errorCode = McuW25_ReadID(buffer_mcuw25, 3);
-  if (errorCode != ERR_OK) {
-    McuLog_trace("McuW25_ReadID error code: %d", errorCode);
-  } else {
-    McuLog_trace("McuW25_ReadID returned ID: %d %d %d", buffer_mcuw25[0],
-                 buffer_mcuw25[1], buffer_mcuw25[2]);
+#if PL_CONFIG_USE_PCF85063A
+  if (McuPCF85063A_WriteClockOutputFrequency(McuPCF85063A_COF_FREQ_OFF) !=
+      ERR_OK) {
+    McuLog_fatal("failed writing COF");
   }
-  McuLog_trace("McuW25_ReadID returned: %d", buffer_mcuw25[0]);
+#endif
+
+#if PL_CONFIG_USE_RTC
+  TIMEREC time;
+  DATEREC date;
+
+  if (McuTimeDate_Init() != ERR_OK) { /* do it inside task, as needs to talk
+                                         over I2C to the external RTC */
+    McuLog_fatal("failed initializing McuTimeDate");
+  }
+#endif
+
+#if PL_CONFIG_USE_PCF85063A
+  // todo : required ? periodic sync
+  if (McuTimeDate_SyncWithExternalRTC() != ERR_OK) {
+    McuLog_fatal("failed sync with external RTC");
+  }
+#endif
 
   for (;;) {
 #if APP_HAS_ONBOARD_GREEN_LED
@@ -103,33 +197,12 @@ static void AppTask(void *pv) {
     ledIsOn = !ledIsOn;
 #endif
     vTaskDelay(pdMS_TO_TICKS(5 * 100));
-
-    // todo : move to menu file
-    const char *mainMenuOptions[] = {
-        "[r]adio",
-        "rc[2]32",
-        "rc232 [c]onfiguration"
-    };
-    menu_display(mainMenuOptions, 3);
-
-    char userCmd = menu_get_user_input();
-    switch (userCmd) {
-    case 'r':
-      menu_handler_radio();
-      break;
-    case '2':
-      menu_handler_rc232();
-      break;
-    case 'c':
-      menu_handler_rc232_config();
-      break;
-    default:
-      printf("Invalid option\n");
-      break;
-    }
   }
-}
+} /* AppTask */
 
+/**
+ * \brief Shell command to print status information.
+ */
 static uint8_t PrintStatus(McuShell_ConstStdIOType *io) {
   unsigned char buf[48];
 
@@ -149,6 +222,9 @@ static uint8_t PrintStatus(McuShell_ConstStdIOType *io) {
   return ERR_OK;
 }
 
+/**
+ * \brief Shell command to parse application specific commands.
+ */
 uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
                          const McuShell_StdIOType *io) {
   uint32_t value;
@@ -173,12 +249,46 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
   return ERR_OK;
 }
 
+/**
+ * \brief Appplication main function.
+ */
 void APP_Run(void) {
   PL_Init();
-  radio_init();
+#if PL_CONFIG_USE_BUTTONS
+  McuBtn_Init();
+#endif
+#if PICO_CONFIG_USE_SENSORS
+  sensors_init(); // --> Sensor Task
+#endif
 #if PICO_CONFIG_USE_RADIO
   rc232_init();
-  radio_init();
+  radio_init(); // --> Radio Task
+#endif
+#if PICO_CONFIG_USE_RTC
+  // todo : move
+  gpio_init(PICO_PINS_I2C0_ENABLE);
+  gpio_set_dir(PICO_PINS_I2C0_ENABLE, GPIO_OUT);
+  gpio_put(PICO_PINS_I2C0_ENABLE, 1);
+  ExtRTC_Init(); // --> Timer Service Task, already in app platform)
+#endif
+#if PICO_CONFIG_USE_MENU
+  menu_init(); // --> Menu Task
+#endif
+
+// fixme : if semaphore null also check/deactivate later or stop here
+#if PL_CONFIG_USE_BUTTONS
+  xButtonASemaphore = xSemaphoreCreateBinary();
+  if (xButtonASemaphore == NULL) {
+    McuLog_fatal("failed creating semaphore");
+  }
+  xButtonBSemaphore = xSemaphoreCreateBinary();
+  if (xButtonBSemaphore == NULL) {
+    McuLog_fatal("failed creating semaphore");
+  }
+  xButtonCSemaphore = xSemaphoreCreateBinary();
+  if (xButtonCSemaphore == NULL) {
+    McuLog_fatal("failed creating semaphore");
+  }
 #endif
 
   McuLog_info("Create task 'App' ... ");
