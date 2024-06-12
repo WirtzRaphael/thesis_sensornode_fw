@@ -16,7 +16,7 @@
 #include "pico/util/queue.h"
 
 #include "i2c_operations.h"
-#include "pico_config.h"
+#include "platform_config.h"
 #include "tmp117.h"
 #include <errno.h>
 #include <stdint.h>

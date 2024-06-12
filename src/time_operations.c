@@ -1,6 +1,6 @@
-#include "pico_config.h"
+#include "platform_config.h"
 
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
   #include "McuLib.h"
   #include "McuLog.h"
   #include "McuTimeDate.h"

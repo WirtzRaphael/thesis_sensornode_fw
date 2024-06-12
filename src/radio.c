@@ -10,9 +10,9 @@
  * todo : buffer handling (?) -> rc232
  * todo : crc (-> fcs ?)
  */
-#include "pico_config.h"
+#include "platform_config.h"
 
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
   #include "McuLib.h"
   #include "McuLog.h"
   #include "McuRTOS.h"
@@ -38,11 +38,11 @@
   #define PROTOCOL_VERSION         (1)
   #define PROTOCOL_AUTH_SIZE_BYTES (10)
   #define RF_CHANNEL_DEFAULT       (1)
+  #define TRANSMISSION_IN_BYTES        (0)
 
   // Use fix channel or scan channels
-  #define SCAN_CHANNELS_FOR_CONNECTION (0)
-  #define TRANSMISSION_IN_BYTES        (0)
-  #define DEACTIVATE_RF                (1)
+  #define SCAN_CHANNELS_FOR_CONNECTION APP_RADIO_CHANNEL_SCAN
+  #define DEACTIVATE_RF                APP_RADIO_DECTIVATE_RF
 
   #define RADIO_LOG_OUTPUT printf
 // #define RADIO_LOG_OUTPUT McuLog_trace // fixme : some values missing
@@ -86,11 +86,8 @@ static void vRadioTask(void *pvParameters) {
     // for update)
 
     if (xSemaphoreTake(xButtonASemaphore, xButtonSemaphoreTimeout) == pdTRUE) {
-      printf("[radio] Semaphore take Button A\n");
-      printf("[radio] Synchronize / Authentication");
-      radio_authentication();
-    }
-    if (xSemaphoreTake(xButtonBSemaphore, xButtonSemaphoreTimeout) == pdTRUE) {
+      /* Send measurement values
+       */
       printf("[radio] Semaphore take Button B\n");
       printf("[radio] Send Temperature 1 \n");
       // fixme : send all values and empty values otherwise
@@ -99,17 +96,23 @@ static void vRadioTask(void *pvParameters) {
       // todo : refactor : readout temperatures into array and pass to radio
       // send fixme : interface readout queue and send values here !
       // todo : error handling
-      (void) radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
-                                      data_info_temperature_1, false);
+      (void)radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
+                                            data_info_temperature_1, false);
 
       printf("[radio] Send Temperature 2 \n");
       data_info_field_t data_info_temperature_2 = {PROTOCOL_VERSION,
                                                    DATA_SENSORS_TEMPERATURE_2};
-      (void) radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
-                                      data_info_temperature_2, false);
+      (void)radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
+                                            data_info_temperature_2, false);
     }
-
-    //  printf("radio killed the video star.");
+  }
+  if (xSemaphoreTake(xButtonAHoldSemaphore, xButtonSemaphoreTimeout) ==
+      pdTRUE) {
+    /* Authenticate
+     */
+    printf("[radio] Semaphore take Button A\n");
+    printf("[radio] Synchronize / Authentication");
+    radio_authentication();
   }
 }
 
@@ -337,6 +340,7 @@ void radio_send_temperature_as_string(
  *
  * - use HDLC-Lite for encoding
  * -
+ * todo [A] : time information
  * todo : change, compress format / algorithm to reduce number of temperatures
  * todo : fill all buffer values / overwrite existing buffer values
  * reference :
@@ -560,7 +564,7 @@ static void unpack_data_info_field(data_info_field_t *field_dest,
  * @param recv_length
  * @return int : error code hdlc
  */
- // todo : check buffer size (recv_data)
+// todo : check buffer size (recv_data)
 error_t decode_hdlc_frame(yahdlc_control_t *control, char *frame_data,
                           size_t frame_length, char *recv_data,
                           size_t *recv_length) {

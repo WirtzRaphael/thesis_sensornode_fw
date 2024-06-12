@@ -2,7 +2,7 @@
 #include "app_platform.h"
 #include "hardware/rtc.h"
 #include "pico/time.h"
-#include "pico_config.h"
+#include "platform_config.h"
 #include "time_operations.h"
 /*
 #include <stdio.h>
@@ -14,20 +14,20 @@
   #include "PicoWiFi.h"
 #endif
 // tasks and dependencies
-#if PICO_CONFIG_USE_POWER
+#if PLATFORM_CONFIG_USE_POWER
   #include "power.h"
 #endif
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
   #include "extRTC.h"
 #endif
-#if PICO_CONFIG_USE_MENU
+#if PLATFORM_CONFIG_USE_MENU
   #include "menu.h"
 #endif
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
   #include "radio.h"
   #include "rc232.h"
 #endif
-#if PICO_CONFIG_USE_SENSORS
+#if PLATFORM_CONFIG_USE_SENSORS
   #include "sensors.h"
 #endif
 // McuLib
@@ -57,6 +57,7 @@
   #include "semphr.h"
 // todo review : extern definition in header and here
 SemaphoreHandle_t xButtonASemaphore;
+SemaphoreHandle_t xButtonAHoldSemaphore;
 SemaphoreHandle_t xButtonBSemaphore;
 SemaphoreHandle_t xButtonCSemaphore;
 /**
@@ -106,15 +107,32 @@ void APP_OnButtonEvent(BTN_Buttons_e button, McuDbnc_EventKinds kind) {
   McuRTT_printf(0, buf);
   #endif
 
-  // todo : refactor, remove printf
   if (button == BTN_A && kind == MCUDBNC_EVENT_RELEASED) {
-    printf("[app] Semaphore give A\n");
     McuLog_info("[app] Semaphore give Button A");
     xSemaphoreGive(xButtonASemaphore);
+  } else if (button == BTN_A && kind == MCUDBNC_EVENT_LONG_PRESSED) {
+    McuLog_info("[app] Semaphore give Button A Hold");
+    printf("button a long \n");
+    xSemaphoreGive(xButtonAHoldSemaphore);
   } else if (button == BTN_B && kind == MCUDBNC_EVENT_PRESSED) {
-    printf("[app] Semaphore give B\n");
     McuLog_info("[app] Semaphore give Button B");
-    xSemaphoreGive(xButtonBSemaphore);
+
+    printf("button b \n");
+    /*
+    power_toggle_periodic_shutdown();
+    // indicate config change
+    gpio_put(PICO_PINS_LED_2, true);
+    vTaskDelay(pdMS_TO_TICKS(200));
+    gpio_put(PICO_PINS_LED_2, true);
+    vTaskDelay(pdMS_TO_TICKS(200));
+    gpio_put(PICO_PINS_LED_2, true);
+    vTaskDelay(pdMS_TO_TICKS(200));
+    gpio_put(PICO_PINS_LED_2, true);
+    vTaskDelay(pdMS_TO_TICKS(200));
+    */
+    // xSemaphoreGive(xButtonBSemaphore);
+  } else if (button == BTN_B && kind == MCUDBNC_EVENT_LONG_PRESSED) {
+    printf("button b long \n");
   }
 }
 #endif
@@ -180,8 +198,9 @@ static void AppTask(void *pv) {
   }
 #endif
 
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
   TIMEREC time;
+  // todo : magic number -> periodic start time
   TIMEREC time_alert = {0, 0, 5, 0};
   DATEREC date;
 
@@ -190,9 +209,9 @@ static void AppTask(void *pv) {
     McuLog_fatal("failed initializing McuTimeDate");
   }
 #endif
-  static uint16_t xDelay_wakeup_ms = 4500;
+  static uint16_t xDelay_wakeup_fallback_ms = APP_POWER_WAKEUP_FALLBACK_MS;
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xDelay_wakeup = pdMS_TO_TICKS(xDelay_wakeup_ms);
+  const TickType_t xDelay_wakeup = pdMS_TO_TICKS(xDelay_wakeup_fallback_ms);
 
 #if PL_CONFIG_USE_PCF85063A
   // todo : required ? periodic sync
@@ -201,12 +220,18 @@ static void AppTask(void *pv) {
   }
 #endif
 
+#if APP_POWER_RADIO_DEFAULT_SLEEP && PLATFORM_CONFIG_USE_RADIO
+  // note : menu cmds for serial communiction effected, require wakeup
+  rc232_rx_read_buffer_full();
+  rc232_sleep();
+#endif
+
   gpio_init(PICO_PINS_LED_2);
   gpio_set_dir(PICO_PINS_LED_2, GPIO_OUT);
   gpio_put(PICO_PINS_LED_2, false);
 
   for (;;) {
-    printf("AppTask Start\n");
+    McuLog_info("AppTask Start\n");
 #if APP_HAS_ONBOARD_GREEN_LED
     McuLED_Toggle(led);
 #elif PL_CONFIG_USE_PICO_W && !PL_CONFIG_USE_WIFI
@@ -216,20 +241,14 @@ static void AppTask(void *pv) {
     // - recheck alert settings (?)
     // wait until other tasks done
     // todo : use semaphore for task sync (?)
-    vTaskDelay(pdMS_TO_TICKS(500));
+    vTaskDelay(pdMS_TO_TICKS(APP_POWER_APP_TASK_MS));
 
-    printf("[App] Power\n");
-#if PICO_CONFIG_USE_POWER
+    McuLog_info("[App] Power\n");
+#if PLATFORM_CONFIG_USE_POWER
+    // todo : POWER OFF RS232 DRIVER -> INIT GPIO's OTHERWISE UNDEFINED
     // indicate shutdown
     gpio_put(PICO_PINS_LED_2, true);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
-    // todo : sleep components (radio)
-    /* Components sleep
-     * note : menu cmds for serial communiction effected
-     */
-    // todo : config condition
-    //rc232_sleep();
+    // vTaskDelay(pdMS_TO_TICKS(50));
 
     /* Wakeup alert
      */
@@ -242,40 +261,43 @@ static void AppTask(void *pv) {
     time_rtc_alarm_enable();
 
     gpio_put(PICO_PINS_LED_2, false);
-    // todo : hold button(s) to switch on/off restart -> maintenance mode
-  #if APP_SHUTDOWN_POWER
-    /* Deinit
-     */
-    printf("[App] Deinit / Suspend\n");
-    vTaskSuspendAll();
-    sensors_deinit();       // -> I2C
-    rc232_deinit();         // -> UART
-    McuGenericI2C_Deinit(); // -> I2C
 
-    /* SHUTDOWN : 3V3
-     * fixme : high current consumption from 3V3, when 3V3_RF ON and 3V3-1 OFF
-     * -> Replace digital isolator
-     */
-    printf("[App] Power off\n");
-    power_3v3_1_enable(false);
-    // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
-    sleep_ms(xDelay_wakeup_ms); // tasks supsended
-    McuLog_error("[App] No power off after %d seconds\n", xDelay_wakeup_ms);
-      // McuArmTools_SoftwareReset(); /* restart */
+    // note : button to switch mode
+    if (power_get_periodic_shutdown() == TRUE) {
+      /* Deinit
+       */
+      printf("[App] Deinit / Suspend\n");
+
+      // todo : move power & config defines
+      ExtRTC_Deinit(); // -> I2C
+      vTaskSuspendAll();
+      //sensors_deinit();              // -> I2C
+      #if PLATFORM_CONFIG_USE_RADIO
+      rc232_deinit();                // -> UART
+      #endif
+      //McuGenericI2C_Deinit();        // -> I2C
+      sleep_ms(APP_POWER_DEINIT_MS); // tasks supsended
+
+      /* SHUTDOWN : 3V3
+       */
+      printf("[App] Power off\n");
+      power_3v3_1_enable(false);
+      // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
+      sleep_ms(xDelay_wakeup_fallback_ms); // tasks supsended
+      McuLog_error("[App] No power off after %d seconds\n",
+                   xDelay_wakeup_fallback_ms);
+      // fixme : fallback
       //  fallback shutdown
+      // - WARNING : check if system can hang up!
       //  - avoid deadlock and to re-initialize system
-  #else
-    // fixme : no sync with rtc time (!), periodic call by rtos
-    printf("[App] Delay wakeup\n");
-    vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
-
-    /* Wakeup
-     */
-    // todo : config condition
-    //rc232_wakeup();
-  #endif
+      McuArmTools_SoftwareReset(); /* restart */
+    } else {
+      // fixme : no sync with rtc time (!), periodic call by rtos
+      McuLog_info("[App] Delay wakeup\n");
+      vTaskDelayUntil(&xLastWakeTime, xDelay_wakeup);
+    }
+#endif /* PLATFORM_CONFIG_USE_POWER */
     /* NO CODE HERE*/
-#endif
 
     // reset alarm flag for power cycle and restart program
     // avoid deadlock
@@ -336,27 +358,27 @@ uint8_t App_ParseCommand(const unsigned char *cmd, bool *handled,
  */
 void APP_Run(void) {
   PL_Init();
-#if PICO_CONFIG_USE_POWER
+#if PLATFORM_CONFIG_USE_POWER
   power_init();
 #endif
 #if PL_CONFIG_USE_BUTTONS
   McuBtn_Init();
 #endif
-#if PICO_CONFIG_USE_SENSORS
+#if PLATFORM_CONFIG_USE_SENSORS
   sensors_init(); // --> Sensor Task
 #endif
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
   rc232_init();
   radio_init(); // --> Radio Task
 #endif
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
   // todo : move
   gpio_init(PICO_PINS_I2C0_ENABLE);
   gpio_set_dir(PICO_PINS_I2C0_ENABLE, GPIO_OUT);
   gpio_put(PICO_PINS_I2C0_ENABLE, 1);
   ExtRTC_Init(); // --> Timer Service Task, already in app platform)
 #endif
-#if PICO_CONFIG_USE_MENU
+#if PLATFORM_CONFIG_USE_MENU
   menu_init(); // --> Menu Task
 #endif
 

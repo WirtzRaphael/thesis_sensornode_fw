@@ -8,21 +8,21 @@
  *
  */
 #include "menu.h"
-#include "pico_config.h"
-#if PICO_CONFIG_USE_POWER
+#include "platform_config.h"
+#if PLATFORM_CONFIG_USE_POWER
 #include "extRTC.h"
 #endif
-#if PICO_CONFIG_USE_POWER
+#if PLATFORM_CONFIG_USE_POWER
   #include "power.h"
 #endif
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
   #include "radio.h"
   #include "rc232.h"
 #endif
-#if PICO_CONFIG_USE_SENSORS
+#if PLATFORM_CONFIG_USE_SENSORS
   #include "sensors.h"
 #endif
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
   #include "time_operations.h"
 #endif
 
@@ -37,7 +37,7 @@
   #define dimof(X) (sizeof(X) / sizeof((X)[0]))
 #endif
 
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
 // DATEREC date_rtc_menu;
 // TIMEREC time_rtc_menu;
 DATEREC date_rtc_ext_menu;
@@ -150,32 +150,32 @@ void menu_handler_main(void) {
   char userCmd = menu_get_user_input();
   switch (userCmd) {
   case 'r':
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
     menu_handler_radio();
 #endif
     break;
   case '2':
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
     menu_handler_rc232();
 #endif
     break;
   case 'c':
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
     menu_handler_rc232_config();
 #endif
     break;
   case 's':
-#if PICO_CONFIG_USE_SENSORS
+#if PLATFORM_CONFIG_USE_SENSORS
     menu_handler_sensors();
 #endif
     break;
   case 't':
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
     menu_handler_time();
 #endif
     break;
   case 'p':
-#if PICO_CONFIG_USE_POWER
+#if PLATFORM_CONFIG_USE_POWER
     menu_handler_power();
 #endif
     break;
@@ -185,7 +185,7 @@ void menu_handler_main(void) {
   }
 }
 
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
 /**
  * @brief menu for radio features
  *
@@ -204,6 +204,7 @@ void menu_handler_radio(void) {
     radio_encoding_hdlc_example();
     break;
   case 's':
+    // use button
     // radio_send_temperature_as_string();
     break;
   case 't':
@@ -324,7 +325,7 @@ void menu_handler_rc232_config(void) {
 }
 #endif
 
-#if PICO_CONFIG_USE_SENSORS
+#if PLATFORM_CONFIG_USE_SENSORS
 void menu_handler_sensors(void) {
   const char *sensorsOptions[] = {"[r]ead temperature (queue latest)"};
   menu_display(sensorsOptions, dimof(sensorsOptions));
@@ -343,7 +344,7 @@ void menu_handler_sensors(void) {
 }
 #endif
 
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
 // todo : capacitor configuration (7pF)
 // todo : turn on int pin
 // todo : check alarm flag
@@ -431,7 +432,7 @@ void menu_handler_time(void) {
 }
 #endif
 
-#if PICO_CONFIG_USE_POWER
+#if PLATFORM_CONFIG_USE_POWER
 void menu_handler_power(void) {
   const char *sensorsOptions[] = {"[1] start VCC-1", "[2] shtudown VCC-1",
                                   "power mode [l]ight", "power mode [h]eavy"};
@@ -446,10 +447,10 @@ void menu_handler_power(void) {
     power_3v3_1_enable(false);
     break;
   case 'l':
-    power_mode(POWER_MODE_LIGHT);
+    power_3V3_mode(POWER_MODE_LIGHT);
     break;
   case 'h':
-    power_mode(POWER_MODE_HEAVY);
+    power_3V3_mode(POWER_MODE_HEAVY);
     break;
   default:
     printf("Invalid option\n");

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "pico_config.h"
+#include "platform_config.h"
 
-#if PICO_CONFIG_USE_RTC
+#if PLATFORM_CONFIG_USE_RTC
   #include "app_platform.h"
   #include "extRTC.h"
   #if PL_CONFIG_USE_PCF85063A

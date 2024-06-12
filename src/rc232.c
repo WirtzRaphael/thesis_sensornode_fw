@@ -18,7 +18,7 @@
 #include "stdio.h"
 
 #include "pico/stdlib.h"
-#include "pico_config.h"
+#include "platform_config.h"
 
 #include "McuLog.h"
 #include "McuUtility.h"
@@ -28,29 +28,29 @@
 #include <errno.h>
 #include <stdint.h>
 
-#if PICO_CONFIG_USE_RADIO
+#if PLATFORM_CONFIG_USE_RADIO
 
-#define RADIO_PIN_TX                     PICO_PINS_UART1_TX
-#define RADIO_PIN_RX                     PICO_PINS_UART1_RX
-#define RADIO_PIN_CTS                    PICO_PINS_UART1_CTS
-#define RADIO_PIN_RTS                    PICO_PINS_UART1_RTS
-#define RADIO_PIN_CONFIG                 PL_GPIO_RADIO_CONFIG
-#define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
+  #define RADIO_PIN_TX                     PICO_PINS_UART1_TX
+  #define RADIO_PIN_RX                     PICO_PINS_UART1_RX
+  #define RADIO_PIN_CTS                    PICO_PINS_UART1_CTS
+  #define RADIO_PIN_RTS                    PICO_PINS_UART1_RTS
+  #define RADIO_PIN_CONFIG                 PL_GPIO_RADIO_CONFIG
+  #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
 
-// note : maybe configure flow control in radio NVM, before activating
-#define UART_RADIO_ID            UART1_ID
-#define UART_RADIO_BAUD_RATE     UART1_BAUD_RATE
-#define UART_HW_FLOW_CONTROL_CTS UART1_CTS
-#define UART_HW_FLOW_CONTROL_RTS UART1_RTS
+  // note : maybe configure flow control in radio NVM, before activating
+  #define UART_RADIO_ID            UART1_ID
+  #define UART_RADIO_BAUD_RATE     UART1_BAUD_RATE
+  #define UART_HW_FLOW_CONTROL_CTS UART1_CTS
+  #define UART_HW_FLOW_CONTROL_RTS UART1_RTS
 
-#define UART_RADIO_DATA_BITS 8
-#define UART_RADIO_STOP_BITS 1
-#define UART_RADIO_PARITY    UART_PARITY_NONE
+  #define UART_RADIO_DATA_BITS 8
+  #define UART_RADIO_STOP_BITS 1
+  #define UART_RADIO_PARITY    UART_PARITY_NONE
 
-#define LOG_LEVEL_DEBUG (0)
-#define PRINTF          (true)
-// exit config state before entering new config state
-#define RADIO_PRE_EXIT_CONFIG (1)
+  #define LOG_LEVEL_DEBUG (0)
+  #define PRINTF          (true)
+  // exit config state before entering new config state
+  #define RADIO_PRE_EXIT_CONFIG (1)
 
 char payload_separator_char[1] = "-";
 
@@ -64,9 +64,9 @@ static void uart_wait(void) {
  */
 static void enter_config_state(void) {
   McuLog_trace("[rc232] Enter config state");
-#if LOG_LEVEL_DEBUG
+  #if LOG_LEVEL_DEBUG
   McuLog_debug("Config pin low");
-#endif
+  #endif
   gpio_put(RADIO_PIN_CONFIG, false);
   sleep_us(50); // additional delay for gpio to be set
 }
@@ -77,10 +77,10 @@ static void enter_config_state(void) {
  */
 void exit_config_state(void) {
   McuLog_trace("[rc232] Exit config state");
-#if LOG_LEVEL_DEBUG
+  #if LOG_LEVEL_DEBUG
   McuLog_debug("Config pin high");
   McuLog_debug("Send X to radio");
-#endif
+  #endif
   gpio_put(RADIO_PIN_CONFIG, true);
   sleep_us(50); // additional delay for gpio to be set
 
@@ -98,21 +98,25 @@ void rc232_init() {
    */
   // todo : activate RTS, configure nvm new and check
   uart_init(UART_RADIO_ID, UART_RADIO_BAUD_RATE);
-  uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS,
-                   UART_HW_FLOW_CONTROL_RTS);
-  // uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS, 0);
+  // uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS,
+  //                    UART_HW_FLOW_CONTROL_RTS);
+  uart_set_hw_flow(UART_RADIO_ID, UART_HW_FLOW_CONTROL_CTS, 0);
 
   uart_set_format(UART_RADIO_ID, UART_RADIO_DATA_BITS, UART_RADIO_STOP_BITS,
                   UART_RADIO_PARITY);
 
   gpio_set_function(RADIO_PIN_TX, GPIO_FUNC_UART);
   gpio_set_function(RADIO_PIN_RX, GPIO_FUNC_UART);
-#if UART_HW_FLOW_CONTROL_CTS
+  #if UART_HW_FLOW_CONTROL_CTS
   gpio_set_function(RADIO_PIN_CTS, GPIO_FUNC_UART);
-#endif
-#if UART_HW_FLOW_CONTROL_RTS
+  #else
+  gpio_set_function(RADIO_PIN_CTS, GPIO_IN);
+  #endif
+  #if UART_HW_FLOW_CONTROL_RTS
   gpio_set_function(RADIO_PIN_RTS, GPIO_FUNC_UART);
-#endif
+  #else
+  gpio_set_function(RADIO_PIN_RTS, GPIO_IN);
+  #endif
 
   // todo : move central
   /* Pin configuration
@@ -127,9 +131,9 @@ void rc232_init() {
   gpio_set_dir(RADIO_PIN_CONFIG, GPIO_OUT);
   gpio_put(RADIO_PIN_CONFIG, true);
 
-#if RADIO_CONFIG_NON_VOLATILE_MEMORY
+  #if RADIO_CONFIG_NON_VOLATILE_MEMORY
   rc232_memory_configuration();
-#endif
+  #endif
   /* Radio configuration (volatile memory)
    */
   // rc232_uart_read_all(); // clear buffer
@@ -138,18 +142,16 @@ void rc232_init() {
   // rc232_config_destination_address(20);
 }
 
-
-void rc232_deinit(void){
+void rc232_deinit(void) {
   // uart
   uart_deinit(UART_RADIO_ID);
 
-  // fixme : high current consumption from Battery, when 3V3_RF connected and 3V3-1 OFF
   // gpio
   gpio_set_dir(PL_GPIO_RADIO_RESET, GPIO_IN);
   gpio_set_dir(PL_GPIO_RADIO_CONFIG, GPIO_IN);
-  //gpio_deinit(RADIO_PIN_RX);
+  // gpio_deinit(RADIO_PIN_RX);
   gpio_set_dir(RADIO_PIN_RX, GPIO_IN);
-  //gpio_deinit(RADIO_PIN_TX);
+  // gpio_deinit(RADIO_PIN_TX);
   gpio_set_dir(RADIO_PIN_TX, GPIO_IN);
 }
 
@@ -238,7 +240,6 @@ void rc232_tx_packet_bytes(uint8_t *bytes, size_t length, bool dryrun) {
  * @brief Readout all data from the radio buffer
  *
  * todo : function to only flush/clear buffer (?)
- * todo : cobs protocol
  */
 void rc232_rx_read_buffer_full(void) {
   uint8_t rec_buffer[1];
@@ -273,9 +274,9 @@ error_t rc232_rx_read_bytes(uint8_t *buffer, size_t length) {
  * @note volatile memory
  */
 void rc232_config_destination_address(uint8_t address) {
-#if RADIO_PRE_EXIT_CONFIG
+  #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
-#endif
+  #endif
 
   enter_config_state();
   if (wait_config_prompt() == ERR_FAULT) {
@@ -304,9 +305,9 @@ void rc232_config_destination_address(uint8_t address) {
  * @note volatile memory
  */
 void rc232_config_rf_channel_number(uint8_t channel) {
-#if RADIO_PRE_EXIT_CONFIG
+  #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
-#endif
+  #endif
   enter_config_state();
 
   if (wait_config_prompt() == ERR_FAULT) {
@@ -338,9 +339,9 @@ void rc232_config_rf_channel_number(uint8_t channel) {
  * @note volatile memory
  */
 void rc232_config_rf_power(uint8_t power) {
-#if RADIO_PRE_EXIT_CONFIG
+  #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
-#endif
+  #endif
   enter_config_state();
 
   if (wait_config_prompt() == ERR_FAULT) {
@@ -367,9 +368,9 @@ void rc232_config_rf_power(uint8_t power) {
  * @brief Read the temperature from the radio module.
  */
 void rc232_read_temperature(void) {
-#if RADIO_PRE_EXIT_CONFIG
+  #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
-#endif
+  #endif
 
   enter_config_state();
   if (wait_config_prompt() == ERR_FAULT) {
@@ -395,9 +396,9 @@ void rc232_read_temperature(void) {
   // Temperature calculation
   uint8_t temperature = rec_buffer[0] - 128;
   McuLog_trace("[rc232] Temperature is : %d", temperature);
-#if PRINTF
+  #if PRINTF
   printf("Temperature is : %d\n", temperature);
-#endif
+  #endif
 
   exit_config_state();
 }
@@ -406,9 +407,9 @@ void rc232_read_temperature(void) {
  * @brief Read the voltage from the radio module.
  */
 void rc232_read_voltage(void) {
-#if RADIO_PRE_EXIT_CONFIG
+  #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
-#endif
+  #endif
 
   enter_config_state();
   if (wait_config_prompt() == ERR_FAULT) {
@@ -434,9 +435,9 @@ void rc232_read_voltage(void) {
   // Voltage calculation
   uint8_t voltage = rec_buffer[0] * 0.030;
   McuLog_trace("[rc232] Voltage is : %d", voltage);
-#if PRINTF
+  #if PRINTF
   printf("Voltage is : %d\n", voltage);
-#endif
+  #endif
 
   exit_config_state();
 }
@@ -448,9 +449,9 @@ void rc232_read_voltage(void) {
  * @note P = - RSSI /2
  */
 uint8_t rc232_signal_strength_indicator(void) {
-#if RADIO_PRE_EXIT_CONFIG
+  #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
-#endif
+  #endif
 
   enter_config_state();
   if (wait_config_prompt() == ERR_FAULT) {
@@ -476,9 +477,9 @@ uint8_t rc232_signal_strength_indicator(void) {
   // -- Signal strenght calculation
   uint8_t rssi = rec_buffer[0];
   McuLog_trace("[rc232] RSSI is : %d", rssi);
-#if PRINTF
+  #if PRINTF
   printf("RSSI is : %d\n", rssi);
-#endif
+  #endif
 
   exit_config_state();
 }
@@ -488,9 +489,9 @@ uint8_t rc232_signal_strength_indicator(void) {
  *
  */
 void rc232_sleep(void) {
-#if RADIO_PRE_EXIT_CONFIG
+  #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
-#endif
+  #endif
 
   enter_config_state();
   if (wait_config_prompt() == ERR_FAULT) {
@@ -529,9 +530,9 @@ uint8_t wait_config_prompt(void) {
  * @brief Get the configuration memory from the radio module.
  */
 void rc232_get_configuration_memory(void) {
-#if RADIO_PRE_EXIT_CONFIG
+  #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
-#endif
+  #endif
 
   enter_config_state();
   if (wait_config_prompt() == ERR_FAULT) {
@@ -572,9 +573,9 @@ uint8_t check_config_prompt(uint8_t received) {
  * @param address Data address in non-volatile memory (NVM)
  */
 void rc232_memory_read_one_byte(uint8_t address) {
-#if RADIO_PRE_EXIT_CONFIG
+  #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
-#endif
+  #endif
   rc232_rx_read_buffer_full(); // fix : clear buffer, otherwise missing/wrong
                                // values
 
@@ -594,9 +595,9 @@ void rc232_memory_read_one_byte(uint8_t address) {
 
   // -- Send : Parameters
   uart_write_blocking(UART_RADIO_ID, &address, 1);
-#if PRINTF
+  #if PRINTF
   printf("address: 0x%02hhX (%d)\n", address, address);
-#endif
+  #endif
   McuLog_trace("[rc232] address: %d", address);
   uart_wait();
 
@@ -604,14 +605,14 @@ void rc232_memory_read_one_byte(uint8_t address) {
   uint8_t buffer_size = 2;
   uint8_t rec_buffer[buffer_size];
   uart_read_blocking(UART_RADIO_ID, rec_buffer, buffer_size);
-/* debug : print received buffer
-for (uint8_t i = 0; i < buffer_size; i++) {
-  McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
-}
-*/
-#if PRINTF
+  /* debug : print received buffer
+  for (uint8_t i = 0; i < buffer_size; i++) {
+    McuLog_trace("Radio received [%d] : %d \n", i, rec_buffer[i]);
+  }
+  */
+  #if PRINTF
   printf("config value : %d \n", rec_buffer[0]);
-#endif
+  #endif
   McuLog_trace("[rc232] config value : %d \n", rec_buffer[0]);
 
   exit_config_state();
@@ -640,9 +641,9 @@ void rc232_memory_read_configuration(void) {
  *
  */
 void rc232_memory_write_configuration(void) {
-#if RADIO_PRE_EXIT_CONFIG
+  #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
-#endif
+  #endif
 
   /* IDLE -> CONFIG
    */
@@ -673,8 +674,8 @@ void rc232_memory_write_configuration(void) {
   unsigned char config_power[] = {NVM_ADDR_RF_POWER, 1};
   uart_write_blocking(UART_RADIO_ID, config_power, 2);
   uart_wait();
-  McuLog_trace("[rc232] Config NVM : RF Power (Addr : %d, Value : %d)", config_power[0],
-               config_power[1]);
+  McuLog_trace("[rc232] Config NVM : RF Power (Addr : %d, Value : %d)",
+  config_power[0], config_power[1]);
 
   // -- RF Data rate
   // 4 : 1.2kbit/s
@@ -709,8 +710,8 @@ void rc232_memory_write_configuration(void) {
   unsigned char config_destination_id[] = {NVM_ADDR_DID, 20};
   uart_write_blocking(UART_RADIO_ID, config_destination_id, 2);
   uart_wait();
-  McuLog_trace("[rc232] Config NVM : Destination ID (DID) (Addr : %d, Value : %d)",
-               config_destination_id[0], config_destination_id[1]);
+  McuLog_trace("[rc232] Config NVM : Destination ID (DID) (Addr : %d, Value :
+  %d)", config_destination_id[0], config_destination_id[1]);
 
   // -- Packet end character
   // 00 : NONE
@@ -718,22 +719,22 @@ void rc232_memory_write_configuration(void) {
   unsigned char config_packet_end_char[] = {NVM_ADDR_PACKET_END_CHAR, 0x00};
   uart_write_blocking(UART_RADIO_ID, config_packet_end_char, 2);
   uart_wait();
-  McuLog_trace("[rc232] Config NVM : Packet end character (Addr : %d, Value : %d)",
-               config_packet_end_char[0], config_packet_end_char[1]);
+  McuLog_trace("[rc232] Config NVM : Packet end character (Addr : %d, Value :
+  %d)", config_packet_end_char[0], config_packet_end_char[1]);
 
   // -- Address mode
   unsigned char config_address_mode[] = {NVM_ADDR_ADDRESS_MODE, 0x02};
   uart_write_blocking(UART_RADIO_ID, config_address_mode, 2);
   uart_wait();
-  McuLog_trace("[rc232] Config NVM : Packet end character (Addr : %d, Value : %d)",
-               config_address_mode[0], config_address_mode[1]);
+  McuLog_trace("[rc232] Config NVM : Packet end character (Addr : %d, Value :
+  %d)", config_address_mode[0], config_address_mode[1]);
 
   // -- CRC mode
   unsigned char config_crc[] = {NVM_ADDR_CRC, 0x02};
   uart_write_blocking(UART_RADIO_ID, config_crc, 2);
   uart_wait();
-  McuLog_trace("[rc232] Config NVM : CRC mode (Addr : %d, Value : %d)", config_crc[0],
-               config_crc[1]);
+  McuLog_trace("[rc232] Config NVM : CRC mode (Addr : %d, Value : %d)",
+  config_crc[0], config_crc[1]);
 
   // -- UART
   // 0 : None
@@ -744,8 +745,8 @@ void rc232_memory_write_configuration(void) {
   unsigned char config_uart_flow[] = {NVM_ADDR_UART_FW_CTRL, 0x01};
   uart_write_blocking(UART_RADIO_ID, config_uart_flow, 2);
   uart_wait();
-  McuLog_trace("[rc232] Config NVM : UART HW flow control (Addr : %d, Value : %d)",
-               config_uart_flow[0], config_uart_flow[1]);
+  McuLog_trace("[rc232] Config NVM : UART HW flow control (Addr : %d, Value :
+  %d)", config_uart_flow[0], config_uart_flow[1]);
   */ // --> AVOID MULIPLE WRITES
 
   // todo : de-, enryption with key, vector (later)
