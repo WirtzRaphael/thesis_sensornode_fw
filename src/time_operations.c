@@ -65,30 +65,40 @@ error_t time_rtc_software_reset(void) {
 error_t time_rtc_alarm_from_now_s(uint16_t *t_from_now_s) {
   time_rtc_get_time(&time);
   time_rtc_get_date(&date);
-
-  unix_time = McuTimeDate_TimeDateToUnixSeconds(&time, &date, offset_hours);
-  alert_unix_time = unix_time + 5;
-  McuTimeDate_UnixSecondsToTimeDate(alert_unix_time, offset_hours, &alert_time,
+  // unix time conversion to avoid overflow handling for seconds, minutes, hour
+  time_unix = McuTimeDate_TimeDateToUnixSeconds(&time, &date, offset_hours);
+  alert_time_unix = time_unix + 5;
+  // convert unix time to alert time and date
+  McuTimeDate_UnixSecondsToTimeDate(alert_time_unix, offset_hours, &alert_time,
                                     &alert_date);
 
+  time_rtc_alarm_set_time(&alert_time, &alert_date);
+}
+
+error_t time_rtc_alarm_set_time(TIMEREC *alert_time, DATEREC *alert_date) {
+  uint8_t val = 0;
+  bool dummy;
+  bool is24h, isAM;
+
+  // write alarm time
   if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) != ERR_OK) {
     McuLog_error("Error reading alarm second\n");
     return ERR_FAILED;
   }
-  McuPCF85063A_WriteAlarmSecond(alert_time.Sec, enable);
-  McuLog_trace("Alarm sec : %d\n", alert_time.Sec);
+  McuPCF85063A_WriteAlarmSecond(alert_time->Sec, enable);
+  McuLog_trace("Alarm sec : %d\n", alert_time->Sec);
   if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) != ERR_OK) {
     McuLog_error("Error reading alarm minute\n");
     return ERR_FAILED;
   }
-  McuPCF85063A_WriteAlarmMinute(alert_time.Min, enable);
-  McuLog_trace("Alarm min : %d\n", alert_time.Min);
+  McuPCF85063A_WriteAlarmMinute(alert_time->Min, enable);
+  McuLog_trace("Alarm min : %d\n", alert_time->Min);
   if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) != ERR_OK) {
     McuLog_error("Error reading alarm hour\n");
     return ERR_FAILED;
   }
-  McuPCF85063A_WriteAlarmHour(alert_time.Hour, enable, is24h, isAM);
-  McuLog_trace("Alarm hour : %d\n", alert_time.Hour);
+  McuPCF85063A_WriteAlarmHour(alert_time->Hour, enable, is24h, isAM);
+  McuLog_trace("Alarm hour : %d\n", alert_time->Hour);
 
   return ERR_OK;
 }
