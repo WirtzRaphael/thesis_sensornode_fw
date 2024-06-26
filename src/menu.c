@@ -10,7 +10,7 @@
 #include "menu.h"
 #include "platform_config.h"
 #if PLATFORM_CONFIG_USE_POWER
-#include "extRTC.h"
+  #include "extRTC.h"
 #endif
 #if PLATFORM_CONFIG_USE_POWER
   #include "power.h"
@@ -27,10 +27,10 @@
 #endif
 
 #include "McuLog.h"
-#include "stdio.h"
-#include <stdint.h>
 #include "McuTimeDate.h"
 #include "pico/stdlib.h"
+#include "stdio.h"
+#include <stdint.h>
 // todo : remove
 
 #ifndef dimof
@@ -73,7 +73,6 @@ void menu_set_date_default(void) {
 }
 
 // todo : move function into another file like time/power/...
-// todo : extend to wakeup for measurement time
 // i.e. wakeup every 10 seconds (10:00:00, 10:00:10,...)
 // note: alarm time means not exactly time X from now, because of the current
 // time accuracy. e.g. wakeup 5 seconds from now -> 10:00:04:500 -> (+4.5) ->

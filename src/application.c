@@ -5,6 +5,7 @@
 #include "platform_config.h"
 #include "time_operations.h"
 /*
+#include <stdint.h>
 #include <stdio.h>
 */
 #if PL_CONFIG_USE_PICO_W
@@ -212,6 +213,7 @@ static void AppTask(void *pv) {
   const TickType_t xDelay_wakeup = pdMS_TO_TICKS(xDelay_wakeup_fallback_ms);
 
 #if PL_CONFIG_USE_PCF85063A
+  // todo [demo] [B] : sync time with external RTC
   // todo : required ? periodic sync
   if (McuTimeDate_SyncWithExternalRTC() != ERR_OK) {
     McuLog_fatal("failed sync with external RTC");
@@ -239,25 +241,28 @@ static void AppTask(void *pv) {
     // - recheck alert settings (?)
     // wait until other tasks done
     // todo : use semaphore for task sync (?)
+    // todo [demo] : sync task measurement
     vTaskDelay(pdMS_TO_TICKS(APP_POWER_APP_TASK_MS));
 
     McuLog_info("[App] Power\n");
 #if PLATFORM_CONFIG_USE_POWER
+    // todo [demo] [C] : Power off RS232
     // todo : POWER OFF RS232 DRIVER -> INIT GPIO's OTHERWISE UNDEFINED
     // indicate shutdown
     gpio_put(PICO_PINS_LED_2, true);
     // vTaskDelay(pdMS_TO_TICKS(50));
 
-    /* Wakeup alert
+    /* Wakeup alert via rtc
      */
     time_rtc_alarm_reset_flag(); // be sure that the flag is reset
-    // fixme : avoid time shiff -> pass time and check or at beginning of task
+    // fixme : avoid time shift -> pass time and check or at beginning of task
     // todo : get time rtc at start of task, alert based on this -> time sync
     uint16_t t_from_now_s = (uint16_t) APP_RTC_ALERT_DELTA_SEC;
     do {
       time_rtc_alarm_from_now_s(&t_from_now_s);
     } while (time_rtc_alarm_check_future() == true);
     time_rtc_alarm_enable();
+    // todo [demo] : alarm check not in future
 
     gpio_put(PICO_PINS_LED_2, false);
 
@@ -270,11 +275,11 @@ static void AppTask(void *pv) {
       // todo : move power & config defines
       ExtRTC_Deinit(); // -> I2C
       vTaskSuspendAll();
-      //sensors_deinit();              // -> I2C
-      #if PLATFORM_CONFIG_USE_RADIO
-      rc232_deinit();                // -> UART
-      #endif
-      //McuGenericI2C_Deinit();        // -> I2C
+  // sensors_deinit();              // -> I2C
+  #if PLATFORM_CONFIG_USE_RADIO
+      rc232_deinit(); // -> UART
+  #endif
+      // McuGenericI2C_Deinit();        // -> I2C
       sleep_ms(APP_POWER_DEINIT_MS); // tasks supsended
 
       /* SHUTDOWN : 3V3
@@ -289,7 +294,7 @@ static void AppTask(void *pv) {
       //  fallback shutdown
       // - WARNING : check if system can hang up!
       //  - avoid deadlock and to re-initialize system
-      McuArmTools_SoftwareReset(); /* restart */
+      // McuArmTools_SoftwareReset(); /* restart */
     } else {
       // fixme : no sync with rtc time (!), periodic call by rtos
       McuLog_info("[App] Delay wakeup\n");

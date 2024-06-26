@@ -367,12 +367,16 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
 
   pack_data_info_field(&data_info_field, send_data[0]);
   data_temperature.index++;
+  // todo [demo] : field value
   send_data[1] = 255; // todo : receiver address
   data_temperature.index++;
+
+  // todo [demo] : time info measurements
 
   // Measurement values
   // reads multiple values from queue until buffer full or queue empty
   // note : number of values multiplied by the size
+  // todo [demo] : measurements length
   // todo : magic number temperature byte length
   for (data_temperature.index;
        data_temperature.index <= 2 * RADIO_TEMPERATURE_VALUES;

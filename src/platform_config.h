@@ -40,25 +40,30 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define PLATFORM_CONFIG_USE_RTC     (1)
   #define PLATFORM_CONFIG_USE_MENU    (1)
   #define PLATFORM_CONFIG_USE_BUTTONS (1)
-  #define PLATFORM_CONFIG_USE_RADIO   (1)
+  // hint : deactivate when no VCC_RF
+  #define PLATFORM_CONFIG_USE_RADIO   (0)
   #define PLATFORM_CONFIG_USE_SENSORS (1)
   #define PLATFORM_CONFIG_USE_POWER   (1)
   //
   // fixme : working from menu. otherwise? Clear Buffer?
-  #define APP_HAS_ONBOARD_GREEN_LED     (0)
-  // RADIO
-  #define APP_RADIO_DECTIVATE_RF        (0)
-  #define APP_RADIO_CHANNEL_SCAN        (0)
-  // POWER
+  #define APP_HAS_ONBOARD_GREEN_LED (0)
+  /* RADIO
+  */
+  #define APP_RADIO_DECTIVATE_RF (1)
+  #define APP_RADIO_CHANNEL_SCAN (0)
+  /* POWER
+  */
   #define APP_POWER_RADIO_DEFAULT_SLEEP (1)
-  #define APP_POWER_AUTO_SHUTDOWN (1)
-  // RTC
-  #define APP_RTC_ALERT_TIME_HOUR   (0)
-  #define APP_RTC_ALERT_TIME_MIN    (0)
-  #define APP_RTC_ALERT_TIME_SEC    (5)
-  #define APP_RTC_ALERT_TIME_SEC100 (0)
-  // - MEASURE
-  #define APP_POWER_APP_TASK_MS        (100)
+  #define APP_POWER_AUTO_SHUTDOWN       (1)
+  /* RTC
+  */
+  #define APP_RTC_ALERT_DELTA_SEC (5)
+  // todo [demo] : APP shutdown sync/fix time
+  // todo [demo] : periodic send (based on time sync rtc)
+  // todo [demo] : NVM memory -> info for radio send (eg. last send time)
+  /* - MEASURE, DEMO
+  */
+  #define APP_POWER_APP_TASK_MS        (1000)
   #define APP_POWER_WAKEUP_FALLBACK_MS (4000)
   // fixme : delay  deinit i2c etc.
   #define APP_POWER_DEINIT_MS (50)
