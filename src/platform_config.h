@@ -52,6 +52,11 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   // POWER
   #define APP_POWER_RADIO_DEFAULT_SLEEP (1)
   #define APP_POWER_AUTO_SHUTDOWN (1)
+  // RTC
+  #define APP_RTC_ALERT_TIME_HOUR   (0)
+  #define APP_RTC_ALERT_TIME_MIN    (0)
+  #define APP_RTC_ALERT_TIME_SEC    (5)
+  #define APP_RTC_ALERT_TIME_SEC100 (0)
   // - MEASURE
   #define APP_POWER_APP_TASK_MS        (100)
   #define APP_POWER_WAKEUP_FALLBACK_MS (4000)
