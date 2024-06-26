@@ -120,31 +120,26 @@ void time_rtc_alarm_set_time(void) {
   printf("Alarm hour : %d\n", alarm_h);
 }
 
-void time_rtc_alarm_get_time(void) {
+uint8_t time_rtc_alarm_get_time(TIMEREC *time, alert_enabled *alert_enabled) {
   uint8_t val = 0;
   bool dummy;
   bool is24h, isAM;
 
+  time->Sec100 = 0; // hint : not supported
+
   if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) == ERR_OK) {
-    printf("Alarm sec : %d\n", val);
-    printf("- Enabled : %d\n", dummy);
+    time->Sec = val;
+    alert_enabled->sec_enabled = dummy;
   }
   if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) == ERR_OK) {
-    printf("Alarm min : %d\n", val);
-    printf("- Enabled : %d\n", dummy);
+    time->Min = val;
+    alert_enabled->min_enabled = dummy;
   }
   if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) == ERR_OK) {
-    printf("Alarm hour : %d\n", val);
-    printf("- Enabled : %d\n", dummy);
+    time->Hour = val;
+    alert_enabled->hour_enabled = dummy;
   }
-  if (McuPCF85063A_ReadAlarmDay(&val, &dummy) == ERR_OK) {
-    printf("Alarm day : %d\n", val);
-    printf("- Enabled : %d\n", dummy);
-  }
-  if (McuPCF85063A_ReadAlarmWeekday(&val, &dummy) == ERR_OK) {
-    printf("Alarm weekday : %d\n", val);
-    printf("- Enabled : %d\n", dummy);
-  }
+  return ERR_OK;
 }
 
 error_t time_rtc_alarm_enable(void) {
