@@ -52,6 +52,26 @@ error_t time_rtc_get_date(DATEREC *date) {
   }
 }
 
+/**
+ * @brief Set date
+ *
+ * @param datevar
+ * @return error_t
+ */
+error_t time_rtc_set_date(DATEREC *datevar) {
+  if (ExtRTC_SetDateInfo(datevar->Year, datevar->Month, datevar->Day) ==
+      ERR_OK) {
+    return ERR_OK;
+  } else {
+    return ERR_FAILED;
+  }
+}
+
+/**
+ * @brief rtc software reset
+ *
+ * @return error_t
+ */
 error_t time_rtc_software_reset(void) {
   return McuPCF85063A_WriteSoftwareReset();
 }
