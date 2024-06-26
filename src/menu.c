@@ -78,10 +78,22 @@ void menu_set_date_default(void) {
 // note: alarm time means not exactly time X from now, because of the current
 // time accuracy. e.g. wakeup 5 seconds from now -> 10:00:04:500 -> (+4.5) ->
 // 10:00:09:000
-static void menu_alarm_set_time(void) { time_rtc_alarm_set_time(); }
+static void menu_alarm_set_time(void) {
+  uint16_t t_from_now_s = 10;
+  time_rtc_alarm_from_now_s(&t_from_now_s);
+}
 
 // todo : move function into another file like time/power/...
-void menu_read_alarm(void) { time_rtc_alarm_get_time(); }
+void menu_read_alarm(void) {
+  TIMEREC time;
+  alert_enabled alert_enabled;
+  time_rtc_alarm_get_time(&time, &alert_enabled);
+  printf("Alarm time: %d:%d:%d\n", time.Hour, time.Min, time.Sec);
+  printf("Alarm enabled: %d, %d, %d, %d\n", alert_enabled.sec100_enabled,
+         alert_enabled.sec_enabled, alert_enabled.min_enabled,
+         alert_enabled.hour_enabled);
+}
+
 #endif
 
 /**
