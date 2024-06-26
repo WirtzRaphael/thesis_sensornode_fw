@@ -200,8 +200,6 @@ static void AppTask(void *pv) {
 
 #if PLATFORM_CONFIG_USE_RTC
   TIMEREC time;
-  TIMEREC time_alert = {APP_RTC_ALERT_TIME_HOUR, APP_RTC_ALERT_TIME_MIN,
-                        APP_RTC_ALERT_TIME_SEC, APP_RTC_ALERT_TIME_SEC100};
   DATEREC date;
 
   if (McuTimeDate_Init() != ERR_OK) { /* do it inside task, as needs to talk
