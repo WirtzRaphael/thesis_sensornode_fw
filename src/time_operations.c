@@ -11,8 +11,14 @@
   #include "McuPCF85063A.h"
   #include "extRTC.h"
 
-DATEREC date;
-TIMEREC time;
+// todo [demo] : replace mcutimedate library ?
+uint32_t alert_time_unix = 0;
+DATEREC alert_date = {0, 0, 0};
+TIMEREC alert_time = {0, 0, 0, 0};
+DATEREC date = {2000, 1, 1};
+TIMEREC time = {0, 0, 0, 0};
+uint32_t time_unix = 0;
+uint8_t offset_hours = 0;
 
 static bool enable = true;
 static bool disabled = false;
