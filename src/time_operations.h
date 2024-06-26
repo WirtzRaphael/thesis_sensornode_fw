@@ -13,7 +13,7 @@ typedef struct {
 
 void time_rtc_set_time(uint8_t hour, uint8_t minute, uint8_t second);
 error_t time_rtc_software_reset(void);
-void time_rtc_alarm_set_time(void);
+uint8_t time_rtc_alarm_check_future(void);
 error_t time_rtc_alarm_from_now_s(uint16_t *t_from_now_s);
 uint8_t time_rtc_alarm_get_time(TIMEREC *time, alert_enabled *alert_enabled);
 error_t time_rtc_alarm_enable(void);

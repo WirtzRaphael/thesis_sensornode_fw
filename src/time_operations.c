@@ -93,38 +93,26 @@ error_t time_rtc_alarm_from_now_s(uint16_t *t_from_now_s) {
   return ERR_OK;
 }
 
-}
-
-void time_rtc_alarm_set_time(void) {
-  // todo : params
-  // alarm time from current time
-  uint8_t alarm_h = 0;
-  uint8_t alarm_m = 0;
-  uint8_t alarm_s = 5;
-
-  uint8_t ret_time = 0;
-  uint8_t val = 0;
-  bool dummy;
-  bool is24h, isAM;
-
+/**
+ * @brief Check if alarm time is in the future
+ *
+ * @return uint8_t
+ */
+uint8_t time_rtc_alarm_check_future(void) {
+  alert_enabled alert_enabled;
   time_rtc_get_time(&time);
+  time_unix = McuTimeDate_TimeDateToUnixSeconds(&time, &date, offset_hours);
+  //
+  time_rtc_alarm_get_time(&alert_time, &alert_enabled);
+  alert_time_unix =
+      McuTimeDate_TimeDateToUnixSeconds(&alert_time, &alert_date, offset_hours);
 
-  if (McuPCF85063A_ReadAlarmSecond(&val, &dummy) != ERR_OK) {
-    printf("Error reading alarm second\n");
-    return;
+  if (time_unix < alert_time_unix) {
+    return ERR_OK;
+  } else {
+    return ERR_FAILED;
   }
-  McuPCF85063A_WriteAlarmSecond((time.Sec + alarm_s), enable);
-  printf("Alarm sec : %d\n", alarm_s);
-  if (McuPCF85063A_ReadAlarmMinute(&val, &dummy) != ERR_OK) {
-    printf("Error reading alarm minute\n");
-    return;
-  }
-  McuPCF85063A_WriteAlarmMinute((time.Min + alarm_m), enable);
-  printf("Alarm min : %d\n", alarm_m);
-  if (McuPCF85063A_ReadAlarmHour(&val, &dummy, &is24h, &isAM) != ERR_OK) {
-    printf("Error reading alarm hour\n");
-    return;
-  }
+}
 
 /**
  * @brief Get alarm time
