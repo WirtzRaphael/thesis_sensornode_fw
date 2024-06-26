@@ -18,10 +18,8 @@ static bool enable = true;
 static bool disabled = false;
 
 void time_rtc_set_time(uint8_t hour, uint8_t minute, uint8_t second) {
-  time.Hour = hour;
-  time.Min = minute;
-  time.Sec = second;
-  time.Sec100 = 0;
+  uint8_t sec100 = 0;
+  ExtRTC_SetTimeInfo(hour, minute, second, sec100);
 }
 
 /**
