@@ -253,9 +253,10 @@ static void AppTask(void *pv) {
     time_rtc_alarm_reset_flag(); // be sure that the flag is reset
     // fixme : avoid time shiff -> pass time and check or at beginning of task
     // todo : get time rtc at start of task, alert based on this -> time sync
-    // rtc todo : check if alert in the future or already passed -> time sync
-    // rtc
-    time_rtc_alarm_from_now(&time_alert);
+    uint16_t t_from_now_s = (uint16_t) APP_RTC_ALERT_DELTA_SEC;
+    do {
+      time_rtc_alarm_from_now_s(&t_from_now_s);
+    } while (time_rtc_alarm_check_future() == true);
     time_rtc_alarm_enable();
 
     gpio_put(PICO_PINS_LED_2, false);
