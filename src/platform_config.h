@@ -35,41 +35,55 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 #endif
 
 #if MODEL_RP2040 && HW_PLATFORM == PL_CONFIG_HW_VERSION_2_0
-  /* Features
+  /** Features
    */
   #define PLATFORM_CONFIG_USE_RTC     (1)
   #define PLATFORM_CONFIG_USE_MENU    (1)
   #define PLATFORM_CONFIG_USE_BUTTONS (1)
   // hint : deactivate when no VCC_RF
-  #define PLATFORM_CONFIG_USE_RADIO   (0)
+  #define PLATFORM_CONFIG_USE_RADIO                                            \
+    (0 || APP_DEMO_AUTOSHUTDOWN_WITH_RADIO ||                                  \
+     APP_DEMO_NO_AUTOSHUTDOWN_WITH_RADIO)
   #define PLATFORM_CONFIG_USE_SENSORS (1)
   #define PLATFORM_CONFIG_USE_POWER   (1)
   //
   // fixme : working from menu. otherwise? Clear Buffer?
   #define APP_HAS_ONBOARD_GREEN_LED (0)
-  /* RADIO
-  */
+  /** RADIO
+   */
   #define APP_RADIO_DECTIVATE_RF (1)
   #define APP_RADIO_CHANNEL_SCAN (0)
-  /* POWER
-  */
-  #define APP_POWER_RADIO_DEFAULT_SLEEP (1)
-  #define APP_POWER_AUTO_SHUTDOWN       (1)
-  /* RTC
-  */
-  #define APP_RTC_ALERT_DELTA_SEC (5)
-  /* WATCHDOG
+  /** POWER
    */
-  #define PL_CONFIG_USE_WATCHDOG_PICO (1)
-  // todo [demo] : APP shutdown sync/fix time
-  // todo [demo] : periodic send (based on time sync rtc)
-  // todo [demo] : NVM memory -> info for radio send (eg. last send time)
-  /* - MEASURE, DEMO
-  */
+  #define APP_POWER_RADIO_DEFAULT_SLEEP (1)
+  #define APP_POWER_AUTO_SHUTDOWN                                              \
+    (0 || APP_DEMO_AUTOSHUTDOWN_WITH_RADIO || APP_DEMO_AUTOSHUTDOWN_NO_RADIO)
   #define APP_POWER_APP_TASK_MS        (1000)
   #define APP_POWER_WAKEUP_FALLBACK_MS (4000)
   // fixme : delay  deinit i2c etc.
   #define APP_POWER_DEINIT_MS (50)
+  /* RTC
+   */
+  #define APP_RTC_ALERT_DELTA_SEC (5)
+  /* WATCHDOG
+   */
+  #define PL_CONFIG_USE_WATCHDOG_PICO (1)
+  /* DEMO
+   */
+  // todo [demo] : re-init/restart when jumper set
+  /* # AUTOSHUTDOWN NO RADIO
+   * -  
+  */
+  // todo [demo] : watchdog
+  #define APP_DEMO_AUTOSHUTDOWN_NO_RADIO (1)
+  // todo [demo] : periodic send
+  // todo [demo] : MODE TEST
+  #define APP_DEMO_NO_AUTOSHUTDOWN_WITH_RADIO (0)
+  // todo [demo] : APP shutdown sync/fix time
+  // todo [demo] : periodic send (based on time sync rtc)
+  // todo [demo] : NVM memory -> info for radio send (eg. last send time)
+  // todo [demo] : MODE TEST
+  #define APP_DEMO_AUTOSHUTDOWN_WITH_RADIO (0)
   /* GPIO
    */
   #define PICO_PINS_BUTTON_A    14u
