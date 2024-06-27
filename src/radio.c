@@ -68,6 +68,7 @@ static radio_data_temperature_t data_temperature = {
 };
 
 static uint16_t radio_time_intervals_ms = 500;
+static uint8_t radio_auto_send_counter = 0;
 
 static pico_unique_board_id_t pico_uid = {0};
 

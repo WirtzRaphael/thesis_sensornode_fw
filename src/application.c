@@ -249,6 +249,7 @@ static void AppTask(void *pv) {
     // wait until other tasks done
     // todo : use semaphore for task sync (?)
     // todo [demo] : sync task measurement
+    radio_send_auto_temperatures();
     vTaskDelay(pdMS_TO_TICKS(APP_POWER_APP_TASK_MS));
 #if PL_CONFIG_USE_WATCHDOG_PICO
     watchdog_update();
