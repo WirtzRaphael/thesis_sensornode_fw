@@ -58,9 +58,9 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define APP_POWER_RADIO_DEFAULT_SLEEP (1)
   /**  AUTO-SHUTDOWN
    * - mcu shutdowns own voltage supply
-   * - use rtc to wakeup circuit 
+   * - use rtc to wakeup circuit
    * - restart via watchdog if voltage supply not shutdown
-  */
+   */
   #define APP_POWER_AUTO_SHUTDOWN                                              \
     (0 || APP_DEMO_AUTOSHUTDOWN_WITH_RADIO || APP_DEMO_AUTOSHUTDOWN_NO_RADIO)
   #define APP_POWER_APP_TASK_MS        (1000)
@@ -74,15 +74,15 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
    */
   #define PL_CONFIG_USE_WATCHDOG_PICO (1)
   /** DEMO : AUTOSHUTDOWN NO RADIO
-  */
+   */
   #define APP_DEMO_AUTOSHUTDOWN_NO_RADIO (1)
   /** DEMO : NO AUTOSHUTDOWN WITH RADIO
-  */
+   */
   // todo [demo] : periodic send
   // todo [demo] : MODE TEST
   #define APP_DEMO_NO_AUTOSHUTDOWN_WITH_RADIO (0)
   /** DEMO : AUTOSHUTDOWN WITH RADIO
-  */
+   */
   // todo [demo] : APP shutdown sync/fix time
   // todo [demo] : periodic send (based on time sync rtc)
   // todo [demo] : NVM memory -> info for radio send (eg. last send time)
