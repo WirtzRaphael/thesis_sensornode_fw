@@ -64,7 +64,6 @@
 #define PL_CONFIG_USE_EXT_RTC           (PL_CONFIG_USE_PCF85063A)
 #define PL_CONFIG_USE_LIGHTS            (0 && (PL_CONFIG_USE_PWM_LED|PL_CONFIG_USE_NEO_PIXEL_HW) && !PL_CONFIG_IS_APP_LED_COUNTER) /* lights module which interfaces both the normal LED and WS2812b */
 #define PL_CONFIG_USE_SEMIHOSTING       (0 && PL_CONFIG_USE_UNIT_TESTS)
-// todo : watchdog
 #define PL_CONFIG_USE_WATCHDOG          (0 && McuWatchdog_CONFIG_USE_WATCHDOG) /* if using Watchdog timer or not, configured in IncludeMcuLibConfig.h */
 
 #define PL_CONFIG_USE_GCOV      (0)

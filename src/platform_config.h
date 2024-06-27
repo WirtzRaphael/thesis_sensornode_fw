@@ -73,17 +73,16 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   /* WATCHDOG
    */
   #define PL_CONFIG_USE_WATCHDOG_PICO (1)
-  /* DEMO
-   */
-  // todo [demo] : re-init/restart when jumper set
-  /* # AUTOSHUTDOWN NO RADIO
-   * -  
+  /** DEMO : AUTOSHUTDOWN NO RADIO
   */
-  // todo [demo] : watchdog
   #define APP_DEMO_AUTOSHUTDOWN_NO_RADIO (1)
+  /** DEMO : NO AUTOSHUTDOWN WITH RADIO
+  */
   // todo [demo] : periodic send
   // todo [demo] : MODE TEST
   #define APP_DEMO_NO_AUTOSHUTDOWN_WITH_RADIO (0)
+  /** DEMO : AUTOSHUTDOWN WITH RADIO
+  */
   // todo [demo] : APP shutdown sync/fix time
   // todo [demo] : periodic send (based on time sync rtc)
   // todo [demo] : NVM memory -> info for radio send (eg. last send time)
