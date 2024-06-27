@@ -72,15 +72,18 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define APP_RTC_ALERT_DELTA_SEC (5)
   /* WATCHDOG
    */
-  #define PL_CONFIG_USE_WATCHDOG_PICO (1)
+  #define PL_CONFIG_USE_WATCHDOG_PICO (0)
   /** DEMO : AUTOSHUTDOWN NO RADIO
+   * HW requirements
+   * - VCC_RF disconnected
    */
-  #define APP_DEMO_AUTOSHUTDOWN_NO_RADIO (1)
+  #define APP_DEMO_AUTOSHUTDOWN_NO_RADIO (0)
   /** DEMO : NO AUTOSHUTDOWN WITH RADIO
+   * HW requirements
+   * - VCC_RF connected
    */
   // todo [demo] : periodic send
-  // todo [demo] : MODE TEST
-  #define APP_DEMO_NO_AUTOSHUTDOWN_WITH_RADIO (0)
+  #define APP_DEMO_NO_AUTOSHUTDOWN_WITH_RADIO (1)
   /** DEMO : AUTOSHUTDOWN WITH RADIO
    */
   // todo [demo] : APP shutdown sync/fix time
