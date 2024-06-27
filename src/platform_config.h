@@ -58,6 +58,9 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   /* RTC
   */
   #define APP_RTC_ALERT_DELTA_SEC (5)
+  /* WATCHDOG
+   */
+  #define PL_CONFIG_USE_WATCHDOG_PICO (1)
   // todo [demo] : APP shutdown sync/fix time
   // todo [demo] : periodic send (based on time sync rtc)
   // todo [demo] : NVM memory -> info for radio send (eg. last send time)

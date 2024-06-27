@@ -35,6 +35,9 @@
 #if PL_CONFIG_USE_BUTTONS
   #include "McuButton.h"
 #endif
+#if PL_CONFIG_USE_WATCHDOG_PICO
+  #include "hardware/watchdog.h"
+#endif
 #include "McuArmTools.h"
 #include "McuGenericI2C.h"
 #include "McuLED.h"
@@ -230,6 +233,10 @@ static void AppTask(void *pv) {
   gpio_set_dir(PICO_PINS_LED_2, GPIO_OUT);
   gpio_put(PICO_PINS_LED_2, false);
 
+#if PL_CONFIG_USE_WATCHDOG_PICO
+  // todo [demo] : watchdog time in config
+  watchdog_enable(1000, 1);
+#endif
   for (;;) {
     McuLog_info("AppTask Start\n");
 #if APP_HAS_ONBOARD_GREEN_LED
@@ -243,6 +250,9 @@ static void AppTask(void *pv) {
     // todo : use semaphore for task sync (?)
     // todo [demo] : sync task measurement
     vTaskDelay(pdMS_TO_TICKS(APP_POWER_APP_TASK_MS));
+#if PL_CONFIG_USE_WATCHDOG_PICO
+    watchdog_update();
+#endif
 
     McuLog_info("[App] Power\n");
 #if PLATFORM_CONFIG_USE_POWER
@@ -257,9 +267,12 @@ static void AppTask(void *pv) {
     time_rtc_alarm_reset_flag(); // be sure that the flag is reset
     // fixme : avoid time shift -> pass time and check or at beginning of task
     // todo : get time rtc at start of task, alert based on this -> time sync
-    uint16_t t_from_now_s = (uint16_t) APP_RTC_ALERT_DELTA_SEC;
+    uint16_t t_from_now_s = (uint16_t)APP_RTC_ALERT_DELTA_SEC;
     do {
       time_rtc_alarm_from_now_s(&t_from_now_s);
+  #if PL_CONFIG_USE_WATCHDOG_PICO
+      watchdog_update();
+  #endif
     } while (time_rtc_alarm_check_future() == true);
     time_rtc_alarm_enable();
     // todo [demo] : alarm check not in future
@@ -281,20 +294,32 @@ static void AppTask(void *pv) {
   #endif
       // McuGenericI2C_Deinit();        // -> I2C
       sleep_ms(APP_POWER_DEINIT_MS); // tasks supsended
+  #if PL_CONFIG_USE_WATCHDOG_PICO
+      watchdog_update();
+  #endif
 
       /* SHUTDOWN : 3V3
        */
       printf("[App] Power off\n");
       power_3v3_1_enable(false);
       // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
-      sleep_ms(xDelay_wakeup_fallback_ms); // tasks supsended
-      McuLog_error("[App] No power off after %d seconds\n",
-                   xDelay_wakeup_fallback_ms);
-      // fixme : fallback
-      //  fallback shutdown
-      // - WARNING : check if system can hang up!
-      //  - avoid deadlock and to re-initialize system
-      // McuArmTools_SoftwareReset(); /* restart */
+      /* fallback delay
+      */
+      for (uint16_t i; i <= xDelay_wakeup_fallback_ms; i++) {
+        sleep_ms(1);
+  #if PL_CONFIG_USE_WATCHDOG_PICO
+        watchdog_update();
+  #endif
+      }
+      /*  fallback shutdown
+       * - don't update watchdog to reboot system
+       * - avoid deadlock and to re-initialize system
+       */
+      while (1) {
+        McuLog_error("[App] No power off after %d seconds\n",
+                     xDelay_wakeup_fallback_ms);
+        // McuArmTools_SoftwareReset(); /* restart */
+      }
     } else {
       // fixme : no sync with rtc time (!), periodic call by rtos
       McuLog_info("[App] Delay wakeup\n");
@@ -303,6 +328,8 @@ static void AppTask(void *pv) {
 #endif /* PLATFORM_CONFIG_USE_POWER */
     /* NO CODE HERE*/
 
+    // todo [demo] : reset alarm flag
+    // todo [demo] : re-init
     // reset alarm flag for power cycle and restart program
     // avoid deadlock
   }
