@@ -74,6 +74,8 @@ void radio_send_temperature_as_string(
 error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
                                         data_info_field_t data_info_field,
                                         bool dryrun);
+void radio_send_auto_temperatures(void);
+void radio_send_temperatures(void);
 void radio_send_test_string(void);
 char radio_get_rf_destination_address(void);
 static void print_bits_of_byte(uint8_t byte, bool print);

@@ -89,21 +89,7 @@ static void vRadioTask(void *pvParameters) {
       /* Send measurement values
        */
       printf("[radio] Semaphore take Button B\n");
-      printf("[radio] Send Temperature 1 \n");
-      // fixme : send all values and empty values otherwise
-      data_info_field_t data_info_temperature_1 = {PROTOCOL_VERSION,
-                                                   DATA_SENSORS_TEMPERATURE_1};
-      // todo : refactor : readout temperatures into array and pass to radio
-      // send fixme : interface readout queue and send values here !
-      // todo : error handling
-      (void)radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
-                                            data_info_temperature_1, false);
-
-      printf("[radio] Send Temperature 2 \n");
-      data_info_field_t data_info_temperature_2 = {PROTOCOL_VERSION,
-                                                   DATA_SENSORS_TEMPERATURE_2};
-      (void)radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
-                                            data_info_temperature_2, false);
+      radio_send_temperatures();
     }
   }
   if (xSemaphoreTake(xButtonAHoldSemaphore, xButtonSemaphoreTimeout) ==
@@ -479,6 +465,41 @@ void radio_encoding_hdlc_example(void) {
     printf("%d", recv_data[i]);
   }
   printf("\n");
+}
+
+/**
+ * @brief send automatic measurement values
+ *
+ */
+void radio_send_auto_temperatures(void) {
+  radio_auto_send_counter++;
+  if (radio_auto_send_counter >= APP_RADIO_AUTO_SEND_INTERVAL) {
+    radio_auto_send_counter = 0;
+    McuLog_info("[radio] auto send counter reset \n");
+    McuLog_info("[radio] auto send temperatures \n");
+    radio_send_temperatures();
+  } else {
+    McuLog_info("[radio] auto send counter increased \n");
+    return;
+  }
+}
+
+void radio_send_temperatures(void) {
+  printf("[radio] Send Temperature 1 \n");
+  // fixme : send all values and empty values otherwise
+  data_info_field_t data_info_temperature_1 = {PROTOCOL_VERSION,
+                                               DATA_SENSORS_TEMPERATURE_1};
+  // todo : refactor : readout temperatures into array and pass to radio
+  // send fixme : interface readout queue and send values here !
+  // todo : error handling
+  (void)radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
+                                        data_info_temperature_1, false);
+
+  printf("[radio] Send Temperature 2 \n");
+  data_info_field_t data_info_temperature_2 = {PROTOCOL_VERSION,
+                                               DATA_SENSORS_TEMPERATURE_2};
+  (void)radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
+                                        data_info_temperature_2, false);
 }
 
 /**
