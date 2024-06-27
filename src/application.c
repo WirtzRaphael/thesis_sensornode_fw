@@ -310,6 +310,7 @@ static void AppTask(void *pv) {
         watchdog_update();
   #endif
       }
+      time_rtc_alarm_reset_flag(); // no rtc wakeup
       /*  fallback shutdown
        * - don't update watchdog to reboot system
        * - avoid deadlock and to re-initialize system
