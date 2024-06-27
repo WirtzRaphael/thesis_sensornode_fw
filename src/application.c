@@ -275,7 +275,6 @@ static void AppTask(void *pv) {
   #endif
     } while (time_rtc_alarm_check_future() == true);
     time_rtc_alarm_enable();
-    // todo [demo] : alarm check not in future
 
     gpio_put(PICO_PINS_LED_2, false);
 
@@ -304,7 +303,7 @@ static void AppTask(void *pv) {
       power_3v3_1_enable(false);
       // fixme : delay until when tasks suspended -> sleep.h & rtc rp2040
       /* fallback delay
-      */
+       */
       for (uint16_t i; i <= xDelay_wakeup_fallback_ms; i++) {
         sleep_ms(1);
   #if PL_CONFIG_USE_WATCHDOG_PICO
@@ -327,11 +326,6 @@ static void AppTask(void *pv) {
     }
 #endif /* PLATFORM_CONFIG_USE_POWER */
     /* NO CODE HERE*/
-
-    // todo [demo] : reset alarm flag
-    // todo [demo] : re-init
-    // reset alarm flag for power cycle and restart program
-    // avoid deadlock
   }
 } /* AppTask */
 
