@@ -51,7 +51,9 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define APP_HAS_ONBOARD_GREEN_LED (0)
   /** RADIO
    */
-  #define APP_RADIO_DECTIVATE_RF (1)
+  #define APP_RADIO_DECTIVATE_RF                                               \
+    (0 || APP_DEMO_AUTOSHUTDOWN_WITH_RADIO ||                                  \
+     APP_DEMO_NO_AUTOSHUTDOWN_WITH_RADIO)
   #define APP_RADIO_CHANNEL_SCAN (0)
   /** POWER
    */
