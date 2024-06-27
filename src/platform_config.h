@@ -56,6 +56,11 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   /** POWER
    */
   #define APP_POWER_RADIO_DEFAULT_SLEEP (1)
+  /**  AUTO-SHUTDOWN
+   * - mcu shutdowns own voltage supply
+   * - use rtc to wakeup circuit 
+   * - restart via watchdog if voltage supply not shutdown
+  */
   #define APP_POWER_AUTO_SHUTDOWN                                              \
     (0 || APP_DEMO_AUTOSHUTDOWN_WITH_RADIO || APP_DEMO_AUTOSHUTDOWN_NO_RADIO)
   #define APP_POWER_APP_TASK_MS        (1000)
