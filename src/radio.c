@@ -44,8 +44,9 @@
   #define SCAN_CHANNELS_FOR_CONNECTION APP_RADIO_CHANNEL_SCAN
   #define DEACTIVATE_RF                APP_RADIO_DEACTIVATE_RF
 
-  #define RADIO_LOG_OUTPUT printf
-// #define RADIO_LOG_OUTPUT McuLog_trace // fixme : some values missing
+//  #define RADIO_LOG_OUTPUT printf
+  #define RADIO_LOG_OUTPUT McuLog_trace // fixme : some values missing
+  #define RADIO_LOG_PRINT  (0)
 
   #ifndef dimof
     #define dimof(X) (sizeof(X) / sizeof((X)[0]))
@@ -376,7 +377,7 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
     error_resp = sensors_temperature_xQueue_receive(
         xQueue_temperature, &data_temperature.measurement);
     if (error_resp != ERR_OK) {
-      printf("[radio] No new temperature value received\n");
+      RADIO_LOG_OUTPUT("[radio] No new temperature value received\n");
       // fill values
       send_data[data_temperature.index] = 0;
       send_data[data_temperature.index + 1] = 0;
@@ -384,7 +385,8 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
     }
     convert_temperature_to_byte(data_temperature.measurement_byte,
                                 &data_temperature.measurement);
-    printf("temperature: %f\n", data_temperature.measurement.temperature);
+    RADIO_LOG_OUTPUT("temperature: %f\n",
+                     data_temperature.measurement.temperature);
     send_data[data_temperature.index] = data_temperature.measurement_byte[0];
     send_data[data_temperature.index + 1] =
         data_temperature.measurement_byte[1];
@@ -486,7 +488,7 @@ void radio_send_auto_temperatures(void) {
 }
 
 void radio_send_temperatures(void) {
-  printf("[radio] Send Temperature 1 \n");
+  RADIO_LOG_OUTPUT("[radio] Send Temperature 1 \n");
   // fixme : send all values and empty values otherwise
   data_info_field_t data_info_temperature_1 = {PROTOCOL_VERSION,
                                                DATA_SENSORS_TEMPERATURE_1};
@@ -496,7 +498,7 @@ void radio_send_temperatures(void) {
   (void)radio_send_temperature_as_bytes(xQueue_temperature_sensor_1,
                                         data_info_temperature_1, false);
 
-  printf("[radio] Send Temperature 2 \n");
+  RADIO_LOG_OUTPUT("[radio] Send Temperature 2 \n");
   data_info_field_t data_info_temperature_2 = {PROTOCOL_VERSION,
                                                DATA_SENSORS_TEMPERATURE_2};
   (void)radio_send_temperature_as_bytes(xQueue_temperature_sensor_2,
@@ -542,8 +544,8 @@ static void convert_temperature_to_byte(
   McuUtility_SetValue16LE(temperature, data_16LE_byte);
   RADIO_LOG_OUTPUT("[send] ==> sensor: Temperature \n");
   RADIO_LOG_OUTPUT("[send]  -> converted to byte:\n");
-  print_bits_of_byte(data_16LE_byte[1], true);
-  print_bits_of_byte(data_16LE_byte[0], true);
+  print_bits_of_byte(data_16LE_byte[1], RADIO_LOG_PRINT);
+  print_bits_of_byte(data_16LE_byte[0], RADIO_LOG_PRINT);
 }
 
 /**
@@ -622,7 +624,7 @@ static void log_hdlc_data(char *data_ptr, size_t data_len) {
   RADIO_LOG_OUTPUT("[hdlc]  -> int : ");
   log_buffer_as_int(data_ptr, data_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> bin : ");
-  print_bits_of_byte(*(data_ptr), true);
+  print_bits_of_byte(*(data_ptr), RADIO_LOG_PRINT);
   RADIO_LOG_OUTPUT("[hdlc]  -> length: %d\n", data_len);
 }
 
@@ -639,7 +641,7 @@ static void log_hdlc_encoded(char *encoded_ptr, size_t encoded_len) {
   RADIO_LOG_OUTPUT("[hdlc]  -> int : ");
   log_buffer_as_int(encoded_ptr, encoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> bin : ");
-  print_bits_of_byte(*(encoded_ptr), true);
+  print_bits_of_byte(*(encoded_ptr), RADIO_LOG_PRINT);
   RADIO_LOG_OUTPUT("[hdlc]  -> length: %d\n", encoded_len);
 }
 
@@ -656,7 +658,7 @@ static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len) {
   RADIO_LOG_OUTPUT("[hdlc]  -> int : ");
   log_buffer_as_int(decoded_ptr, decoded_len);
   RADIO_LOG_OUTPUT("[hdlc]  -> bin : ");
-  print_bits_of_byte(*(decoded_ptr), true);
+  print_bits_of_byte(*(decoded_ptr), RADIO_LOG_PRINT);
   RADIO_LOG_OUTPUT("[hdlc]  -> length: %d\n", decoded_len);
 }
 
@@ -668,9 +670,9 @@ static void log_hdlc_decoded(char *decoded_ptr, size_t decoded_len) {
  */
 static void log_buffer_as_char(char *buffer, size_t length) {
   for (size_t i = 0; i < length; i++) {
-    printf("|%c", (char)buffer[i]);
+    RADIO_LOG_OUTPUT("|%c", (char)buffer[i]);
   }
-  printf("\n");
+  RADIO_LOG_OUTPUT("\n");
 }
 
 /**
@@ -681,9 +683,9 @@ static void log_buffer_as_char(char *buffer, size_t length) {
  */
 static void log_buffer_as_int(char *buffer, size_t length) {
   for (size_t i = 0; i < length; i++) {
-    printf("|%d", (char)buffer[i]);
+    RADIO_LOG_OUTPUT("|%d", (char)buffer[i]);
   }
-  printf("\n");
+  RADIO_LOG_OUTPUT("\n");
 }
 
 /**
