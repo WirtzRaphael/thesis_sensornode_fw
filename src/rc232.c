@@ -30,11 +30,12 @@
 
 #if PLATFORM_CONFIG_USE_RADIO
 
-  #define RADIO_PIN_TX                     PICO_PINS_UART1_TX
-  #define RADIO_PIN_RX                     PICO_PINS_UART1_RX
-  #define RADIO_PIN_CTS                    PICO_PINS_UART1_CTS
-  #define RADIO_PIN_RTS                    PICO_PINS_UART1_RTS
-  #define RADIO_PIN_CONFIG                 PL_GPIO_RADIO_CONFIG
+  #define RADIO_PIN_TX     PICO_PINS_UART1_TX
+  #define RADIO_PIN_RX     PICO_PINS_UART1_RX
+  #define RADIO_PIN_CTS    PICO_PINS_UART1_CTS
+  #define RADIO_PIN_RTS    PICO_PINS_UART1_RTS
+  #define RADIO_PIN_CONFIG PL_GPIO_RADIO_CONFIG
+  // todo [demo] : ?
   #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
 
   // note : maybe configure flow control in radio NVM, before activating
@@ -710,8 +711,9 @@ void rc232_memory_write_configuration(void) {
   unsigned char config_destination_id[] = {NVM_ADDR_DID, 20};
   uart_write_blocking(UART_RADIO_ID, config_destination_id, 2);
   uart_wait();
-  McuLog_trace("[rc232] Config NVM : Destination ID (DID) (Addr : %d, Value :
-  %d)", config_destination_id[0], config_destination_id[1]);
+  McuLog_trace(
+      "[rc232] Config NVM : Destination ID (DID) (Addr : %d, Value : %d)",
+      config_destination_id[0], config_destination_id[1]);
 
   // -- Packet end character
   // 00 : NONE
@@ -729,12 +731,14 @@ void rc232_memory_write_configuration(void) {
   McuLog_trace("[rc232] Config NVM : Packet end character (Addr : %d, Value :
   %d)", config_address_mode[0], config_address_mode[1]);
 
+*/
   // -- CRC mode
   unsigned char config_crc[] = {NVM_ADDR_CRC, 0x02};
   uart_write_blocking(UART_RADIO_ID, config_crc, 2);
   uart_wait();
   McuLog_trace("[rc232] Config NVM : CRC mode (Addr : %d, Value : %d)",
   config_crc[0], config_crc[1]);
+  /*
 
   // -- UART
   // 0 : None
