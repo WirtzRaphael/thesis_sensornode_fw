@@ -112,5 +112,6 @@ void rc232_memory_read_configuration(void);
 
 uint8_t wait_config_prompt(void);
 uint8_t check_config_prompt(uint8_t received);
+error_t rc232_check_not_configuration_mode(void);
 
 #endif /* RADIO_CONFIG_H_ */

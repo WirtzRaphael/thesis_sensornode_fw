@@ -534,6 +534,13 @@ uint8_t wait_config_prompt(void) {
   return check_config_prompt(rec_prompt[0]);
 }
 
+error_t rc232_check_not_configuration_mode(void){
+  if (rc232_get_configuration_memory() == ERR_FAILED) {
+    return ERR_FAILED;
+  }
+  return ERR_OK;
+}
+
 /**
  * @brief Get the configuration memory from the radio module.
  */

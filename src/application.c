@@ -250,6 +250,9 @@ static void AppTask(void *pv) {
 // todo : use semaphore for task sync (?)
 // todo [demo] : sync task measurement
 #if PLATFORM_CONFIG_USE_RADIO
+    if(rc232_check_not_configuration_mode() == ERR_FAILED) {
+      exit_config_state();
+    }
     radio_send_auto_temperatures();
 #endif
     vTaskDelay(pdMS_TO_TICKS(APP_POWER_APP_TASK_MS));
