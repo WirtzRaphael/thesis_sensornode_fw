@@ -137,9 +137,8 @@ void rc232_init() {
   gpio_set_dir(RADIO_PIN_CONFIG, GPIO_OUT);
   gpio_put(RADIO_PIN_CONFIG, true);
 
-
   /* Configuration
-  */
+   */
   // note : program crashes when exiting config state here
   #if RADIO_CONFIG_NON_VOLATILE_MEMORY
   rc232_memory_configuration();
@@ -258,7 +257,7 @@ error_t rc232_rx_read_buffer_full(bool print) {
   while (uart_is_readable(UART_RADIO_ID)) {
     uart_read_blocking(UART_RADIO_ID, rec_buffer, 1);
     McuLog_trace("[rc232] Received %s from radio\n", rec_buffer);
-    if(print) {
+    if (print) {
       printf("Received %s from radio\n", rec_buffer);
       printf("Received %d from radio\n", *rec_buffer);
     }
@@ -549,7 +548,7 @@ uint8_t wait_config_prompt(void) {
   return check_config_prompt(rec_prompt[0]);
 }
 
-error_t rc232_check_not_configuration_mode(void){
+error_t rc232_check_not_configuration_mode(void) {
   if (rc232_get_configuration_memory() == ERR_FAILED) {
     return ERR_FAILED;
   }
@@ -576,7 +575,7 @@ error_t rc232_get_configuration_memory(void) {
 
   // Readout buffer
   // fixme : values encoding in terminal
-  if(rc232_rx_read_buffer_full(false) == ERR_FAILED) {
+  if (rc232_rx_read_buffer_full(false) == ERR_FAILED) {
     return ERR_FAILED;
   }
 
@@ -609,8 +608,8 @@ void rc232_memory_read_one_byte(uint8_t address) {
   #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
   #endif
-  rc232_rx_read_buffer_full(false); // fix : clear buffer, otherwise missing/wrong
-                               // values
+  rc232_rx_read_buffer_full(false); // fix : clear buffer, otherwise
+                                    // missing/wrong values
 
   enter_config_state();
 
