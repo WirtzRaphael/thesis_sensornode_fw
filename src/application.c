@@ -250,9 +250,12 @@ static void AppTask(void *pv) {
 // todo : use semaphore for task sync (?)
 // todo [demo] : sync task measurement
 #if PLATFORM_CONFIG_USE_RADIO
+    // fixme [demo] : wakes up radio!
     if(rc232_check_not_configuration_mode() == ERR_FAILED) {
       exit_config_state();
     }
+    // todo move wakeup into radio send
+    // send temperature periodic and handle sleep mode
     radio_send_auto_temperatures();
 #endif
     vTaskDelay(pdMS_TO_TICKS(APP_POWER_APP_TASK_MS));

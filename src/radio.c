@@ -478,11 +478,13 @@ void radio_encoding_hdlc_example(void) {
  */
 void radio_send_auto_temperatures(void) {
   if (radio_auto_send_counter >= APP_RADIO_AUTO_SEND_INTERVAL) {
+    rc232_wakeup();
     radio_auto_send_counter = 0;
     McuLog_info("[radio] auto send counter reset \n");
     McuLog_info("[radio] auto send temperatures \n");
     radio_send_temperatures();
   } else {
+    rc232_sleep();
     radio_auto_send_counter++;
     McuLog_info("[radio] auto send counter increased \n");
     return;
