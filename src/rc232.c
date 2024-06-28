@@ -142,10 +142,12 @@ void rc232_init() {
   #endif
   /* Radio configuration (volatile memory)
    */
-  // rc232_uart_read_all(); // clear buffer
-  // rc232_config_rf_channel_number(1);
-  // rc232_config_rf_power(1);
-  // rc232_config_destination_address(20);
+  #if RADIO_CONFIG_VOLATILE_MEMORY
+  rc232_uart_read_all(); // clear buffer
+  rc232_config_rf_channel_number(1);
+  rc232_config_rf_power(1);
+  rc232_config_destination_address(20);
+  #endif
 }
 
 void rc232_deinit(void) {
