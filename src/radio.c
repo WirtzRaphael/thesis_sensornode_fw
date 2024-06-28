@@ -417,7 +417,9 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
                     &recv_length);
   #endif
 
-  rc232_tx_packet_bytes(send_data, sizeof(send_data), DEACTIVATE_RF);
+  // todo [demo] : send encoded data
+  //rc232_tx_packet_bytes(send_data, sizeof(send_data), DEACTIVATE_RF);
+  rc232_tx_packet_bytes(frame_data, sizeof(frame_data), DEACTIVATE_RF);
   return ERR_OK;
 }
 
@@ -475,13 +477,13 @@ void radio_encoding_hdlc_example(void) {
  *
  */
 void radio_send_auto_temperatures(void) {
-  radio_auto_send_counter++;
   if (radio_auto_send_counter >= APP_RADIO_AUTO_SEND_INTERVAL) {
     radio_auto_send_counter = 0;
     McuLog_info("[radio] auto send counter reset \n");
     McuLog_info("[radio] auto send temperatures \n");
     radio_send_temperatures();
   } else {
+    radio_auto_send_counter++;
     McuLog_info("[radio] auto send counter increased \n");
     return;
   }
