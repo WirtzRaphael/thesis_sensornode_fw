@@ -731,14 +731,12 @@ void rc232_memory_write_configuration(void) {
   McuLog_trace("[rc232] Config NVM : Packet end character (Addr : %d, Value :
   %d)", config_address_mode[0], config_address_mode[1]);
 
-*/
   // -- CRC mode
   unsigned char config_crc[] = {NVM_ADDR_CRC, 0x02};
   uart_write_blocking(UART_RADIO_ID, config_crc, 2);
   uart_wait();
   McuLog_trace("[rc232] Config NVM : CRC mode (Addr : %d, Value : %d)",
-  config_crc[0], config_crc[1]);
-  /*
+               config_crc[0], config_crc[1]);
 
   // -- UART
   // 0 : None
