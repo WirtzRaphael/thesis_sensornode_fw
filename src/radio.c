@@ -150,7 +150,7 @@ char radio_get_rf_destination_address(void) {
  * fixme : buffer read infinit wait -> reset (problematic ?)
  */
 void radio_authentication(void) {
-  rc232_rx_read_buffer_full(); // empty buffer
+  rc232_rx_read_buffer_full(false); // empty buffer
 
   RADIO_LOG_OUTPUT("[radio] ==> Scan authentication\n");
   #if SCAN_CHANNELS_FOR_CONNECTION

@@ -137,6 +137,10 @@ void rc232_init() {
   gpio_set_dir(RADIO_PIN_CONFIG, GPIO_OUT);
   gpio_put(RADIO_PIN_CONFIG, true);
 
+
+  /* Configuration
+  */
+  // note : program crashes when exiting config state here
   #if RADIO_CONFIG_NON_VOLATILE_MEMORY
   rc232_memory_configuration();
   #endif
@@ -249,13 +253,15 @@ void rc232_tx_packet_bytes(uint8_t *bytes, size_t length, bool dryrun) {
  *
  * todo : function to only flush/clear buffer (?)
  */
-void rc232_rx_read_buffer_full(void) {
+error_t rc232_rx_read_buffer_full(bool print) {
   uint8_t rec_buffer[1];
   while (uart_is_readable(UART_RADIO_ID)) {
     uart_read_blocking(UART_RADIO_ID, rec_buffer, 1);
     McuLog_trace("[rc232] Received %s from radio\n", rec_buffer);
-    printf("Received %s from radio\n", rec_buffer);
-    printf("Received %d from radio\n", *rec_buffer);
+    if(print) {
+      printf("Received %s from radio\n", rec_buffer);
+      printf("Received %d from radio\n", *rec_buffer);
+    }
   }
 }
 
@@ -544,14 +550,14 @@ error_t rc232_check_not_configuration_mode(void){
 /**
  * @brief Get the configuration memory from the radio module.
  */
-void rc232_get_configuration_memory(void) {
+error_t rc232_get_configuration_memory(void) {
   #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
   #endif
 
   enter_config_state();
   if (wait_config_prompt() == ERR_FAULT) {
-    return;
+    return ERR_FAILED;
   }
 
   // -- Send : Command byte
@@ -561,9 +567,12 @@ void rc232_get_configuration_memory(void) {
 
   // Readout buffer
   // fixme : values encoding in terminal
-  rc232_rx_read_buffer_full();
+  if(rc232_rx_read_buffer_full(false) == ERR_FAILED) {
+    return ERR_FAILED;
+  }
 
   exit_config_state();
+  return ERR_OK;
 }
 
 /**
@@ -591,7 +600,7 @@ void rc232_memory_read_one_byte(uint8_t address) {
   #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
   #endif
-  rc232_rx_read_buffer_full(); // fix : clear buffer, otherwise missing/wrong
+  rc232_rx_read_buffer_full(false); // fix : clear buffer, otherwise missing/wrong
                                // values
 
   enter_config_state();
@@ -780,7 +789,7 @@ void rc232_memory_write_configuration(void) {
   }
 
   // fixme : clean buffer, contains '>' and values
-  rc232_rx_read_buffer_full();
+  rc232_rx_read_buffer_full(false);
 
   exit_config_state();
   McuLog_trace("[rc232] Exit memory configuration state !");

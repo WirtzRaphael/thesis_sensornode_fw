@@ -245,7 +245,7 @@ void menu_handler_rc232(void) {
   char userCmd = menu_get_user_input();
   switch (userCmd) {
   case 'b':
-    rc232_rx_read_buffer_full();
+    rc232_rx_read_buffer_full(true);
     break;
   case 'c':
     rc232_config_destination_address(RC232_BROADCAST_ADDRESS);
@@ -257,7 +257,7 @@ void menu_handler_rc232(void) {
     rc232_sleep();
     break;
   case 'r':
-    rc232_rx_read_buffer_full(); // same as buffer read out
+    rc232_rx_read_buffer_full(true); // same as buffer read out
     break;
   case 's':
     rc232_tx_packet_string("RC232 Send String", false);
