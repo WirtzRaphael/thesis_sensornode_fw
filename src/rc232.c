@@ -36,7 +36,12 @@
   #define RADIO_PIN_RTS    PICO_PINS_UART1_RTS
   #define RADIO_PIN_CONFIG PL_GPIO_RADIO_CONFIG
   // todo [demo] : ?
-  #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
+  #ifndef RADIO_CONFIG_NON_VOLATILE_MEMORY
+    #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
+  #endif
+  #ifndef RADIO_CONFIG_VOLATILE_MEMORY
+    #define RADIO_CONFIG_VOLATILE_MEMORY (0)
+  #endif
 
   // note : maybe configure flow control in radio NVM, before activating
   #define UART_RADIO_ID            UART1_ID
