@@ -502,14 +502,14 @@ uint8_t rc232_signal_strength_indicator(void) {
  * @brief Enters low current sleep mode for the radio module.
  *
  */
-void rc232_sleep(void) {
+error_t rc232_sleep(void) {
   #if RADIO_PRE_EXIT_CONFIG
   exit_config_state();
   #endif
 
   enter_config_state();
   if (wait_config_prompt() == ERR_FAULT) {
-    return;
+    return ERR_FAILED;
   }
 
   gpio_put(RADIO_PIN_CONFIG, false);
@@ -517,10 +517,15 @@ void rc232_sleep(void) {
 
   // -- Send : Command byte
   // uart_write_blocking(UART_ID, &pre, 1);
-  uart_puts(UART_RADIO_ID, "Z");
-  McuLog_trace("[rc232] Send Z to radio");
-  uart_wait();
+  if (uart_is_writable(UART_RADIO_ID)) {
+    uart_puts(UART_RADIO_ID, "Z");
+    McuLog_trace("[rc232] Send Z to radio");
+    uart_wait();
+  } else {
+    return ERR_FAILED;
+  }
   // don't exit config state. i.e hold gpio low.
+  return ERR_OK;
 }
 
 /**
