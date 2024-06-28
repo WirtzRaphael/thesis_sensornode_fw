@@ -245,11 +245,13 @@ static void AppTask(void *pv) {
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, ledIsOn);
     ledIsOn = !ledIsOn;
 #endif
-    // - recheck alert settings (?)
-    // wait until other tasks done
-    // todo : use semaphore for task sync (?)
-    // todo [demo] : sync task measurement
+// - recheck alert settings (?)
+// wait until other tasks done
+// todo : use semaphore for task sync (?)
+// todo [demo] : sync task measurement
+#if PLATFORM_CONFIG_USE_RADIO
     radio_send_auto_temperatures();
+#endif
     vTaskDelay(pdMS_TO_TICKS(APP_POWER_APP_TASK_MS));
 #if PL_CONFIG_USE_WATCHDOG_PICO
     watchdog_update();
