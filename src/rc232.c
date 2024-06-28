@@ -540,8 +540,12 @@ uint8_t wait_config_prompt(void) {
   sleep_us(t_CONFIG_PROMPT_US);
 
   uint8_t rec_prompt[1];
-  uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
-  McuLog_trace("[rc232] Received %d from radio\n", rec_prompt[0]);
+  if (uart_is_readable(UART_RADIO_ID)) {
+    uart_read_blocking(UART_RADIO_ID, rec_prompt, 1);
+    McuLog_trace("[rc232] Received %d from radio\n", rec_prompt[0]);
+  } else {
+    return ERR_FAILED;
+  }
   return check_config_prompt(rec_prompt[0]);
 }
 

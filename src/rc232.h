@@ -95,7 +95,7 @@ void rc232_deinit(void);
 void rc232_config_destination_address(uint8_t address);
 void rc232_config_rf_channel_number(uint8_t channel);
 void rc232_config_rf_power(uint8_t power);
-void rc232_sleep(void);
+error_t rc232_sleep(void);
 void rc232_wakeup(void);
 error_t rc232_get_configuration_memory(void);
 void rc232_read_temperature(void);
