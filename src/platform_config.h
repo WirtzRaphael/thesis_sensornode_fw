@@ -77,15 +77,21 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
    */
   #define PL_CONFIG_USE_WATCHDOG_PICO (0)
   /** DEMO : AUTOSHUTDOWN NO RADIO
+   * Functionality
+   * - VCC MCU shutdown
+   * - watchdog to restart if no shutdown
+   * - restart via rtc alert
    * HW requirements
    * - VCC_RF disconnected
    */
   #define APP_DEMO_AUTOSHUTDOWN_NO_RADIO (0)
   /** DEMO : NO AUTOSHUTDOWN WITH RADIO
+   * Functionality
+   * - radio auto send
+   * - no VCC MCU shutdown
    * HW requirements
    * - VCC_RF connected
    */
-  // todo [demo] : periodic send
   #define APP_DEMO_NO_AUTOSHUTDOWN_WITH_RADIO (1)
   /** DEMO : AUTOSHUTDOWN WITH RADIO
    */
