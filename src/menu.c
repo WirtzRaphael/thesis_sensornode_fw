@@ -8,6 +8,8 @@
  *
  */
 #include "menu.h"
+#include "tusb.h"
+
 #include "platform_config.h"
 #if PLATFORM_CONFIG_USE_POWER
   #include "extRTC.h"
@@ -138,13 +140,22 @@ void menu_display(const char *options[], int numOptions) {
 }
 
 /**
- * @brief Get the User Input for the menu
+ * @brief Get the User Input for the menu (blocking)
  *
  * @return char
  */
 char menu_get_user_input() {
-  char userCmd = getchar();
-  printf("You entered: %c\n\n", userCmd);
+  char userCmd = '\0';
+  while (userCmd == '\0') {
+    if (tud_cdc_available()) {
+      userCmd = getchar();
+      printf("You entered: %c\n\n", userCmd);
+      return userCmd;
+    } else {
+      // avoid busy-waiting
+      vTaskDelay(pdMS_TO_TICKS(MENU_DELAY_USER_INPUT_MS));
+    }
+  }
   return userCmd;
 }
 

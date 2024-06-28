@@ -57,7 +57,9 @@ static const uint LED_PIN = PICO_DEFAULT_LED_PIN;
   #define APP_RADIO_AUTO_SEND              (1)
   #define RADIO_CONFIG_NON_VOLATILE_MEMORY (0)
   #define RADIO_CONFIG_VOLATILE_MEMORY     (0)
-
+  /** MENU
+  */
+  #define MENU_DELAY_USER_INPUT_MS (50)
   /** POWER
    */
   #define APP_POWER_RADIO_DEFAULT_SLEEP (1)
