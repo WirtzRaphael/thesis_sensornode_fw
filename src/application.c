@@ -252,9 +252,11 @@ static void AppTask(void *pv) {
 #if PLATFORM_CONFIG_USE_RADIO
     // fixme [demo] : wakes up radio!
     // fixme [demo] : hang up after some iterations
+    /*
     if(rc232_check_not_configuration_mode() == ERR_FAILED) {
       exit_config_state();
     }
+    */
     // send temperature periodic and handle sleep mode
     radio_send_auto_temperatures();
 #endif
