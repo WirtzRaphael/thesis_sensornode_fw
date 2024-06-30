@@ -17,9 +17,11 @@
   #include "McuLog.h"
   #include "McuRTOS.h"
   #include "McuUtility.h"
+  #include "McuTimeDate.h"
   #include "pico/time.h"
   #include "pico/types.h"
   #include "pico/unique_id.h"
+  #include "time_operations.h"
   #include "radio.h"
   #include "semphr.h"
   #include "yahdlc.h"
@@ -44,8 +46,8 @@
   #define SCAN_CHANNELS_FOR_CONNECTION APP_RADIO_CHANNEL_SCAN
   #define DEACTIVATE_RF                APP_RADIO_DEACTIVATE_RF
 
-//  #define RADIO_LOG_OUTPUT printf
-  #define RADIO_LOG_OUTPUT McuLog_trace // fixme : some values missing
+  #define RADIO_LOG_OUTPUT printf
+//  #define RADIO_LOG_OUTPUT McuLog_trace // fixme : some values missing
   #define RADIO_LOG_PRINT  (0)
 
   #ifndef dimof
@@ -232,6 +234,7 @@ static error_t radio_authentication_request(void) {
                     &recv_length);
   #endif
 
+  // todo : send frame
   rc232_tx_packet_bytes(send_data, sizeof(send_data), DEACTIVATE_RF);
   return ERR_OK;
 }
@@ -586,15 +589,16 @@ static void convert_temperature_to_byte(
  * @param field_src
  * @param data_info_field
  */
+ // fixme : wrong content
 static void pack_data_info_field(data_info_field_t *field_src,
-                                 uint8_t data_info_field) {
-  data_info_field =
-      (field_src->protocol_version | field_src->data_content << 3);
+                                 uint8_t field_target) {
+  field_target =
+      (field_src->protocol_version << 5 | field_src->data_content);
   RADIO_LOG_OUTPUT("[hdlc] ==> Pack data info field \n");
   RADIO_LOG_OUTPUT("[hdlc]  -> protocol version: %d\n",
                    field_src->protocol_version);
   RADIO_LOG_OUTPUT("[hdlc]  -> data content: %d\n", field_src->data_content);
-  RADIO_LOG_OUTPUT("[hdlc]  -> packed: %d\n", data_info_field);
+  RADIO_LOG_OUTPUT("[hdlc]  -> packed: %d\n", field_target);
 }
 
 /**
@@ -605,8 +609,8 @@ static void pack_data_info_field(data_info_field_t *field_src,
  */
 static void unpack_data_info_field(data_info_field_t *field_dest,
                                    uint8_t data_info_field) {
-  field_dest->data_content = data_info_field & 0x07;
-  field_dest->protocol_version = data_info_field >> 3;
+  field_dest->data_content = data_info_field & 0x1F;
+  field_dest->protocol_version = data_info_field >> 5;
   RADIO_LOG_OUTPUT("[hdlc] ==> Unpack data info field \n");
   RADIO_LOG_OUTPUT("[hdlc]  -> packed: %d\n", data_info_field);
   RADIO_LOG_OUTPUT("[hdlc]  -> protocol version: %d\n",
