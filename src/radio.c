@@ -353,13 +353,30 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
   data_temperature.index = 0; // reset index
   error_t error_resp;
 
-  pack_data_info_field(&data_info_field, send_data[0]);
-  data_temperature.index++;
-  // todo [demo] : field value
-  send_data[1] = 255; // todo : receiver address
+  // fixme : wrong content
+  //pack_data_info_field(&data_info_field, send_data[0]);
+  send_data[0] = (data_info_field.protocol_version << 5 | data_info_field.data_content);
+  // increase index
   data_temperature.index++;
 
-  // todo [demo] : time info measurements
+  send_data[1] = 255; // todo : receiver address
+  // increase index
+  data_temperature.index++;
+
+  // Time
+  uint32_t time_unix = 0;
+  DATEREC date = {2024, 7, 1};
+  TIMEREC time = {0, 0, 0, 0};
+  time_rtc_get_time(&time);
+  time_rtc_get_date(&date);
+  time_unix = McuTimeDate_TimeDateToUnixSeconds(&time, &date, 0);
+
+  send_data[2] = time_unix & 0xFF;
+  send_data[3] = (time_unix >> 8) & 0xFF;
+  send_data[4] = (time_unix >> 16) & 0xFF;
+  send_data[5] = (time_unix >> 24) & 0xFF;
+  // increase index
+  data_temperature.index += 4;
 
   // Measurement values
   // reads multiple values from queue until buffer full or queue empty

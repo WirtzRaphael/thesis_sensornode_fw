@@ -15,7 +15,7 @@
 uint32_t alert_time_unix = 0;
 DATEREC alert_date = {0, 0, 0};
 TIMEREC alert_time = {0, 0, 0, 0};
-DATEREC date = {2000, 1, 1};
+DATEREC date = {2024, 7, 1};
 TIMEREC time = {0, 0, 0, 0};
 uint32_t time_unix = 0;
 uint8_t offset_hours = 0;

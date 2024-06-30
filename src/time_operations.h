@@ -20,5 +20,7 @@ uint8_t time_rtc_alarm_get_time(TIMEREC *time, alert_enabled *alert_enabled);
 error_t time_rtc_alarm_set_time(TIMEREC *alert_time, DATEREC *alert_date);
 error_t time_rtc_alarm_enable(void);
 error_t time_rtc_alarm_reset_flag(void);
+error_t time_rtc_get_time(TIMEREC *time);
+error_t time_rtc_get_date(DATEREC *date);
 
 #endif /* TIME_H_ */
