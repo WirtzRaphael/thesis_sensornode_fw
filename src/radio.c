@@ -434,8 +434,19 @@ error_t radio_send_temperature_as_bytes(QueueHandle_t xQueue_temperature,
                     &recv_length);
   #endif
 
-  // todo [demo] : send encoded data
-  //rc232_tx_packet_bytes(send_data, sizeof(send_data), DEACTIVATE_RF);
+/* TEST DATA
+  uint8_t test_byte = 0xC2;
+  rc232_tx_packet_bytes(&test_byte, sizeof(test_byte), DEACTIVATE_RF);
+  uint8_t frame_test[7];
+  frame_test[0] = 0x7E;
+  frame_test[1] = 0x02;
+  frame_test[2] = 0x03;
+  frame_test[3] = 0xA0;
+  frame_test[4] = 0xA0;
+  frame_test[5] = 0xA0;
+  frame_test[6] = 0x7E;
+  rc232_tx_packet_bytes((uint8_t*) &frame_test, sizeof(frame_test), DEACTIVATE_RF);
+*/
   rc232_tx_packet_bytes(frame_data, sizeof(frame_data), DEACTIVATE_RF);
   return ERR_OK;
 }
